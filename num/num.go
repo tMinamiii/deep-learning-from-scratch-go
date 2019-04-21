@@ -14,7 +14,7 @@ func Relu(x float64) float64 {
 }
 
 func Sigmoid(x float64) float64 {
-	return 1 / (1 + math.Pow(E, x))
+	return 1 / (1 + math.Exp(-x))
 }
 
 func StepFunction(x float64) int {

@@ -21,11 +21,11 @@ func TestRelu(t *testing.T) {
 }
 
 func TestSigmoid(t *testing.T) {
-	if Sigmoid(10) != 4.5397868702274976e-05 {
+	if Sigmoid(10) != 0.9999546021312976 {
 		log.Println(Sigmoid(10))
 		t.Fail()
 	}
-	if Sigmoid(1) != 0.26894142136992605 {
+	if Sigmoid(1) != 0.7310585786300049 {
 		log.Println(Sigmoid(1))
 		t.Fail()
 	}
@@ -33,7 +33,7 @@ func TestSigmoid(t *testing.T) {
 		log.Println(Sigmoid(0))
 		t.Fail()
 	}
-	if Sigmoid(-1) != 0.731058578630074 {
+	if Sigmoid(-1) != 0.2689414213699951 {
 		log.Println(Sigmoid(-1))
 		t.Fail()
 	}
