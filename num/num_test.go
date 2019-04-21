@@ -1,44 +1,55 @@
 package num
 
 import (
+	"log"
 	"testing"
 )
 
-func TestExp(t *testing.T) {
-	if Exp(1) != 2.71828182846 {
+func TestRelu(t *testing.T) {
+	if Relu(10) != 10 {
 		t.Fail()
 	}
-	if Exp(0) != 1 {
+	if Relu(1) != 1 {
 		t.Fail()
 	}
-
-}
-
-func TestArrayMulti(t *testing.T) {
-	x := []float64{2, 4, 5}
-	w := []float64{1, 2, 3}
-	result, err := ArrayMulti(x, w)
-	if err != nil {
+	if Relu(0) != 0 {
 		t.Fail()
 	}
-	if !ArrayEqual(result, []float64{2, 8, 15}) {
-		t.Fail()
-	}
-	if ArrayEqual(result, []float64{1, 4, 10}) {
-		t.Fail()
-	}
-	if ArrayEqual(result, []float64{2, 9, 15}) {
-		t.Fail()
-	}
-	if ArrayEqual(result, []float64{2, 9}) {
+	if Relu(-1) != 0 {
 		t.Fail()
 	}
 }
 
-func TestArraySum(t *testing.T) {
-	ary := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-	result := ArraySum(ary)
-	if result != 55 {
+func TestSigmoid(t *testing.T) {
+	if Sigmoid(10) != 4.5397868702274976e-05 {
+		log.Println(Sigmoid(10))
+		t.Fail()
+	}
+	if Sigmoid(1) != 0.26894142136992605 {
+		log.Println(Sigmoid(1))
+		t.Fail()
+	}
+	if Sigmoid(0) != 0.5 {
+		log.Println(Sigmoid(0))
+		t.Fail()
+	}
+	if Sigmoid(-1) != 0.731058578630074 {
+		log.Println(Sigmoid(-1))
+		t.Fail()
+	}
+}
+
+func TestStepFunction(t *testing.T) {
+	if StepFunction(10) != 1 {
+		t.Fail()
+	}
+	if StepFunction(1) != 1 {
+		t.Fail()
+	}
+	if StepFunction(0) != 0 {
+		t.Fail()
+	}
+	if StepFunction(-1) != 0 {
 		t.Fail()
 	}
 }

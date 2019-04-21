@@ -1,8 +1,9 @@
 package logic
 
 import (
-	"deeplearning/num"
 	"log"
+
+	"github.com/naronA/zero_deeplearning/array"
 )
 
 // AND is 論理和
@@ -10,12 +11,12 @@ func AND(x1 float64, x2 float64) int {
 	x := []float64{x1, x2}
 	w := []float64{0.5, 0.5}
 	const b = -0.7
-	mul, err := num.ArrayMulti(x, w)
+	mul, err := array.Multi(x, w)
 	if err != nil {
 		log.Fatal(err)
 		return 0
 	}
-	tmp := num.ArraySum(mul) + b
+	tmp := array.Sum(mul) + b
 	if tmp <= 0 {
 		return 0
 	}
@@ -28,12 +29,12 @@ func NAND(x1 float64, x2 float64) int {
 	x := []float64{x1, x2}
 	w := []float64{-0.5, -0.5}
 	const b = 0.7
-	mul, err := num.ArrayMulti(x, w)
+	mul, err := array.Multi(x, w)
 	if err != nil {
 		log.Fatal(err)
 		return 0
 	}
-	tmp := num.ArraySum(mul) + b
+	tmp := array.Sum(mul) + b
 	if tmp <= 0 {
 		return 0
 	}
@@ -45,12 +46,12 @@ func OR(x1 float64, x2 float64) int {
 	x := []float64{x1, x2}
 	w := []float64{0.5, 0.5}
 	const b = -0.2
-	mul, err := num.ArrayMulti(x, w)
+	mul, err := array.Multi(x, w)
 	if err != nil {
 		log.Fatal(err)
 		return 0
 	}
-	tmp := num.ArraySum(mul) + b
+	tmp := array.Sum(mul) + b
 	if tmp <= 0 {
 		return 0
 	}

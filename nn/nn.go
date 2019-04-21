@@ -1,10 +1,5 @@
 package nn
 
-import(
-	"errors"
-)
-
-
 func initNetwork() {
 	network := map[string]interface{}{}
 	network["W1"] = [][]float64{{0.1, 0.3, 0.5}, {0.2, 0.4, 0.6}}
@@ -14,7 +9,6 @@ func initNetwork() {
 	network["W3"] = [][]float64{{0.1, 0.3}, {0.2, 0.4}}
 	network["b3"] = []float64{0.1, 0.2}
 }
-
 
 func forward(network map[string]interface{}, x []float64) {
 	W1 := network["W1"]
