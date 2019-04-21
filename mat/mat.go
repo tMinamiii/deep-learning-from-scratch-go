@@ -2,9 +2,9 @@ package mat
 
 import (
 	"errors"
-	"log"
 
 	"github.com/naronA/zero_deeplearning/array"
+	"github.com/naronA/zero_deeplearning/num"
 )
 
 type Mat64 struct {
@@ -13,9 +13,16 @@ type Mat64 struct {
 	Columns int
 }
 
+func (m *Mat64) Shape() (int, int) {
+	if m.Rows == 1 {
+		return m.Columns, 0
+	}
+	return m.Rows, m.Columns
+}
+
 func (m *Mat64) Element(r int, c int) float64 {
 	index := r*m.Columns + c
-	log.Printf("Row: %d / Column: %d / Index: %d\n", r, c, index)
+	// log.Printf("Row: %d / Column: %d / Index: %d\n", r, c, index)
 	return m.Array[index]
 }
 
@@ -39,10 +46,10 @@ func Equal(m1 *Mat64, m2 *Mat64) bool {
 	return false
 }
 
-func Mul(m1 *Mat64, m2 *Mat64) (*Mat64, error) {
+func Mul(m1 *Mat64, m2 *Mat64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Rows {
-		return nil, errors.New("cant multiply. lengths are not matched ")
+		return nil
 	}
 	mat := make([]float64, m1.Rows*m2.Columns)
 	for i := 0; i < m1.Columns; i++ {
@@ -57,13 +64,13 @@ func Mul(m1 *Mat64, m2 *Mat64) (*Mat64, error) {
 		Array:   mat,
 		Rows:    m1.Rows,
 		Columns: m2.Columns,
-	}, nil
+	}
 }
 
-func Add(m1 *Mat64, m2 *Mat64) (*Mat64, error) {
+func Add(m1 *Mat64, m2 *Mat64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Columns && m1.Rows != m2.Rows {
-		return nil, errors.New("cant multiply. lengths are not matched ")
+		return nil
 	}
 
 	mat := make([]float64, m1.Rows*m1.Columns)
@@ -77,10 +84,10 @@ func Add(m1 *Mat64, m2 *Mat64) (*Mat64, error) {
 		Array:   mat,
 		Rows:    m1.Rows,
 		Columns: m1.Columns,
-	}, nil
+	}
 }
 
-func MulScalar(a float64, m *Mat64) (*Mat64, error) {
+func MulScalar(a float64, m *Mat64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	mat := make([]float64, m.Rows*m.Columns)
 	for r := 0; r < m.Rows; r++ {
@@ -93,5 +100,37 @@ func MulScalar(a float64, m *Mat64) (*Mat64, error) {
 		Array:   mat,
 		Rows:    m.Rows,
 		Columns: m.Columns,
-	}, nil
+	}
 }
+
+func Sigmoid(m *Mat64) *Mat64 {
+	mat := make([]float64, m.Rows*m.Columns)
+	for r := 0; r < m.Rows; r++ {
+		for c := 0; c < m.Columns; c++ {
+			index := r*m.Columns + c
+			mat[index] = num.Sigmoid(m.Element(r, c))
+		}
+	}
+	return &Mat64{
+		Array:   mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func Relu(m *Mat64) *Mat64 {
+	mat := make([]float64, m.Rows*m.Columns)
+	for r := 0; r < m.Rows; r++ {
+		for c := 0; c < m.Columns; c++ {
+			index := r*m.Columns + c
+			mat[index] = num.Relu(m.Element(r, c))
+		}
+	}
+	return &Mat64{
+		Array:   mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+
