@@ -106,3 +106,7 @@ func Softmax(a []float64) []float64 {
 	result := Divide(expA, sumExpA)
 	return result
 }
+
+func IdentityFunction(x []float64) []float64 {
+	return x
+}
