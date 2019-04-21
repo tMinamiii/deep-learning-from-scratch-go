@@ -80,4 +80,11 @@ func TestSoftmax(t *testing.T) {
 		log.Println(actual, expected)
 		t.Fail()
 	}
+	if Sum(actual)-1 != 0 {
+		if Sum(actual)-1 > 0 && Sum(actual)-1 > 0.0000001 {
+			t.Fail()
+		} else if Sum(actual)-1 < 0 && Sum(actual)-1 < -0.0000001 {
+			t.Fail()
+		}
+	}
 }
