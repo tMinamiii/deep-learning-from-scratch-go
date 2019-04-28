@@ -8,7 +8,7 @@ import (
 )
 
 type Mat64 struct {
-	Array   []float64
+	Array   array.Array
 	Rows    int
 	Columns int
 }
@@ -40,7 +40,7 @@ func NewMat64(row int, column int, array []float64) (*Mat64, error) {
 func Equal(m1 *Mat64, m2 *Mat64) bool {
 	if m1.Rows == m2.Rows &&
 		m1.Columns == m2.Columns &&
-		array.Equal(m1.Array, m2.Array) {
+		m1.Array.Equal(m2.Array) {
 		return true
 	}
 	return false

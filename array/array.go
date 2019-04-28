@@ -1,49 +1,117 @@
 package array
 
 import (
-	"errors"
 	"math"
 
 	"github.com/naronA/zero_deeplearning/num"
 )
 
-func Equal(x1 []float64, x2 []float64) bool {
+type Array []float64
+
+const delta = 1e-7
+
+func (x1 Array) Equal(x2 Array) bool {
 	if len(x1) != len(x2) {
 		return false
 	}
-	for i := 0; i < len(x1); i++ {
+
+	for i := 0; i < len(x2); i++ {
 		diff := x1[i] - x2[i]
-		if diff < 0.0 && diff < -0.00001 {
+		if diff < 0.0 && diff < -delta {
 			return false
 		}
-		if diff > 0.0 && diff > 0.00001 {
+		if diff > 0.0 && diff > delta {
 			return false
 		}
 	}
 	return true
 }
 
-func Pow(x []float64, y float64) ([]float64, error) {
-	result := make([]float64, len(x))
-	for i := 0; i < len(x); i++ {
-		result[i] = math.Pow(x[i], y)
+func (x1 Array) Pow(x2 float64) Array {
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = math.Pow(x1[i], x2)
 	}
-	return result, nil
+	return result
 }
 
-func Multi(x1 []float64, x2 []float64) ([]float64, error) {
+func (x1 Array) Multi(x2 float64) Array {
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] * x2
+	}
+	return result
+}
+
+func (x1 Array) MultiArray(x2 Array) Array {
 	if len(x1) != len(x2) {
-		err := errors.New("not matched array length")
-		return nil, err
+		return nil
 	}
 	result := make([]float64, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = x1[i] * x2[i]
 	}
-	return result, nil
+	return result
 }
 
-func Sum(ary []float64) float64 {
+func (x Array) Divide(y float64) Array {
+	result := make(Array, len(x))
+	for i, v := range x {
+		result[i] = v / y
+	}
+	return result
+}
+
+func (x1 Array) DivideArray(x2 Array) Array {
+	if len(x1) != len(x2) {
+		return nil
+	}
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] / x2[i]
+	}
+	return result
+}
+
+func (x1 Array) Add(x2 float64) Array {
+	result := make(Array, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] + x2
+	}
+	return result
+}
+
+func (x1 Array) AddArray(x2 Array) Array {
+	if len(x1) != len(x2) {
+		return nil
+	}
+	result := make(Array, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] + x2[i]
+	}
+	return result
+}
+
+func (x1 Array) Sub(x2 float64) Array {
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] - x2
+	}
+	return result
+}
+
+func (x1 Array) SubArray(x2 Array) Array {
+	if len(x1) != len(x2) {
+		return nil
+	}
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] - x2[i]
+	}
+	return result
+}
+
+func Sum(ary Array) float64 {
 	sum := 0.0
 	for _, num := range ary {
 		sum += num
@@ -51,16 +119,16 @@ func Sum(ary []float64) float64 {
 	return sum
 }
 
-func Relu(x []float64) []float64 {
-	result := make([]float64, len(x))
+func Relu(x Array) Array {
+	result := make(Array, len(x))
 	for i, v := range x {
 		result[i] = num.Relu(v)
 	}
 	return result
 }
 
-func Sigmoid(x []float64) []float64 {
-	result := make([]float64, len(x))
+func Sigmoid(x Array) Array {
+	result := make(Array, len(x))
 	for i, v := range x {
 		result[i] = num.Sigmoid(v)
 	}
@@ -75,7 +143,7 @@ func StepFunction(x []float64) []int {
 	return result
 }
 
-func Max(x []float64) float64 {
+func Max(x Array) float64 {
 	max := math.SmallestNonzeroFloat64
 	for _, v := range x {
 		max = math.Max(max, v)
@@ -83,43 +151,41 @@ func Max(x []float64) float64 {
 	return max
 }
 
-func Exp(x []float64) []float64 {
-	result := make([]float64, len(x))
+func Exp(x Array) Array {
+	result := make(Array, len(x))
 	for i, v := range x {
 		result[i] = math.Exp(v)
 	}
 	return result
 }
 
-func Sub(x []float64, y float64) []float64 {
-	result := make([]float64, len(x))
+func Log(x Array) Array {
+	result := make(Array, len(x))
 	for i, v := range x {
-		result[i] = v - y
+		result[i] = math.Log(v)
 	}
 	return result
 }
 
-func Divide(x []float64, y float64) []float64 {
-	result := make([]float64, len(x))
-	for i, v := range x {
-		result[i] = v / y
-	}
-	return result
-}
-
-func Softmax(a []float64) []float64 {
+func Softmax(a Array) Array {
 	c := Max(a)
-	expA := Exp(Sub(a, c))
+	expA := Exp(a.Sub(c))
 	sumExpA := Sum(expA)
-	result := Divide(expA, sumExpA)
+	result := expA.Divide(sumExpA)
 	return result
 }
 
-func IdentityFunction(x []float64) []float64 {
+func IdentityFunction(x Array) Array {
 	return x
 }
 
-func MeanSquaredError(y, t float64) {
-	return 0.5 * Sum((y - t))
+func MeanSquaredError(y, t Array) float64 {
+	sub := y.SubArray(t)
+	pow := sub.Pow(2)
+	return 0.5 * Sum(pow)
+}
 
+func CrossEntropyError(y, t Array) float64 {
+	log := Log(y.Add(delta))
+	return -Sum(log.MultiArray(t))
 }
