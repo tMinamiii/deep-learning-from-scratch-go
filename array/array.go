@@ -23,6 +23,14 @@ func Equal(x1 []float64, x2 []float64) bool {
 	return true
 }
 
+func Pow(x []float64, y float64) ([]float64, error) {
+	result := make([]float64, len(x))
+	for i := 0; i < len(x); i++ {
+		result[i] = math.Pow(x[i], y)
+	}
+	return result, nil
+}
+
 func Multi(x1 []float64, x2 []float64) ([]float64, error) {
 	if len(x1) != len(x2) {
 		err := errors.New("not matched array length")
@@ -109,4 +117,9 @@ func Softmax(a []float64) []float64 {
 
 func IdentityFunction(x []float64) []float64 {
 	return x
+}
+
+func MeanSquaredError(y, t float64) {
+	return 0.5 * Sum((y - t))
+
 }
