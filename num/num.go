@@ -23,3 +23,8 @@ func StepFunction(x float64) int {
 	}
 	return 0
 }
+
+func NumericalDiff(f func(float64) float64, x float64) float64 {
+	h := 1e-4
+	return (f(x+h) - f(x-h)) / (2 * h)
+}

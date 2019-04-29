@@ -53,3 +53,23 @@ func TestStepFunction(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func function(x float64) float64 {
+	return (0.01*x*x) + 0.1*x
+}
+
+func TestNumericalDiff1(t *testing.T) {
+	diff := NumericalDiff(function, 5)
+	if diff != 0.1999999999990898 {
+		log.Println(diff)
+		t.Fail()
+	}
+}
+
+func TestNumericalDiff2(t *testing.T) {
+	diff := NumericalDiff(function, 10)
+	if diff != 0.2999999999997449 {
+		log.Println(diff)
+		t.Fail()
+	}
+}

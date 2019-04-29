@@ -89,6 +89,28 @@ func TestSoftmax(t *testing.T) {
 	}
 }
 
+func TestMeanSquaredError1(t *testing.T) {
+	k := Array{0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+	y := Array{0.1, 0.05, 0.6, 0.0, 0.05, 0.1, 0.0, 0.1, 0.0, 0.0}
+	actual := MeanSquaredError(y, k)
+	expected := 0.09750000000000003
+	if actual != expected {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
+
+func TestMeanSquaredError2(t *testing.T) {
+	k := Array{0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+	y := Array{0.1, 0.05, 0.1, 0.0, 0.05, 0.1, 0.0, 0.6, 0.0, 0.0}
+	actual := MeanSquaredError(y, k)
+	expected := 0.5974999999999999
+	if actual != expected {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
+
 func TestCrossEntropyError1(t *testing.T) {
 	k := Array{0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 	y := Array{0.1, 0.05, 0.6, 0.0, 0.05, 0.1, 0.0, 0.1, 0.0, 0.0}

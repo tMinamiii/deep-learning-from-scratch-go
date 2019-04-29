@@ -16,23 +16,60 @@ const (
 	Height     = 28
 )
 
-func main() {
-	// Read Label file
-	file, err := os.Open("./mnsit/train-labels-idx1-ubyte.gz")
-	if err != nil {
-		return
-	}
-	defer file.Close()
-	gzipReader, err := gzip.NewReader(file)
-	if err != nil {
-		return
-	}
-	defer gzipReader.Close()
+type MnistDataSet struct {
+	Images *MnistImage
+	Label  []MnistLabel
 }
 
-type Label uint8
+func LoadMnist() (*MnistDataSet, *MnistDataSet) {
 
-func readLabels(r io.Reader) []Label {
+	trainImagesFile, err := os.Open("./mnist/train-images-idx3-ubyte.gz")
+	if err != nil {
+		return nil, nil
+	}
+	defer trainImagesFile.Close()
+	trainLabelsFile, err := os.Open("./mnist/train-labels-idx1-ubyte.gz")
+	if err != nil {
+		return nil, nil
+	}
+	defer trainLabelsFile.Close()
+	testImagesFile, err := os.Open("./mnist/t10k-images-idx3-ubyte.gz")
+	if err != nil {
+		return nil, nil
+	}
+	defer testImagesFile.Close()
+	testLabelsFile, err := os.Open("./mnist/t10k-labels-idx1-ubyte.gz")
+	if err != nil {
+		return nil, nil
+	}
+	defer testLabelsFile.Close()
+
+	trainImages := readImages(trainImagesFile)
+	trainLabels := readLabels(trainLabelsFile)
+	testImages := readImages(testImagesFile)
+	testLabels := readLabels(testLabelsFile)
+	return &MnistDataSet{trainImages, trainLabels}, &MnistDataSet{testImages, testLabels}
+
+}
+
+type MnistLabel struct {
+	number uint8
+	oneHot []uint8
+}
+
+func oneHot(n uint8) []uint8 {
+	oneHot := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	oneHot[n] = 1
+	return oneHot
+}
+
+func readLabels(file *os.File) []MnistLabel {
+	r, err := gzip.NewReader(file)
+	if err != nil {
+		return nil
+	}
+	defer r.Close()
+
 	var (
 		magic int32
 		n     int32
@@ -47,13 +84,14 @@ func readLabels(r io.Reader) []Label {
 		return nil
 	}
 	// N個のラベルデータが含まれているのでN要素の配列をつくる
-	labels := make([]Label, n)
+	labels := make([]MnistLabel, n)
 	for i := 0; i < int(n); i++ {
-		var l Label
-		if err := binary.Read(r, binary.BigEndian, &l); err != nil {
+		var num uint8
+		if err := binary.Read(r, binary.BigEndian, &num); err != nil {
 			return nil
 		}
-		labels[i] = l
+		labels[i].number = num
+		labels[i].oneHot = oneHot(num)
 	}
 	return labels
 }
@@ -70,7 +108,7 @@ func (img RawImage) At(x, y int) color.Color {
 
 func (img RawImage) Bounds() image.Rectangle {
 	return image.Rectangle{
-		Min: image.Point{0,0},
+		Min: image.Point{0, 0},
 		Max: image.Point{Width, Height},
 	}
 }
@@ -81,7 +119,12 @@ type MnistImage struct {
 	imgs []RawImage
 }
 
-func readImages(r io.Reader) *MnistImage {
+func readImages(file *os.File) *MnistImage {
+	r, err := gzip.NewReader(file)
+	if err != nil {
+		return nil
+	}
+	defer r.Close()
 	var (
 		magic int32
 		n     int32

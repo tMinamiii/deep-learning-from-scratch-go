@@ -46,7 +46,7 @@ func (m1 *Mat64) Equal(m2 *Mat64) bool {
 	return false
 }
 
-func (m1 *Mat64) Mul(m2 *Mat64) *Mat64 {
+func (m1 *Mat64) Dot(m2 *Mat64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Rows {
 		return nil
@@ -64,6 +64,15 @@ func (m1 *Mat64) Mul(m2 *Mat64) *Mat64 {
 		Array:   mat,
 		Rows:    m1.Rows,
 		Columns: m2.Columns,
+	}
+}
+
+func (m1 *Mat64) Mul(m2 *Mat64) *Mat64 {
+	mul := m1.Array.Multi(m2.Array)
+	return &Mat64{
+		Array:   mul,
+		Rows:    m1.Rows,
+		Columns: m1.Columns,
 	}
 }
 
@@ -87,7 +96,7 @@ func (m1 *Mat64) Add(m2 *Mat64) *Mat64 {
 	}
 }
 
-func (m *Mat64) MultiAll(a float64) *Mat64 {
+func (m *Mat64) MulAll(a float64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	mat := make([]float64, m.Rows*m.Columns)
 	for r := 0; r < m.Rows; r++ {
@@ -131,4 +140,23 @@ func Relu(m *Mat64) *Mat64 {
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
+}
+
+func Log(m *Mat64) *Mat64 {
+	log := array.Log(m.Array)
+	return &Mat64{
+		Array:   log,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func Sum(m *Mat64) float64 {
+	return array.Sum(m.Array)
+}
+
+func CrossEntropyError(y *Mat64, t *Mat64) float64 {
+	batchSize := y.Columns
+	mul := Log(y).Mul(t)
+	return -Sum(mul) / float64(batchSize)
 }

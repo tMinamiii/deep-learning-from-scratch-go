@@ -189,3 +189,4 @@ func CrossEntropyError(y, t Array) float64 {
 	log := Log(y.AddAll(delta))
 	return -Sum(log.Multi(t))
 }
+
