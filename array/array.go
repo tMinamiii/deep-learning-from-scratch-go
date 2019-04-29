@@ -35,53 +35,7 @@ func (x1 Array) Pow(x2 float64) Array {
 	return result
 }
 
-func (x1 Array) Multi(x2 float64) Array {
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] * x2
-	}
-	return result
-}
-
-func (x1 Array) MultiArray(x2 Array) Array {
-	if len(x1) != len(x2) {
-		return nil
-	}
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] * x2[i]
-	}
-	return result
-}
-
-func (x Array) Divide(y float64) Array {
-	result := make(Array, len(x))
-	for i, v := range x {
-		result[i] = v / y
-	}
-	return result
-}
-
-func (x1 Array) DivideArray(x2 Array) Array {
-	if len(x1) != len(x2) {
-		return nil
-	}
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] / x2[i]
-	}
-	return result
-}
-
-func (x1 Array) Add(x2 float64) Array {
-	result := make(Array, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] + x2
-	}
-	return result
-}
-
-func (x1 Array) AddArray(x2 Array) Array {
+func (x1 Array) Add(x2 Array) Array {
 	if len(x1) != len(x2) {
 		return nil
 	}
@@ -92,7 +46,48 @@ func (x1 Array) AddArray(x2 Array) Array {
 	return result
 }
 
-func (x1 Array) Sub(x2 float64) Array {
+func (x1 Array) Sub(x2 Array) Array {
+	if len(x1) != len(x2) {
+		return nil
+	}
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] - x2[i]
+	}
+	return result
+}
+
+func (x1 Array) Multi(x2 Array) Array {
+	if len(x1) != len(x2) {
+		return nil
+	}
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] * x2[i]
+	}
+	return result
+}
+
+func (x1 Array) Divide(x2 Array) Array {
+	if len(x1) != len(x2) {
+		return nil
+	}
+	result := make([]float64, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] / x2[i]
+	}
+	return result
+}
+
+func (x1 Array) AddAll(x2 float64) Array {
+	result := make(Array, len(x1))
+	for i := 0; i < len(x1); i++ {
+		result[i] = x1[i] + x2
+	}
+	return result
+}
+
+func (x1 Array) SubAll(x2 float64) Array {
 	result := make([]float64, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = x1[i] - x2
@@ -100,13 +95,18 @@ func (x1 Array) Sub(x2 float64) Array {
 	return result
 }
 
-func (x1 Array) SubArray(x2 Array) Array {
-	if len(x1) != len(x2) {
-		return nil
-	}
+func (x1 Array) MultiAll(x2 float64) Array {
 	result := make([]float64, len(x1))
 	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] - x2[i]
+		result[i] = x1[i] * x2
+	}
+	return result
+}
+
+func (x Array) DivideAll(y float64) Array {
+	result := make(Array, len(x))
+	for i, v := range x {
+		result[i] = v / y
 	}
 	return result
 }
@@ -167,11 +167,11 @@ func Log(x Array) Array {
 	return result
 }
 
-func Softmax(a Array) Array {
-	c := Max(a)
-	expA := Exp(a.Sub(c))
+func Softmax(x Array) Array {
+	c := Max(x)
+	expA := Exp(x.SubAll(c))
 	sumExpA := Sum(expA)
-	result := expA.Divide(sumExpA)
+	result := expA.DivideAll(sumExpA)
 	return result
 }
 
@@ -180,12 +180,12 @@ func IdentityFunction(x Array) Array {
 }
 
 func MeanSquaredError(y, t Array) float64 {
-	sub := y.SubArray(t)
+	sub := y.Sub(t)
 	pow := sub.Pow(2)
 	return 0.5 * Sum(pow)
 }
 
 func CrossEntropyError(y, t Array) float64 {
-	log := Log(y.Add(delta))
-	return -Sum(log.MultiArray(t))
+	log := Log(y.AddAll(delta))
+	return -Sum(log.Multi(t))
 }

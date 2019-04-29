@@ -2,91 +2,93 @@ package mat
 
 import (
 	"testing"
+
+	"github.com/naronA/zero_deeplearning/array"
 )
 
 func TestMul_1(t *testing.T) {
-	m1, _ := NewMat64(1, 2, []float64{1, 2})
-	m2, _ := NewMat64(2, 1, []float64{3, 4})
-	actual := Mul(m1, m2)
-	expected, _ := NewMat64(1, 1, []float64{11})
-	if !Equal(actual, expected) {
+	m1, _ := NewMat64(1, 2, array.Array{1, 2})
+	m2, _ := NewMat64(2, 1, array.Array{3, 4})
+	actual := m1.Mul(m2)
+	expected, _ := NewMat64(1, 1, array.Array{11})
+	if !actual.Equal(expected) {
 		t.Fail()
 	}
 }
 
 func TestMul_2(t *testing.T) {
-	m1, _ := NewMat64(1, 2, []float64{1, 2})
-	m2, _ := NewMat64(2, 2, []float64{
+	m1, _ := NewMat64(1, 2, array.Array{1, 2})
+	m2, _ := NewMat64(2, 2, array.Array{
 		1, 2,
 		3, 4,
 	})
-	actual := Mul(m1, m2)
-	expected, _ := NewMat64(1, 2, []float64{
+	actual := m1.Mul(m2)
+	expected, _ := NewMat64(1, 2, array.Array{
 		7, 10,
 	})
-	if !Equal(actual, expected) {
+	if !actual.Equal(expected) {
 		t.Fail()
 	}
 }
 
 func TestMul_3(t *testing.T) {
-	m1, _ := NewMat64(2, 2, []float64{
+	m1, _ := NewMat64(2, 2, array.Array{
 		1, 2,
 		3, 4,
 	})
-	m2, _ := NewMat64(2, 2, []float64{
+	m2, _ := NewMat64(2, 2, array.Array{
 		1, 0,
 		0, 1,
 	})
-	actual := Mul(m1, m2)
-	expected, _ := NewMat64(2, 2, []float64{
+	actual := m1.Mul(m2)
+	expected, _ := NewMat64(2, 2, array.Array{
 		1, 2,
 		3, 4,
 	})
-	if !Equal(actual, expected) {
+	if !actual.Equal(expected) {
 		t.Fail()
 	}
 
 }
 
 func TestMul_4(t *testing.T) {
-	m1, _ := NewMat64(1, 2, []float64{1, 2})
-	m2, _ := NewMat64(2, 3, []float64{
+	m1, _ := NewMat64(1, 2, array.Array{1, 2})
+	m2, _ := NewMat64(2, 3, array.Array{
 		1, 1, 1,
 		2, 2, 2,
 	})
-	actual := Mul(m1, m2)
-	expected, _ := NewMat64(1, 3, []float64{5, 5, 5})
-	if !Equal(actual, expected) {
+	actual := m1.Mul(m2)
+	expected, _ := NewMat64(1, 3, array.Array{5, 5, 5})
+	if !actual.Equal(expected) {
 		t.Fail()
 	}
 }
 
 func TestAdd_1(t *testing.T) {
-	m1, _ := NewMat64(1, 2, []float64{1, 2})
-	m2, _ := NewMat64(1, 2, []float64{3, 4})
-	actual := Add(m1, m2)
-	expected, _ := NewMat64(1, 2, []float64{4, 6})
-	if !Equal(actual, expected) {
+	m1, _ := NewMat64(1, 2, array.Array{1, 2})
+	m2, _ := NewMat64(1, 2, array.Array{3, 4})
+	actual := m1.Add(m2)
+	expected, _ := NewMat64(1, 2, array.Array{4, 6})
+	if !actual.Equal(expected) {
 		t.Fail()
 	}
 }
 
 func TestAdd_2(t *testing.T) {
-	m1, _ := NewMat64(2, 2, []float64{
+	m1, _ := NewMat64(2, 2, array.Array{
 		1, 2,
 		3, 4,
 	})
-	m2, _ := NewMat64(2, 2, []float64{
+	m2, _ := NewMat64(2, 2, array.Array{
 		3, 4,
 		4, 5,
 	})
-	actual := Add(m1, m2)
-	expected, _ := NewMat64(2, 2, []float64{
+	actual := m1.Add(m2)
+	expected, _ := NewMat64(2, 2, array.Array{
 		4, 6,
 		7, 9,
 	})
-	if !Equal(actual, expected) {
+	if !actual.Equal(expected) {
 		t.Fail()
 	}
 }

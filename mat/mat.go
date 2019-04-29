@@ -26,7 +26,7 @@ func (m *Mat64) Element(r int, c int) float64 {
 	return m.Array[index]
 }
 
-func NewMat64(row int, column int, array []float64) (*Mat64, error) {
+func NewMat64(row int, column int, array array.Array) (*Mat64, error) {
 	if row == 0 || column == 0 {
 		return nil, errors.New("row/columns is zero.")
 	}
@@ -37,7 +37,7 @@ func NewMat64(row int, column int, array []float64) (*Mat64, error) {
 	}, nil
 }
 
-func Equal(m1 *Mat64, m2 *Mat64) bool {
+func (m1 *Mat64) Equal(m2 *Mat64) bool {
 	if m1.Rows == m2.Rows &&
 		m1.Columns == m2.Columns &&
 		m1.Array.Equal(m2.Array) {
@@ -46,7 +46,7 @@ func Equal(m1 *Mat64, m2 *Mat64) bool {
 	return false
 }
 
-func Mul(m1 *Mat64, m2 *Mat64) *Mat64 {
+func (m1 *Mat64) Mul(m2 *Mat64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Rows {
 		return nil
@@ -67,7 +67,7 @@ func Mul(m1 *Mat64, m2 *Mat64) *Mat64 {
 	}
 }
 
-func Add(m1 *Mat64, m2 *Mat64) *Mat64 {
+func (m1 *Mat64) Add(m2 *Mat64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Columns && m1.Rows != m2.Rows {
 		return nil
@@ -87,7 +87,7 @@ func Add(m1 *Mat64, m2 *Mat64) *Mat64 {
 	}
 }
 
-func MulScalar(a float64, m *Mat64) *Mat64 {
+func (m *Mat64) MultiAll(a float64) *Mat64 {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	mat := make([]float64, m.Rows*m.Columns)
 	for r := 0; r < m.Rows; r++ {
@@ -132,5 +132,3 @@ func Relu(m *Mat64) *Mat64 {
 		Columns: m.Columns,
 	}
 }
-
-
