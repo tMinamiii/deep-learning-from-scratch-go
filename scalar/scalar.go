@@ -1,4 +1,4 @@
-package num
+package scalar
 
 import (
 	"math"
@@ -27,4 +27,12 @@ func StepFunction(x float64) int {
 func NumericalDiff(f func(float64) float64, x float64) float64 {
 	h := 1e-4
 	return (f(x+h) - f(x-h)) / (2 * h)
+}
+
+func function1(x float64) float64 {
+	return (0.01 * x * x) + 0.1*x
+}
+
+func function2(x []float64) float64 {
+	return x[0]*x[0] + x[1]*x[1]
 }

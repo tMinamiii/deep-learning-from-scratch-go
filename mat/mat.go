@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/naronA/zero_deeplearning/array"
-	"github.com/naronA/zero_deeplearning/num"
+	"github.com/naronA/zero_deeplearning/scalar"
 )
 
 type Mat64 struct {
@@ -117,7 +117,7 @@ func Sigmoid(m *Mat64) *Mat64 {
 	for r := 0; r < m.Rows; r++ {
 		for c := 0; c < m.Columns; c++ {
 			index := r*m.Columns + c
-			mat[index] = num.Sigmoid(m.Element(r, c))
+			mat[index] = scalar.Sigmoid(m.Element(r, c))
 		}
 	}
 	return &Mat64{
@@ -132,7 +132,7 @@ func Relu(m *Mat64) *Mat64 {
 	for r := 0; r < m.Rows; r++ {
 		for c := 0; c < m.Columns; c++ {
 			index := r*m.Columns + c
-			mat[index] = num.Relu(m.Element(r, c))
+			mat[index] = scalar.Relu(m.Element(r, c))
 		}
 	}
 	return &Mat64{

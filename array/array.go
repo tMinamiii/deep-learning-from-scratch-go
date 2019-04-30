@@ -3,7 +3,7 @@ package array
 import (
 	"math"
 
-	"github.com/naronA/zero_deeplearning/num"
+	"github.com/naronA/zero_deeplearning/scalar"
 )
 
 type Array []float64
@@ -25,6 +25,25 @@ func (x1 Array) Equal(x2 Array) bool {
 		}
 	}
 	return true
+}
+
+func (x1 Array) NotEqual(x2 Array) bool {
+	return !x1.Equal(x2)
+}
+func Zeros(n int) Array {
+	zeros := make(Array, n)
+	for i := range zeros {
+		zeros[i] = 0
+	}
+	return zeros
+}
+
+func ZerosLike(x Array) Array {
+	zeros := make(Array, len(x))
+	for i := range zeros {
+		zeros[i] = 0
+	}
+	return zeros
 }
 
 func (x1 Array) Pow(x2 float64) Array {
@@ -122,7 +141,7 @@ func Sum(ary Array) float64 {
 func Relu(x Array) Array {
 	result := make(Array, len(x))
 	for i, v := range x {
-		result[i] = num.Relu(v)
+		result[i] = scalar.Relu(v)
 	}
 	return result
 }
@@ -130,7 +149,7 @@ func Relu(x Array) Array {
 func Sigmoid(x Array) Array {
 	result := make(Array, len(x))
 	for i, v := range x {
-		result[i] = num.Sigmoid(v)
+		result[i] = scalar.Sigmoid(v)
 	}
 	return result
 }
@@ -138,7 +157,7 @@ func Sigmoid(x Array) Array {
 func StepFunction(x []float64) []int {
 	result := make([]int, len(x))
 	for i, v := range x {
-		result[i] = num.StepFunction(v)
+		result[i] = scalar.StepFunction(v)
 	}
 	return result
 }
@@ -190,3 +209,39 @@ func CrossEntropyError(y, t Array) float64 {
 	return -Sum(log.Multi(t))
 }
 
+func NumericalDiff(f func(Array) float64, x Array) Array {
+	h := 1e-4
+	grad := ZerosLike(x)
+
+	for idx := range x {
+		tmpVal := x[idx]
+		// f(x+h)の計算
+		x[idx] = tmpVal + h
+		fxh1 := f(x)
+
+		// f(x+h)の計算
+		x[idx] = tmpVal - h
+		fxh2 := f(x)
+
+		grad[idx] = (fxh1 - fxh2) / (2 * h)
+		x[idx] = tmpVal
+	}
+	return grad
+}
+
+func GradientDescent(f func(Array) float64, initX Array, lr float64, stepNum int) Array {
+	x := initX
+	for i := 0; i < stepNum; i++ {
+		grad := NumericalDiff(f, x)
+		x = grad.MultiAll(lr).Sub(x)
+	}
+	return x
+}
+
+func function1(x Array) float64 {
+	return (0.01 * x[0] * x[0]) + 0.1*x[0]
+}
+
+func function2(x Array) float64 {
+	return x[0]*x[0] + x[1]*x[1]
+}

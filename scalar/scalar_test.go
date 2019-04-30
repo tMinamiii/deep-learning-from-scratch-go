@@ -1,4 +1,4 @@
-package num
+package scalar
 
 import (
 	"log"
@@ -54,12 +54,8 @@ func TestStepFunction(t *testing.T) {
 	}
 }
 
-func function(x float64) float64 {
-	return (0.01*x*x) + 0.1*x
-}
-
 func TestNumericalDiff1(t *testing.T) {
-	diff := NumericalDiff(function, 5)
+	diff := NumericalDiff(function1, 5)
 	if diff != 0.1999999999990898 {
 		log.Println(diff)
 		t.Fail()
@@ -67,9 +63,14 @@ func TestNumericalDiff1(t *testing.T) {
 }
 
 func TestNumericalDiff2(t *testing.T) {
-	diff := NumericalDiff(function, 10)
+	diff := NumericalDiff(function1, 10)
 	if diff != 0.2999999999997449 {
 		log.Println(diff)
 		t.Fail()
 	}
+}
+
+func TestGradientDescent(t *testing.T) {
+	//initX := []float64{-3.0 , 4.0}
+	//GradientDescent()
 }

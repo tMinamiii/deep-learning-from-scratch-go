@@ -5,7 +5,22 @@ import (
 
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/mnist"
 )
+
+type SimpleNet struct {
+	W *mat.Mat64
+}
+
+func (sn *SimpleNet) Predict(x *mat.Mat64) *mat.Mat64 {
+	return x.Dot(sn.W)
+}
+
+func (sn *SimpleNet) Loss(x *mat.Mat64, t array.Array) float64 {
+	z := sn.Predict(x)
+	y := array.Softmax(z.Array)
+	return array.CrossEntropyError(y, t)
+}
 
 func initNetwork() map[string]*mat.Mat64 {
 	network := map[string]*mat.Mat64{}
@@ -66,4 +81,9 @@ func main() {
 	})
 	y := forward(network, x)
 	fmt.Println(y)
+	train, _ := mnist.LoadMnist()
+	for i := 0; i < 30; i++ {
+		fmt.Println(train.Label[i])
+	}
+
 }

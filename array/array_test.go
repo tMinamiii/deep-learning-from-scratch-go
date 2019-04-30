@@ -132,3 +132,51 @@ func TestCrossEntropyError2(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestNumericalDiff1(t *testing.T) {
+	actual := NumericalDiff(function1, Array{5})
+	expected := Array{0.1999999999990898}
+	if actual.NotEqual(expected) {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
+
+func TestNumericalDiff2(t *testing.T) {
+	actual := NumericalDiff(function1, Array{10})
+	expected := Array{0.2999999999997449}
+	if actual.NotEqual(expected) {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
+
+func TestGradientDescent1(t *testing.T) {
+	initX := []float64{-3.0, 4.0}
+	actual := GradientDescent(function2, initX, 0.1, 100)
+	expected := Array{-6.111107928998789e-10, 8.148143905314271e-10}
+	if actual.NotEqual(expected) {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
+
+func TestGradientDescent2(t *testing.T) {
+	initX := []float64{-3.0, 4.0}
+	actual := GradientDescent(function2, initX, 10.0, 100)
+	expected := Array{-2.5898374737328363e+13, -1.2952486168965398e+12}
+	if actual.NotEqual(expected) {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
+
+func TestGradientDescent3(t *testing.T) {
+	initX := []float64{-3.0, 4.0}
+	actual := GradientDescent(function2, initX, 1e-10, 100)
+	expected := Array{-2.999999939999995, 3.9999999199999934}
+	if actual.NotEqual(expected) {
+		log.Println(actual, expected)
+		t.Fail()
+	}
+}
