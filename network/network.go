@@ -1,15 +1,18 @@
-package nn
+package network
 
 import (
-	"fmt"
-
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/mat"
-	"github.com/naronA/zero_deeplearning/mnist"
 )
 
 type SimpleNet struct {
 	W *mat.Mat64
+}
+
+func NewSimpleNet(weight *mat.Mat64) *SimpleNet {
+	return &SimpleNet{
+		W: weight,
+	}
 }
 
 func (sn *SimpleNet) Predict(x *mat.Mat64) *mat.Mat64 {
@@ -22,7 +25,11 @@ func (sn *SimpleNet) Loss(x *mat.Mat64, t array.Array) float64 {
 	return array.CrossEntropyError(y, t)
 }
 
-func initNetwork() map[string]*mat.Mat64 {
+type BasicNetwork struct {
+	Network map[string]*mat.Mat64
+}
+
+func NewBasicNetwork() *BasicNetwork {
 	network := map[string]*mat.Mat64{}
 
 	network["W1"], _ = mat.NewMat64(2, 3, array.Array{
@@ -47,18 +54,18 @@ func initNetwork() map[string]*mat.Mat64 {
 	network["b3"], _ = mat.NewMat64(1, 2, array.Array{
 		0.1, 0.2,
 	})
-
-	return network
-
+	return &BasicNetwork{
+		Network: network,
+	}
 }
 
-func forward(network map[string]*mat.Mat64, x *mat.Mat64) array.Array {
-	W1 := network["W1"]
-	W2 := network["W2"]
-	W3 := network["W3"]
-	b1 := network["b1"]
-	b2 := network["b2"]
-	b3 := network["b3"]
+func (bn *BasicNetwork) Forward(x *mat.Mat64) array.Array {
+	W1 := bn.Network["W1"]
+	W2 := bn.Network["W2"]
+	W3 := bn.Network["W3"]
+	b1 := bn.Network["b1"]
+	b2 := bn.Network["b2"]
+	b3 := bn.Network["b3"]
 
 	mul1 := x.Mul(W1)
 	a1 := mul1.Add(b1)
@@ -72,18 +79,4 @@ func forward(network map[string]*mat.Mat64, x *mat.Mat64) array.Array {
 	a3 := mul3.Add(b3)
 	y := array.IdentityFunction(a3.Array)
 	return y
-}
-
-func main() {
-	network := initNetwork()
-	x, _ := mat.NewMat64(1, 2, array.Array{
-		1.0, 0.5,
-	})
-	y := forward(network, x)
-	fmt.Println(y)
-	train, _ := mnist.LoadMnist()
-	for i := 0; i < 30; i++ {
-		fmt.Println(train.Label[i])
-	}
-
 }
