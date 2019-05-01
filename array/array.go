@@ -1,6 +1,7 @@
 package array
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/naronA/zero_deeplearning/scalar"
@@ -30,6 +31,7 @@ func (x1 Array) Equal(x2 Array) bool {
 func (x1 Array) NotEqual(x2 Array) bool {
 	return !x1.Equal(x2)
 }
+
 func Zeros(n int) Array {
 	zeros := make(Array, n)
 	for i := range zeros {
@@ -209,10 +211,11 @@ func CrossEntropyError(y, t Array) float64 {
 	return -Sum(log.Multi(t))
 }
 
-func NumericalDiff(f func(Array) float64, x Array) Array {
+func NumericalGradient(f func(Array) float64, x Array) Array {
 	h := 1e-4
 	grad := ZerosLike(x)
 
+	fmt.Println(x)
 	for idx := range x {
 		tmpVal := x[idx]
 		// f(x+h)の計算
@@ -226,13 +229,14 @@ func NumericalDiff(f func(Array) float64, x Array) Array {
 		grad[idx] = (fxh1 - fxh2) / (2 * h)
 		x[idx] = tmpVal
 	}
+
 	return grad
 }
 
 func GradientDescent(f func(Array) float64, initX Array, lr float64, stepNum int) Array {
 	x := initX
 	for i := 0; i < stepNum; i++ {
-		grad := NumericalDiff(f, x)
+		grad := NumericalGradient(f, x)
 		x = grad.MultiAll(lr).Sub(x)
 	}
 	return x

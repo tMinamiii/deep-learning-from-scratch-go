@@ -21,11 +21,9 @@ func runBasicNetwork() {
 		fmt.Println(train.Label[i])
 	}
 }
-func runSimplwNetwork() {
-	w, err := mat.NewMat64(2, 3, array.Array{
-		0.47355232, 0.9977393, 0.84668094,
-		0.85557411, 0.03563661, 0.69422093,
-	})
+
+func calcNetwork(wArray array.Array) float64 {
+	w, err := mat.NewMat64(2, 3, wArray)
 	if err != nil {
 		panic(err)
 	}
@@ -33,13 +31,22 @@ func runSimplwNetwork() {
 	if err != nil {
 		panic(err)
 	}
+
 	sn := network.NewSimpleNet(w)
-	p := sn.Predict(x)
-	fmt.Println(p)
+	// p := sn.Predict(x)
 	t := array.Array{0, 0, 1}
 	loss := sn.Loss(x, t)
-	fmt.Println(loss)
+	return loss
 }
+
 func main() {
-	runSimplwNetwork()
+	w, err := mat.NewMat64(2, 3, array.Array{
+		0.47355232, 0.9977393, 0.84668094,
+		0.85557411, 0.03563661, 0.69422093,
+	})
+	if err != nil {
+		panic(err)
+	}
+	r := mat.NumericalGradient(calcNetwork, w)
+	fmt.Println(r)
 }

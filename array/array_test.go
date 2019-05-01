@@ -134,7 +134,7 @@ func TestCrossEntropyError2(t *testing.T) {
 }
 
 func TestNumericalDiff1(t *testing.T) {
-	actual := NumericalDiff(function1, Array{5})
+	actual := NumericalGradient(function1, Array{5})
 	expected := Array{0.1999999999990898}
 	if actual.NotEqual(expected) {
 		log.Println(actual, expected)
@@ -143,7 +143,7 @@ func TestNumericalDiff1(t *testing.T) {
 }
 
 func TestNumericalDiff2(t *testing.T) {
-	actual := NumericalDiff(function1, Array{10})
+	actual := NumericalGradient(function1, Array{10})
 	expected := Array{0.2999999999997449}
 	if actual.NotEqual(expected) {
 		log.Println(actual, expected)

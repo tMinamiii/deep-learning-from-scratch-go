@@ -2,6 +2,7 @@ package mat
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/scalar"
@@ -26,7 +27,59 @@ func (m *Mat64) Element(r int, c int) float64 {
 	return m.Array[index]
 }
 
+func (m *Mat64) SliceRow(r int) array.Array {
+	slice := make(array.Array, m.Columns)
+	for i := 0; i < len(slice); i++ {
+		slice[i] = m.Array[i+r*m.Columns]
+	}
+	return slice
+}
+
+func (m *Mat64) String() string {
+	str := "[\n"
+	for i := 0; i < m.Rows; i++ {
+		str += fmt.Sprintf("  %v,\n", m.SliceRow(i))
+	}
+	str += "]"
+	return str
+}
+
+func Zeros(rows int, cols int) *Mat64 {
+	zeros := make(array.Array, rows*cols)
+	for i := range zeros {
+		zeros[i] = 0
+	}
+	mat, err := NewMat64(rows, cols, zeros)
+	if err != nil {
+		panic(err)
+	}
+	return mat
+}
+
+func ZerosLike(x *Mat64) *Mat64 {
+	zeros := make(array.Array, x.Rows*x.Columns)
+	for i := range zeros {
+		zeros[i] = 0
+	}
+	mat, err := NewMat64(x.Rows, x.Columns, zeros)
+	if err != nil {
+		panic(err)
+	}
+	return mat
+}
+
 func NewMat64(row int, column int, array array.Array) (*Mat64, error) {
+	if row == 0 || column == 0 {
+		return nil, errors.New("row/columns is zero.")
+	}
+	return &Mat64{
+		Array:   array,
+		Rows:    row,
+		Columns: column,
+	}, nil
+}
+
+func NewRandMat64(row int, column int) (*Mat64, error) {
 	if row == 0 || column == 0 {
 		return nil, errors.New("row/columns is zero.")
 	}
@@ -159,4 +212,10 @@ func CrossEntropyError(y *Mat64, t *Mat64) float64 {
 	batchSize := y.Columns
 	mul := Log(y).Mul(t)
 	return -Sum(mul) / float64(batchSize)
+}
+
+func NumericalGradient(f func(array.Array) float64, x *Mat64) *Mat64 {
+	grad := array.NumericalGradient(f, x.Array)
+	mat, _ := NewMat64(x.Rows, x.Columns, grad)
+	return mat
 }
