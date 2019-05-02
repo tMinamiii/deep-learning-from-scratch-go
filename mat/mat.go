@@ -3,7 +3,6 @@ package mat
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/scalar"
@@ -23,12 +22,7 @@ func (m *Matrix) Shape() (int, int) {
 }
 
 func (m *Matrix) Element(r int, c int) float64 {
-	index := r*m.Columns + c
-	if len(m.Array) <= index {
-		log.Println(len(m.Array), index)
-		log.Printf("Row: %d / Column: %d / Index: %d\n", r, c, index)
-	}
-	return m.Array[index]
+	return m.Array[r*m.Columns+c]
 }
 
 func (m *Matrix) SliceRow(r int) array.Array {
@@ -117,17 +111,21 @@ func (m1 *Matrix) Dot(m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
-	mat := make([]float64, m1.Rows*m2.Columns)
-	for r := 0; r < m1.Rows; r++ {
+	arys := make([]array.Array, m1.Columns)
+	for i := 0; i < m1.Columns; i++ {
+		arys[i] = make(array.Array, m1.Rows*m2.Columns)
 		for c := 0; c < m2.Columns; c++ {
-			for i := 0; i < m1.Columns; i++ {
-				index := r*m2.Columns + c
-				mat[index] += m1.Element(r, i) * m2.Element(i, c)
+			for r := 0; r < m1.Rows; r++ {
+				arys[i][r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
 			}
 		}
 	}
+	sum := array.Zeros(m1.Rows * m2.Columns)
+	for _, ary := range arys {
+		sum = sum.Add(ary)
+	}
 	return &Matrix{
-		Array:   mat,
+		Array:   sum,
 		Rows:    m1.Rows,
 		Columns: m2.Columns,
 	}
@@ -161,7 +159,6 @@ func (m1 *Matrix) Sub(m2 *Matrix) *Matrix {
 		Columns: m1.Columns,
 	}
 }
-
 
 func (m1 *Matrix) Add(m2 *Matrix) *Matrix {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない

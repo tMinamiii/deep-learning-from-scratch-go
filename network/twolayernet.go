@@ -1,8 +1,6 @@
 package network
 
 import (
-	"fmt"
-
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/mat"
 )
@@ -36,16 +34,22 @@ func (tln *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 	W2 := tln.Params["W2"]
 	b2 := tln.Params["b2"]
 
-	a1 := x.Dot(W1).AddBroadCast(b1)
+	// start := time.Now()
+	dota1 := x.Dot(W1)
+	a1 := dota1.AddBroadCast(b1)
 	z1 := mat.Sigmoid(a1)
 	a2 := z1.Dot(W2).AddBroadCast(b2)
 	y := mat.Softmax(a2)
+	// end := time.Now()
+	// fmt.Println(end.Sub(start))
+
 	return y
 }
 
 func (tln *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
 	y := tln.Predict(x)
-	return mat.CrossEntropyError(y, t)
+	cee := mat.CrossEntropyError(y, t)
+	return cee
 }
 
 func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
@@ -56,7 +60,7 @@ func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	r, _ := x.Shape()
 	for i, v := range yMax {
 		if v == tMax[i] {
-			sum += float64(v)
+			sum += 1.0
 		}
 	}
 	accuracy := sum / float64(r)
@@ -68,13 +72,13 @@ func (tln *TwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matr
 		return tln.Loss(x, t)
 	}
 	grads := map[string]*mat.Matrix{}
-	fmt.Println("calc W1")
+	// fmt.Println("calc W1")
 	grads["W1"] = mat.NumericalGradient(lossW, tln.Params["W1"])
-	fmt.Println("calc b1")
+	// fmt.Println("calc b1")
 	grads["b1"] = mat.NumericalGradient(lossW, tln.Params["b1"])
-	fmt.Println("calc W2")
+	// fmt.Println("calc W2")
 	grads["W2"] = mat.NumericalGradient(lossW, tln.Params["W2"])
-	fmt.Println("calc b2")
+	// fmt.Println("calc b2")
 	grads["b2"] = mat.NumericalGradient(lossW, tln.Params["b2"])
 	return grads
 }

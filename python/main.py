@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 
 from common.functions import cross_entropy_error, sigmoid, softmax
@@ -23,8 +25,12 @@ class TwoLayerNet:
         return y
 
     def loss(self, x, t):
+        start = time.time()
         y = self.predict(x)
-        return cross_entropy_error(y, t)
+        cee = cross_entropy_error(y, t)
+        end = time.time()
+        print((end-start) * 1000)
+        return cee
 
     def accuracy(self, x, t):
         y = self.predict(x)
