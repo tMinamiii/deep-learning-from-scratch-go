@@ -1,6 +1,8 @@
 package network
 
 import (
+	"fmt"
+
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/mat"
 )
@@ -66,9 +68,13 @@ func (tln *TwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matr
 		return tln.Loss(x, t)
 	}
 	grads := map[string]*mat.Matrix{}
+	fmt.Println("calc W1")
 	grads["W1"] = mat.NumericalGradient(lossW, tln.Params["W1"])
+	fmt.Println("calc b1")
 	grads["b1"] = mat.NumericalGradient(lossW, tln.Params["b1"])
+	fmt.Println("calc W2")
 	grads["W2"] = mat.NumericalGradient(lossW, tln.Params["W2"])
+	fmt.Println("calc b2")
 	grads["b2"] = mat.NumericalGradient(lossW, tln.Params["b2"])
 	return grads
 }

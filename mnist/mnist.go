@@ -7,6 +7,8 @@ import (
 	"image/color"
 	"io"
 	"os"
+
+	"github.com/naronA/zero_deeplearning/array"
 )
 
 const (
@@ -20,8 +22,8 @@ type MnistDataSet struct {
 	Rows      int
 	Cols      int
 	RawImages []RawImage
-	Images    []FloatImage
-	Labels    []MnistLabel
+	Images    []array.Array
+	Labels    []array.Array
 }
 
 func LoadMnist() (*MnistDataSet, *MnistDataSet) {
@@ -68,15 +70,13 @@ func LoadMnist() (*MnistDataSet, *MnistDataSet) {
 	return train, test
 }
 
-type MnistLabel []float64
-
-func oneHot(n uint8) []float64 {
+func oneHot(n uint8) array.Array {
 	oneHot := []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	oneHot[n] = 1
 	return oneHot
 }
 
-func readLabels(file *os.File) []MnistLabel {
+func readLabels(file *os.File) []array.Array {
 	r, err := gzip.NewReader(file)
 	if err != nil {
 		return nil
@@ -97,7 +97,7 @@ func readLabels(file *os.File) []MnistLabel {
 		return nil
 	}
 	// N個のラベルデータが含まれているのでN要素の配列をつくる
-	labels := make([]MnistLabel, n)
+	labels := make([]array.Array, n)
 	for i := 0; i < int(n); i++ {
 		var num uint8
 		if err := binary.Read(r, binary.BigEndian, &num); err != nil {
@@ -110,7 +110,6 @@ func readLabels(file *os.File) []MnistLabel {
 	return labels
 }
 
-type FloatImage []float64
 type RawImage []byte
 
 func (img RawImage) ColorModel() color.Model {
@@ -128,7 +127,7 @@ func (img RawImage) Bounds() image.Rectangle {
 	}
 }
 
-func readImages(file *os.File) (int, int, []RawImage, []FloatImage) {
+func readImages(file *os.File) (int, int, []RawImage, []array.Array) {
 	r, err := gzip.NewReader(file)
 	if err != nil {
 		panic(err)
@@ -158,17 +157,17 @@ func readImages(file *os.File) (int, int, []RawImage, []FloatImage) {
 	}
 	// N個のラベルデータが含まれているのでN要素の配列をつくる
 	imgs := make([]RawImage, n)
-	fimgs := make([]FloatImage, n)
+	fimgs := make([]array.Array, n)
 	m := int(nrow * ncol)
 	for i := 0; i < int(n); i++ {
 		imgs[i] = make(RawImage, m)
-		fimgs[i] = make(FloatImage, m)
+		fimgs[i] = make(array.Array, m)
 		m_, err := io.ReadFull(r, imgs[i])
 		if err != nil {
 			panic(err)
 		}
 		if m_ != int(m) {
-			return 0, 0, nil
+			return 0, 0, nil, nil
 		}
 
 		for j, b := range imgs[i] {

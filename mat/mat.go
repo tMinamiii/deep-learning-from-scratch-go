@@ -142,6 +142,27 @@ func (m1 *Matrix) Mul(m2 *Matrix) *Matrix {
 	}
 }
 
+func (m1 *Matrix) Sub(m2 *Matrix) *Matrix {
+	// 左辺の行数と、右辺の列数があっていないの掛け算できない
+	if m1.Columns != m2.Columns && m1.Rows != m2.Rows {
+		return nil
+	}
+
+	mat := make([]float64, m1.Rows*m1.Columns)
+	for r := 0; r < m1.Rows; r++ {
+		for c := 0; c < m2.Columns; c++ {
+			index := r*m1.Columns + c
+			mat[index] = m1.Element(r, c) - m2.Element(r, c)
+		}
+	}
+	return &Matrix{
+		Array:   mat,
+		Rows:    m1.Rows,
+		Columns: m1.Columns,
+	}
+}
+
+
 func (m1 *Matrix) Add(m2 *Matrix) *Matrix {
 	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Columns && m1.Rows != m2.Rows {
