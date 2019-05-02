@@ -31,7 +31,7 @@ func TestSimpleNetwork(t *testing.T) {
 		fmt.Println(actualPredict, expectedPredict)
 		t.Fail()
 	}
-	ta := array.Array{0, 0, 1}
+	ta, _ := mat.NewMat64(1, 3, array.Array{0, 0, 1})
 	actualLoss := sn.Loss(x, ta)
 	expectedLoss := 0.9280682857864075
 	if actualLoss != expectedLoss {
@@ -52,7 +52,7 @@ func calcNetwork(wArray array.Array) float64 {
 	}
 
 	sn := NewSimpleNet(w)
-	t := array.Array{0, 0, 1}
+	t, _ := mat.NewMat64(1, 3, array.Array{0, 0, 1})
 	return sn.Loss(x, t)
 }
 

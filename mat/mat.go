@@ -3,6 +3,7 @@ package mat
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/scalar"
@@ -23,7 +24,10 @@ func (m *Mat64) Shape() (int, int) {
 
 func (m *Mat64) Element(r int, c int) float64 {
 	index := r*m.Columns + c
-	// log.Printf("Row: %d / Column: %d / Index: %d\n", r, c, index)
+	if len(m.Array) <= index {
+		log.Println(len(m.Array), index)
+		log.Printf("Row: %d / Column: %d / Index: %d\n", r, c, index)
+	}
 	return m.Array[index]
 }
 
@@ -110,15 +114,14 @@ func (m1 *Mat64) Equal(m2 *Mat64) bool {
 }
 
 func (m1 *Mat64) Dot(m2 *Mat64) *Mat64 {
-	// 左辺の行数と、右辺の列数があっていないの掛け算できない
 	if m1.Columns != m2.Rows {
 		return nil
 	}
 	mat := make([]float64, m1.Rows*m2.Columns)
-	for i := 0; i < m1.Columns; i++ {
-		for r := 0; r < m1.Rows; r++ {
-			for c := 0; c < m2.Columns; c++ {
-				index := r*m1.Columns + c
+	for r := 0; r < m1.Rows; r++ {
+		for c := 0; c < m2.Columns; c++ {
+			for i := 0; i < m1.Columns; i++ {
+				index := r*m2.Columns + c
 				mat[index] += m1.Element(r, i) * m2.Element(i, c)
 			}
 		}
@@ -156,6 +159,41 @@ func (m1 *Mat64) Add(m2 *Mat64) *Mat64 {
 		Array:   mat,
 		Rows:    m1.Rows,
 		Columns: m1.Columns,
+	}
+}
+
+func (m1 *Mat64) AddBroadCast(m2 *Mat64) *Mat64 {
+	// 左辺の行数と、右辺の列数があっていないの掛け算できない
+	if m1.Columns != m2.Columns {
+		return nil
+	}
+
+	mat := make([]float64, m1.Rows*m1.Columns)
+	for r := 0; r < m1.Rows; r++ {
+		for c := 0; c < m1.Columns; c++ {
+			index := r*m1.Columns + c
+			mat[index] = m1.Element(r, c) + m2.Element(0, c)
+		}
+	}
+	return &Mat64{
+		Array:   mat,
+		Rows:    m1.Rows,
+		Columns: m1.Columns,
+	}
+}
+func (m *Mat64) AddAll(a float64) *Mat64 {
+
+	mat := make([]float64, m.Rows*m.Columns)
+	for r := 0; r < m.Rows; r++ {
+		for c := 0; c < m.Columns; c++ {
+			index := r*m.Columns + c
+			mat[index] = m.Element(r, c) + a
+		}
+	}
+	return &Mat64{
+		Array:   mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
 	}
 }
 
@@ -218,10 +256,36 @@ func Sum(m *Mat64) float64 {
 	return array.Sum(m.Array)
 }
 
-func CrossEntropyError(y *Mat64, t *Mat64) float64 {
-	batchSize := y.Columns
-	mul := Log(y).Mul(t)
-	return -Sum(mul) / float64(batchSize)
+func ArgMax(x *Mat64) []int {
+	r := make([]int, x.Rows)
+	for i := 0; i < x.Rows; i++ {
+		row := x.SliceRow(i)
+		r[i] = array.ArgMax(row)
+	}
+	return r
+}
+
+func Softmax(x *Mat64) *Mat64 {
+	m := array.Array{}
+	for i := 0; i < x.Rows; i++ {
+		xRow := x.SliceRow(i)
+		m = append(m, array.Softmax(xRow)...)
+	}
+	r, err := NewMat64(x.Rows, x.Columns, m)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func CrossEntropyError(y, t *Mat64) float64 {
+	r := make(array.Array, y.Rows)
+	for i := 0; i < y.Rows; i++ {
+		yRow := y.SliceRow(i)
+		tRow := t.SliceRow(i)
+		r[i] = array.CrossEntropyError(yRow, tRow)
+	}
+	return array.Sum(r) / float64(y.Rows)
 }
 
 func NumericalGradient(f func(array.Array) float64, x *Mat64) *Mat64 {

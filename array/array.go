@@ -1,9 +1,9 @@
 package array
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
+	"time"
 
 	"github.com/naronA/zero_deeplearning/scalar"
 )
@@ -34,6 +34,7 @@ func (x1 Array) NotEqual(x2 Array) bool {
 }
 
 func Randn(n int) Array {
+	rand.Seed(time.Now().UnixNano())
 	zeros := make(Array, n)
 	for i := range zeros {
 		zeros[i] = rand.NormFloat64()
@@ -173,6 +174,18 @@ func StepFunction(x []float64) []int {
 	return result
 }
 
+func ArgMax(x Array) int {
+	max := math.SmallestNonzeroFloat64
+	maxIndex := 0
+	for i, v := range x {
+		if max != math.Max(max, v) {
+			maxIndex = i
+			max = math.Max(max, v)
+		}
+	}
+	return maxIndex
+}
+
 func Max(x Array) float64 {
 	max := math.SmallestNonzeroFloat64
 	for _, v := range x {
@@ -224,7 +237,6 @@ func NumericalGradient(f func(Array) float64, x Array) Array {
 	h := 1e-4
 	grad := ZerosLike(x)
 
-	fmt.Println(x)
 	for idx := range x {
 		tmpVal := x[idx]
 		// f(x+h)の計算

@@ -1,7 +1,6 @@
 package network
 
 import (
-	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/mat"
 )
 
@@ -19,8 +18,8 @@ func (sn *SimpleNet) Predict(x *mat.Mat64) *mat.Mat64 {
 	return x.Dot(sn.W)
 }
 
-func (sn *SimpleNet) Loss(x *mat.Mat64, t array.Array) float64 {
+func (sn *SimpleNet) Loss(x, t *mat.Mat64) float64 {
 	z := sn.Predict(x)
-	y := array.Softmax(z.Array)
-	return array.CrossEntropyError(y, t)
+	y := mat.Softmax(z)
+	return mat.CrossEntropyError(y, t)
 }

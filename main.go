@@ -5,22 +5,8 @@ import (
 
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/mat"
-	"github.com/naronA/zero_deeplearning/mnist"
 	"github.com/naronA/zero_deeplearning/network"
 )
-
-func runBasicNetwork() {
-	network := network.NewBasicNetwork()
-	x, _ := mat.NewMat64(1, 2, array.Array{
-		1.0, 0.5,
-	})
-	y := network.Forward(x)
-	fmt.Println(y)
-	train, _ := mnist.LoadMnist()
-	for i := 0; i < 30; i++ {
-		fmt.Println(train.Label[i])
-	}
-}
 
 func calcNetwork(wArray array.Array) float64 {
 	w, err := mat.NewMat64(2, 3, wArray)
@@ -33,20 +19,24 @@ func calcNetwork(wArray array.Array) float64 {
 	}
 
 	sn := network.NewSimpleNet(w)
-	// p := sn.Predict(x)
-	t := array.Array{0, 0, 1}
-	loss := sn.Loss(x, t)
-	return loss
+	t, _ := mat.NewMat64(1, 3, array.Array{0, 0, 1})
+	return sn.Loss(x, t)
 }
 
 func main() {
-	w, err := mat.NewMat64(2, 3, array.Array{
-		0.47355232, 0.9977393, 0.84668094,
-		0.85557411, 0.03563661, 0.69422093,
-	})
-	if err != nil {
-		panic(err)
-	}
-	r := mat.NumericalGradient(calcNetwork, w)
-	fmt.Println(r)
+	net := network.NewTwoLayerNet(784, 100, 10, 0.01)
+	fmt.Println(net.Params["W1"].Shape())
+	fmt.Println(net.Params["b1"].Shape())
+	fmt.Println(net.Params["W2"].Shape())
+	fmt.Println(net.Params["b2"].Shape())
+	x, _ := mat.NewRandnMat64(100, 784) // ダミーの入力ラベル
+	t, _ := mat.NewRandnMat64(100, 10) // ダミーの正解ラベル
+	fmt.Println(x.Shape())
+	p := net.Predict(x)
+	fmt.Println(p)
+	grads := net.NumericalGradient(x, t)
+	fmt.Println(grads["W1"].Shape())
+	fmt.Println(grads["b1"].Shape())
+	fmt.Println(grads["W2"].Shape())
+	fmt.Println(grads["b2"].Shape())
 }
