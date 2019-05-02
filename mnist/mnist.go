@@ -17,8 +17,11 @@ const (
 )
 
 type MnistDataSet struct {
-	Images *MnistImage
-	Label  []MnistLabel
+	Rows      int
+	Cols      int
+	RawImages []RawImage
+	Images    []FloatImage
+	Labels    []MnistLabel
 }
 
 func LoadMnist() (*MnistDataSet, *MnistDataSet) {
@@ -44,21 +47,31 @@ func LoadMnist() (*MnistDataSet, *MnistDataSet) {
 	}
 	defer testLabelsFile.Close()
 
-	trainImages := readImages(trainImagesFile)
+	trainRows, trainColumns, trainImages, trainFImages := readImages(trainImagesFile)
 	trainLabels := readLabels(trainLabelsFile)
-	testImages := readImages(testImagesFile)
+	train := &MnistDataSet{
+		Rows:      trainRows,
+		Cols:      trainColumns,
+		RawImages: trainImages,
+		Images:    trainFImages,
+		Labels:    trainLabels,
+	}
+	testRows, testColumns, testImages, testFImages := readImages(testImagesFile)
 	testLabels := readLabels(testLabelsFile)
-	return &MnistDataSet{trainImages, trainLabels}, &MnistDataSet{testImages, testLabels}
-
+	test := &MnistDataSet{
+		Rows:      testRows,
+		Cols:      testColumns,
+		RawImages: testImages,
+		Images:    testFImages,
+		Labels:    testLabels,
+	}
+	return train, test
 }
 
-type MnistLabel struct {
-	number uint8
-	oneHot []uint8
-}
+type MnistLabel []float64
 
-func oneHot(n uint8) []uint8 {
-	oneHot := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+func oneHot(n uint8) []float64 {
+	oneHot := []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	oneHot[n] = 1
 	return oneHot
 }
@@ -90,12 +103,14 @@ func readLabels(file *os.File) []MnistLabel {
 		if err := binary.Read(r, binary.BigEndian, &num); err != nil {
 			return nil
 		}
-		labels[i].number = num
-		labels[i].oneHot = oneHot(num)
+		// labels[i].number = num
+		// labels[i].oneHot = oneHot(num)
+		labels[i] = oneHot(num)
 	}
 	return labels
 }
 
+type FloatImage []float64
 type RawImage []byte
 
 func (img RawImage) ColorModel() color.Model {
@@ -113,16 +128,10 @@ func (img RawImage) Bounds() image.Rectangle {
 	}
 }
 
-type MnistImage struct {
-	rows int
-	cols int
-	imgs []RawImage
-}
-
-func readImages(file *os.File) *MnistImage {
+func readImages(file *os.File) (int, int, []RawImage, []FloatImage) {
 	r, err := gzip.NewReader(file)
 	if err != nil {
-		return nil
+		panic(err)
 	}
 	defer r.Close()
 	var (
@@ -133,32 +142,38 @@ func readImages(file *os.File) *MnistImage {
 	)
 
 	if err := binary.Read(r, binary.BigEndian, &magic); err != nil {
-		return &MnistImage{0, 0, nil}
+		panic(err)
 	}
 	if magic != imageMagic {
-		return &MnistImage{0, 0, nil}
+		panic(err)
 	}
 	if err := binary.Read(r, binary.BigEndian, &n); err != nil {
-		return &MnistImage{0, 0, nil}
+		panic(err)
 	}
 	if err := binary.Read(r, binary.BigEndian, &nrow); err != nil {
-		return &MnistImage{0, 0, nil}
+		panic(err)
 	}
 	if err := binary.Read(r, binary.BigEndian, &ncol); err != nil {
-		return &MnistImage{0, 0, nil}
+		panic(err)
 	}
 	// N個のラベルデータが含まれているのでN要素の配列をつくる
 	imgs := make([]RawImage, n)
+	fimgs := make([]FloatImage, n)
 	m := int(nrow * ncol)
 	for i := 0; i < int(n); i++ {
-		imgs[1] = make(RawImage, m)
+		imgs[i] = make(RawImage, m)
+		fimgs[i] = make(FloatImage, m)
 		m_, err := io.ReadFull(r, imgs[i])
 		if err != nil {
-			return &MnistImage{0, 0, nil}
+			panic(err)
 		}
 		if m_ != int(m) {
-			return &MnistImage{0, 0, nil}
+			return 0, 0, nil
+		}
+
+		for j, b := range imgs[i] {
+			fimgs[i][j] = float64(b)
 		}
 	}
-	return &MnistImage{int(nrow), int(ncol), imgs}
+	return int(nrow), int(ncol), imgs, fimgs
 }

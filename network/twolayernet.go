@@ -6,12 +6,12 @@ import (
 )
 
 type TwoLayerNet struct {
-	Params map[string]*mat.Mat64
+	Params map[string]*mat.Matrix
 }
 
 // NewTwoLayerNet は、TwoLayerNetのコンストラクタ
 func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64) *TwoLayerNet {
-	params := map[string]*mat.Mat64{}
+	params := map[string]*mat.Matrix{}
 	W1, err := mat.NewRandnMat64(inputSize, hiddenSize)
 	if err != nil {
 		panic(err)
@@ -28,7 +28,7 @@ func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (tln *TwoLayerNet) Predict(x *mat.Mat64) *mat.Mat64 {
+func (tln *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 	W1 := tln.Params["W1"]
 	b1 := tln.Params["b1"]
 	W2 := tln.Params["W2"]
@@ -41,12 +41,12 @@ func (tln *TwoLayerNet) Predict(x *mat.Mat64) *mat.Mat64 {
 	return y
 }
 
-func (tln *TwoLayerNet) Loss(x, t *mat.Mat64) float64 {
+func (tln *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
 	y := tln.Predict(x)
 	return mat.CrossEntropyError(y, t)
 }
 
-func (tln *TwoLayerNet) Accuracy(x, t *mat.Mat64) float64 {
+func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	y := tln.Predict(x)
 	yMax := mat.ArgMax(y)
 	tMax := mat.ArgMax(t)
@@ -61,11 +61,11 @@ func (tln *TwoLayerNet) Accuracy(x, t *mat.Mat64) float64 {
 	return accuracy
 }
 
-func (tln *TwoLayerNet) NumericalGradient(x, t *mat.Mat64) map[string]*mat.Mat64 {
+func (tln *TwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	lossW := func(wArray array.Array) float64 {
 		return tln.Loss(x, t)
 	}
-	grads := map[string]*mat.Mat64{}
+	grads := map[string]*mat.Matrix{}
 	grads["W1"] = mat.NumericalGradient(lossW, tln.Params["W1"])
 	grads["b1"] = mat.NumericalGradient(lossW, tln.Params["b1"])
 	grads["W2"] = mat.NumericalGradient(lossW, tln.Params["W2"])

@@ -8,11 +8,11 @@ import (
 // BasicNetworkはゼロから作るディープラーニングのp64 Ch3.4.3の
 // ニューラルネットワーク
 type BasicNetwork struct {
-	Network map[string]*mat.Mat64
+	Network map[string]*mat.Matrix
 }
 
 func NewBasicNetwork() *BasicNetwork {
-	network := map[string]*mat.Mat64{}
+	network := map[string]*mat.Matrix{}
 
 	network["W1"], _ = mat.NewMat64(2, 3, array.Array{
 		0.1, 0.3, 0.5,
@@ -41,7 +41,7 @@ func NewBasicNetwork() *BasicNetwork {
 	}
 }
 
-func (bn *BasicNetwork) Forward(x *mat.Mat64) array.Array {
+func (bn *BasicNetwork) Forward(x *mat.Matrix) array.Array {
 	W1 := bn.Network["W1"]
 	W2 := bn.Network["W2"]
 	W3 := bn.Network["W3"]
