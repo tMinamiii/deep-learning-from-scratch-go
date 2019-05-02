@@ -3,6 +3,7 @@ package array
 import (
 	"fmt"
 	"math"
+	"math/rand"
 
 	"github.com/naronA/zero_deeplearning/scalar"
 )
@@ -30,6 +31,14 @@ func (x1 Array) Equal(x2 Array) bool {
 
 func (x1 Array) NotEqual(x2 Array) bool {
 	return !x1.Equal(x2)
+}
+
+func Randn(n int) Array {
+	zeros := make(Array, n)
+	for i := range zeros {
+		zeros[i] = rand.NormFloat64()
+	}
+	return zeros
 }
 
 func Zeros(n int) Array {

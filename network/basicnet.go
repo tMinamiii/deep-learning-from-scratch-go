@@ -5,26 +5,8 @@ import (
 	"github.com/naronA/zero_deeplearning/mat"
 )
 
-type SimpleNet struct {
-	W *mat.Mat64
-}
-
-func NewSimpleNet(weight *mat.Mat64) *SimpleNet {
-	return &SimpleNet{
-		W: weight,
-	}
-}
-
-func (sn *SimpleNet) Predict(x *mat.Mat64) *mat.Mat64 {
-	return x.Dot(sn.W)
-}
-
-func (sn *SimpleNet) Loss(x *mat.Mat64, t array.Array) float64 {
-	z := sn.Predict(x)
-	y := array.Softmax(z.Array)
-	return array.CrossEntropyError(y, t)
-}
-
+// BasicNetworkはゼロから作るディープラーニングのp64 Ch3.4.3の
+// ニューラルネットワーク
 type BasicNetwork struct {
 	Network map[string]*mat.Mat64
 }
@@ -67,15 +49,15 @@ func (bn *BasicNetwork) Forward(x *mat.Mat64) array.Array {
 	b2 := bn.Network["b2"]
 	b3 := bn.Network["b3"]
 
-	mul1 := x.Mul(W1)
+	mul1 := x.Dot(W1)
 	a1 := mul1.Add(b1)
 	z1 := mat.Sigmoid(a1)
 
-	mul2 := z1.Mul(W2)
+	mul2 := z1.Dot(W2)
 	a2 := mul2.Add(b2)
 	z2 := mat.Sigmoid(a2)
 
-	mul3 := z2.Mul(W3)
+	mul3 := z2.Dot(W3)
 	a3 := mul3.Add(b3)
 	y := array.IdentityFunction(a3.Array)
 	return y

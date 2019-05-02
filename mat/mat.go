@@ -79,15 +79,25 @@ func NewMat64(row int, column int, array array.Array) (*Mat64, error) {
 	}, nil
 }
 
-func NewRandMat64(row int, column int) (*Mat64, error) {
+func NewRandnMat64(row int, column int) (*Mat64, error) {
 	if row == 0 || column == 0 {
 		return nil, errors.New("row/columns is zero.")
 	}
+	array := array.Randn(row * column)
 	return &Mat64{
 		Array:   array,
 		Rows:    row,
 		Columns: column,
 	}, nil
+}
+
+func (m1 *Mat64) NotEqual(m2 *Mat64) bool {
+	if m1.Rows == m2.Rows &&
+		m1.Columns == m2.Columns &&
+		m1.Array.Equal(m2.Array) {
+		return false
+	}
+	return true
 }
 
 func (m1 *Mat64) Equal(m2 *Mat64) bool {
