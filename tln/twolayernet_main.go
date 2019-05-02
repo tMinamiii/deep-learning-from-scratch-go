@@ -54,6 +54,8 @@ func train() {
 	}()
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < ItersNum; i++ {
+
+		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		image := array.Array{}
 		label := array.Array{}
@@ -70,7 +72,9 @@ func train() {
 			net.Params[k] = net.Params[k].Sub(grad[k].MulAll(LearningRate))
 		}
 		loss := net.Loss(xBatch, tBatch)
-		fmt.Printf("loss = %v\n", loss)
+		end := time.Now()
+
+		fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
 		trainLossList = append(trainLossList, loss)
 
 		if i%iterPerEpoch == 0 {

@@ -3,6 +3,7 @@ package mat
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/scalar"
@@ -105,6 +106,40 @@ func (m1 *Matrix) Equal(m2 *Matrix) bool {
 		return true
 	}
 	return false
+}
+
+func (m1 *Matrix) DotGo(m2 *Matrix) *Matrix {
+	if m1.Columns != m2.Rows {
+		return nil
+	}
+	arys := make([]array.Array, m1.Columns)
+	wg := &sync.WaitGroup{}
+	ch := make(chan int)
+	for i := 0; i < m1.Columns; i++ {
+		wg.Add(1)
+		arys[i] = make(array.Array, m1.Rows*m2.Columns)
+		go func(ch chan int) {
+			defer wg.Done()
+			i := <-ch
+			for c := 0; c < m2.Columns; c++ {
+				for r := 0; r < m1.Rows; r++ {
+					arys[i][r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
+				}
+			}
+		}(ch)
+		ch <- i
+	}
+	wg.Wait()
+	sum := array.Zeros(m1.Rows * m2.Columns)
+	for _, ary := range arys {
+		sum = sum.Add(ary)
+	}
+	close(ch)
+	return &Matrix{
+		Array:   sum,
+		Rows:    m1.Rows,
+		Columns: m2.Columns,
+	}
 }
 
 func (m1 *Matrix) Dot(m2 *Matrix) *Matrix {
