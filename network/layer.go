@@ -37,9 +37,9 @@ type Relu struct {
 }
 
 func (r *Relu) forward(x float64) {
-	r.Mask = x <= 0
-	out := x
-	out[Mask] = 0
-	return out
+	// r.Mask = x <= 0
+	// out := x
+	// out[Mask] = 0
+	// return out
 }
 

@@ -44,17 +44,11 @@ func Randn(n int) Vector {
 
 func Zeros(n int) Vector {
 	zeros := make(Vector, n)
-	for i := range zeros {
-		zeros[i] = 0
-	}
 	return zeros
 }
 
 func ZerosLike(x Vector) Vector {
 	zeros := make(Vector, len(x))
-	for i := range zeros {
-		zeros[i] = 0
-	}
 	return zeros
 }
 
@@ -66,80 +60,88 @@ func (x1 Vector) Pow(x2 float64) Vector {
 	return result
 }
 
-func (x1 Vector) Add(x2 Vector) Vector {
-	if len(x1) != len(x2) {
-		return nil
+func (x1 Vector) Add(arg interface{}) Vector {
+	switch x2 := arg.(type) {
+	case Vector:
+		if len(x1) != len(x2) {
+			return nil
+		}
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] + x2[i]
+		}
+		return result
+	case float64:
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] + x2
+		}
+		return result
 	}
-	result := make(Vector, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] + x2[i]
-	}
-	return result
+	return nil
 }
 
-func (x1 Vector) Sub(x2 Vector) Vector {
-	if len(x1) != len(x2) {
-		return nil
+func (x1 Vector) Sub(arg interface{}) Vector {
+	switch x2 := arg.(type) {
+	case Vector:
+		if len(x1) != len(x2) {
+			return nil
+		}
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] - x2[i]
+		}
+		return result
+	case float64:
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] - x2
+		}
+		return result
 	}
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] - x2[i]
-	}
-	return result
+	return nil
 }
 
-func (x1 Vector) Multi(x2 Vector) Vector {
-	if len(x1) != len(x2) {
-		return nil
+func (x1 Vector) Mul(arg interface{}) Vector {
+	switch x2 := arg.(type) {
+	case Vector:
+		if len(x1) != len(x2) {
+			return nil
+		}
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] * x2[i]
+		}
+		return result
+	case float64:
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] * x2
+		}
+		return result
 	}
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] * x2[i]
-	}
-	return result
+	return nil
 }
 
-func (x1 Vector) Divide(x2 Vector) Vector {
-	if len(x1) != len(x2) {
-		return nil
+func (x1 Vector) Div(arg interface{}) Vector {
+	switch x2 := arg.(type) {
+	case Vector:
+		if len(x1) != len(x2) {
+			return nil
+		}
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] / x2[i]
+		}
+		return result
+	case float64:
+		result := make([]float64, len(x1))
+		for i := 0; i < len(x1); i++ {
+			result[i] = x1[i] / x2
+		}
+		return result
 	}
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] / x2[i]
-	}
-	return result
-}
-
-func (x1 Vector) AddAll(x2 float64) Vector {
-	result := make(Vector, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] + x2
-	}
-	return result
-}
-
-func (x1 Vector) SubAll(x2 float64) Vector {
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] - x2
-	}
-	return result
-}
-
-func (x1 Vector) MultiAll(x2 float64) Vector {
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = x1[i] * x2
-	}
-	return result
-}
-
-func (x Vector) DivideAll(y float64) Vector {
-	result := make(Vector, len(x))
-	for i, v := range x {
-		result[i] = v / y
-	}
-	return result
+	return nil
 }
 
 func Sum(ary Vector) float64 {
@@ -212,9 +214,9 @@ func Log(x Vector) Vector {
 
 func Softmax(x Vector) Vector {
 	c := Max(x)
-	expA := Exp(x.SubAll(c))
+	expA := Exp(x.Sub(c))
 	sumExpA := Sum(expA)
-	result := expA.DivideAll(sumExpA)
+	result := expA.Div(sumExpA)
 	return result
 }
 
@@ -229,8 +231,8 @@ func MeanSquaredError(y, t Vector) float64 {
 }
 
 func CrossEntropyError(y, t Vector) float64 {
-	log := Log(y.AddAll(delta))
-	return -Sum(log.Multi(t))
+	log := Log(y.Add(delta))
+	return -Sum(log.Mul(t))
 }
 
 func NumericalGradient(f func(Vector) float64, x Vector) Vector {
@@ -258,7 +260,7 @@ func GradientDescent(f func(Vector) float64, initX Vector, lr float64, stepNum i
 	x := initX
 	for i := 0; i < stepNum; i++ {
 		grad := NumericalGradient(f, x)
-		x = grad.MultiAll(lr).Sub(x)
+		x = grad.Mul(lr).Sub(x)
 	}
 	return x
 }

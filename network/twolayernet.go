@@ -1,8 +1,8 @@
 package network
 
 import (
-	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 type TwoLayerNet struct {
@@ -12,17 +12,17 @@ type TwoLayerNet struct {
 // NewTwoLayerNet は、TwoLayerNetのコンストラクタ
 func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64) *TwoLayerNet {
 	params := map[string]*mat.Matrix{}
-	W1, err := mat.NewRandnMat64(inputSize, hiddenSize)
+	W1, err := mat.NewRandnMatrix(inputSize, hiddenSize)
 	if err != nil {
 		panic(err)
 	}
-	W2, err := mat.NewRandnMat64(hiddenSize, outputSize)
+	W2, err := mat.NewRandnMatrix(hiddenSize, outputSize)
 	if err != nil {
 		panic(err)
 	}
-	params["W1"] = W1.MulAll(weightInitStd)
+	params["W1"] = W1.Mul(weightInitStd)
 	params["b1"] = mat.Zeros(1, hiddenSize)
-	params["W2"] = W2.MulAll(weightInitStd)
+	params["W2"] = W2.Mul(weightInitStd)
 	params["b2"] = mat.Zeros(1, outputSize)
 	return &TwoLayerNet{Params: params}
 }
@@ -36,9 +36,9 @@ func (tln *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 
 	// start := time.Now()
 	dota1 := x.Dot(W1)
-	a1 := dota1.AddBroadCast(b1)
+	a1 := dota1.Add(b1.Array)
 	z1 := mat.Sigmoid(a1)
-	a2 := z1.Dot(W2).AddBroadCast(b2)
+	a2 := z1.Dot(W2).Add(b2.Array)
 	y := mat.Softmax(a2)
 	// end := time.Now()
 	// fmt.Println(end.Sub(start))
@@ -68,7 +68,7 @@ func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 }
 
 func (tln *TwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
-	lossW := func(wvec vec.vec) float64 {
+	lossW := func(wvec vec.Vector) float64 {
 		return tln.Loss(x, t)
 	}
 	grads := map[string]*mat.Matrix{}

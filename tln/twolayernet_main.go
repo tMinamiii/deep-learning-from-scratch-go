@@ -22,14 +22,14 @@ const (
 
 func MnistMatrix(set *mnist.MnistDataSet) (*mat.Matrix, *mat.Matrix) {
 	size := len(set.Labels)
-	image := vec.vec{}
-	label := vec.vec{}
+	image := vec.Vector{}
+	label := vec.Vector{}
 	for i := 0; i < size; i++ {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
 	}
-	x, _ := mat.NewMat64(size, ImageLength, image)
-	t, _ := mat.NewMat64(size, 10, label)
+	x, _ := mat.NewMatrix(size, ImageLength, image)
+	t, _ := mat.NewMatrix(size, 10, label)
 	return x, t
 }
 
@@ -57,19 +57,19 @@ func train() {
 
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
-		image := vec.vec{}
-		label := vec.vec{}
+		image := vec.Vector{}
+		label := vec.Vector{}
 		for _, v := range batchIndices {
 			image = append(image, train.Images[v]...)
 			label = append(label, train.Labels[v]...)
 		}
 
-		xBatch, _ := mat.NewMat64(BatchSize, ImageLength, image)
-		tBatch, _ := mat.NewMat64(BatchSize, 10, label)
+		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
+		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
 		grad := net.NumericalGradient(xBatch, tBatch)
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
-			net.Params[k] = net.Params[k].Sub(grad[k].MulAll(LearningRate))
+			net.Params[k] = net.Params[k].Sub(grad[k].Mul(LearningRate))
 		}
 		loss := net.Loss(xBatch, tBatch)
 		end := time.Now()
