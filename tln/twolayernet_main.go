@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/naronA/zero_deeplearning/array"
+	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
 	"github.com/naronA/zero_deeplearning/mnist"
 	"github.com/naronA/zero_deeplearning/network"
@@ -22,8 +22,8 @@ const (
 
 func MnistMatrix(set *mnist.MnistDataSet) (*mat.Matrix, *mat.Matrix) {
 	size := len(set.Labels)
-	image := array.Array{}
-	label := array.Array{}
+	image := vec.vec{}
+	label := vec.vec{}
 	for i := 0; i < size; i++ {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
@@ -57,8 +57,8 @@ func train() {
 
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
-		image := array.Array{}
-		label := array.Array{}
+		image := vec.vec{}
+		label := vec.vec{}
 		for _, v := range batchIndices {
 			image = append(image, train.Images[v]...)
 			label = append(label, train.Labels[v]...)

@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/naronA/zero_deeplearning/array"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 const (
@@ -22,8 +22,8 @@ type MnistDataSet struct {
 	Rows      int
 	Cols      int
 	RawImages []RawImage
-	Images    []array.Array
-	Labels    []array.Array
+	Images    []vec.Vector
+	Labels    []vec.Vector
 }
 
 func LoadMnist() (*MnistDataSet, *MnistDataSet) {
@@ -70,13 +70,13 @@ func LoadMnist() (*MnistDataSet, *MnistDataSet) {
 	return train, test
 }
 
-func oneHot(n uint8) array.Array {
+func oneHot(n uint8) vec.Vector {
 	oneHot := []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	oneHot[n] = 1
 	return oneHot
 }
 
-func readLabels(file *os.File) []array.Array {
+func readLabels(file *os.File) []vec.Vector {
 	r, err := gzip.NewReader(file)
 	if err != nil {
 		return nil
@@ -97,7 +97,7 @@ func readLabels(file *os.File) []array.Array {
 		return nil
 	}
 	// N個のラベルデータが含まれているのでN要素の配列をつくる
-	labels := make([]array.Array, n)
+	labels := make([]vec.Vector, n)
 	for i := 0; i < int(n); i++ {
 		var num uint8
 		if err := binary.Read(r, binary.BigEndian, &num); err != nil {
@@ -127,7 +127,7 @@ func (img RawImage) Bounds() image.Rectangle {
 	}
 }
 
-func readImages(file *os.File) (int, int, []RawImage, []array.Array) {
+func readImages(file *os.File) (int, int, []RawImage, []vec.Vector) {
 	r, err := gzip.NewReader(file)
 	if err != nil {
 		panic(err)
@@ -157,11 +157,11 @@ func readImages(file *os.File) (int, int, []RawImage, []array.Array) {
 	}
 	// N個のラベルデータが含まれているのでN要素の配列をつくる
 	imgs := make([]RawImage, n)
-	fimgs := make([]array.Array, n)
+	fimgs := make([]vec.Vector, n)
 	m := int(nrow * ncol)
 	for i := 0; i < int(n); i++ {
 		imgs[i] = make(RawImage, m)
-		fimgs[i] = make(array.Array, m)
+		fimgs[i] = make(vec.Vector, m)
 		m_, err := io.ReadFull(r, imgs[i])
 		if err != nil {
 			panic(err)

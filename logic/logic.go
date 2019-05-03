@@ -8,8 +8,8 @@ import (
 
 // AND is 論理和
 func AND(x1 float64, x2 float64) int {
-	x := array.Array{x1, x2}
-	w := array.Array{0.5, 0.5}
+	x := array.Vector{x1, x2}
+	w := array.Vector{0.5, 0.5}
 	const b = -0.7
 	mul := x.MultiArray(w)
 	if mul == nil {
@@ -25,8 +25,8 @@ func AND(x1 float64, x2 float64) int {
 
 // NAND is 論理和
 func NAND(x1 float64, x2 float64) int {
-	x := array.Array{x1, x2}
-	w := array.Array{-0.5, -0.5}
+	x := array.Vector{x1, x2}
+	w := array.Vector{-0.5, -0.5}
 	const b = 0.7
 	mul := x.MultiArray(w)
 	if mul == nil {
@@ -41,8 +41,8 @@ func NAND(x1 float64, x2 float64) int {
 
 // OR is 論理和
 func OR(x1 float64, x2 float64) int {
-	x := array.Array{x1, x2}
-	w := array.Array{0.5, 0.5}
+	x := array.Vector{x1, x2}
+	w := array.Vector{0.5, 0.5}
 	const b = -0.2
 	mul := x.MultiArray(w)
 	if mul == nil {

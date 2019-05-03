@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/naronA/zero_deeplearning/array"
 	"github.com/naronA/zero_deeplearning/scalar"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
+type Mat interface {
+	Element(int, int) interface{}
+	Shape() ( int, int )
+  SliceRow(r int) vec.Vector
+}
 type Matrix struct {
-	Array   array.Array
+	Array   vec.Vector
 	Rows    int
 	Columns int
 }
@@ -26,8 +31,8 @@ func (m *Matrix) Element(r int, c int) float64 {
 	return m.Array[r*m.Columns+c]
 }
 
-func (m *Matrix) SliceRow(r int) array.Array {
-	slice := make(array.Array, m.Columns)
+func (m *Matrix) SliceRow(r int) vec.Vector {
+	slice := make(vec.Vector, m.Columns)
 	for i := 0; i < len(slice); i++ {
 		slice[i] = m.Array[i+r*m.Columns]
 	}
@@ -44,7 +49,7 @@ func (m *Matrix) String() string {
 }
 
 func Zeros(rows int, cols int) *Matrix {
-	zeros := make(array.Array, rows*cols)
+	zeros := make(vec.Vector, rows*cols)
 	for i := range zeros {
 		zeros[i] = 0
 	}
@@ -56,7 +61,7 @@ func Zeros(rows int, cols int) *Matrix {
 }
 
 func ZerosLike(x *Matrix) *Matrix {
-	zeros := make(array.Array, x.Rows*x.Columns)
+	zeros := make(vec.Vector, x.Rows*x.Columns)
 	for i := range zeros {
 		zeros[i] = 0
 	}
@@ -67,12 +72,12 @@ func ZerosLike(x *Matrix) *Matrix {
 	return mat
 }
 
-func NewMat64(row int, column int, array array.Array) (*Matrix, error) {
+func NewMat64(row int, column int, vec vec.Vector) (*Matrix, error) {
 	if row == 0 || column == 0 {
 		return nil, errors.New("row/columns is zero.")
 	}
 	return &Matrix{
-		Array:   array,
+		Array:   vec,
 		Rows:    row,
 		Columns: column,
 	}, nil
@@ -82,9 +87,9 @@ func NewRandnMat64(row int, column int) (*Matrix, error) {
 	if row == 0 || column == 0 {
 		return nil, errors.New("row/columns is zero.")
 	}
-	array := array.Randn(row * column)
+	vec := vec.Randn(row * column)
 	return &Matrix{
-		Array:   array,
+		Array:   vec,
 		Rows:    row,
 		Columns: column,
 	}, nil
@@ -112,12 +117,12 @@ func (m1 *Matrix) DotGo(m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
-	arys := make([]array.Array, m1.Columns)
+	arys := make([]vec.Vector, m1.Columns)
 	wg := &sync.WaitGroup{}
 	ch := make(chan int)
 	for i := 0; i < m1.Columns; i++ {
 		wg.Add(1)
-		arys[i] = make(array.Array, m1.Rows*m2.Columns)
+		arys[i] = make(vec.Vector, m1.Rows*m2.Columns)
 		go func(ch chan int) {
 			defer wg.Done()
 			i := <-ch
@@ -130,7 +135,7 @@ func (m1 *Matrix) DotGo(m2 *Matrix) *Matrix {
 		ch <- i
 	}
 	wg.Wait()
-	sum := array.Zeros(m1.Rows * m2.Columns)
+	sum := vec.Zeros(m1.Rows * m2.Columns)
 	for _, ary := range arys {
 		sum = sum.Add(ary)
 	}
@@ -146,16 +151,16 @@ func (m1 *Matrix) Dot(m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
-	arys := make([]array.Array, m1.Columns)
+	arys := make([]vec.Vector, m1.Columns)
 	for i := 0; i < m1.Columns; i++ {
-		arys[i] = make(array.Array, m1.Rows*m2.Columns)
+		arys[i] = make(vec.Vector, m1.Rows*m2.Columns)
 		for c := 0; c < m2.Columns; c++ {
 			for r := 0; r < m1.Rows; r++ {
 				arys[i][r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
 			}
 		}
 	}
-	sum := array.Zeros(m1.Rows * m2.Columns)
+	sum := vec.Zeros(m1.Rows * m2.Columns)
 	for _, ary := range arys {
 		sum = sum.Add(ary)
 	}
@@ -297,7 +302,7 @@ func Relu(m *Matrix) *Matrix {
 }
 
 func Log(m *Matrix) *Matrix {
-	log := array.Log(m.Array)
+	log := vec.Log(m.Array)
 	return &Matrix{
 		Array:   log,
 		Rows:    m.Rows,
@@ -306,23 +311,23 @@ func Log(m *Matrix) *Matrix {
 }
 
 func Sum(m *Matrix) float64 {
-	return array.Sum(m.Array)
+	return vec.Sum(m.Array)
 }
 
 func ArgMax(x *Matrix) []int {
 	r := make([]int, x.Rows)
 	for i := 0; i < x.Rows; i++ {
 		row := x.SliceRow(i)
-		r[i] = array.ArgMax(row)
+		r[i] = vec.ArgMax(row)
 	}
 	return r
 }
 
 func Softmax(x *Matrix) *Matrix {
-	m := array.Array{}
+	m := vec.Vector{}
 	for i := 0; i < x.Rows; i++ {
 		xRow := x.SliceRow(i)
-		m = append(m, array.Softmax(xRow)...)
+		m = append(m, vec.Softmax(xRow)...)
 	}
 	r, err := NewMat64(x.Rows, x.Columns, m)
 	if err != nil {
@@ -332,17 +337,17 @@ func Softmax(x *Matrix) *Matrix {
 }
 
 func CrossEntropyError(y, t *Matrix) float64 {
-	r := make(array.Array, y.Rows)
+	r := make(vec.Vector, y.Rows)
 	for i := 0; i < y.Rows; i++ {
 		yRow := y.SliceRow(i)
 		tRow := t.SliceRow(i)
-		r[i] = array.CrossEntropyError(yRow, tRow)
+		r[i] = vec.CrossEntropyError(yRow, tRow)
 	}
-	return array.Sum(r) / float64(y.Rows)
+	return vec.Sum(r) / float64(y.Rows)
 }
 
-func NumericalGradient(f func(array.Array) float64, x *Matrix) *Matrix {
-	grad := array.NumericalGradient(f, x.Array)
+func NumericalGradient(f func(vec.Vector) float64, x *Matrix) *Matrix {
+	grad := vec.NumericalGradient(f, x.Array)
 	mat, _ := NewMat64(x.Rows, x.Columns, grad)
 	return mat
 }

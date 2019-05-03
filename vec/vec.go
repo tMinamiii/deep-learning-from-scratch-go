@@ -1,4 +1,4 @@
-package array
+package vec
 
 import (
 	"math"
@@ -8,11 +8,11 @@ import (
 	"github.com/naronA/zero_deeplearning/scalar"
 )
 
-type Array []float64
+type Vector []float64
 
 const delta = 1e-7
 
-func (x1 Array) Equal(x2 Array) bool {
+func (x1 Vector) Equal(x2 Vector) bool {
 	if len(x1) != len(x2) {
 		return false
 	}
@@ -29,36 +29,36 @@ func (x1 Array) Equal(x2 Array) bool {
 	return true
 }
 
-func (x1 Array) NotEqual(x2 Array) bool {
+func (x1 Vector) NotEqual(x2 Vector) bool {
 	return !x1.Equal(x2)
 }
 
-func Randn(n int) Array {
+func Randn(n int) Vector {
 	rand.Seed(time.Now().UnixNano())
-	zeros := make(Array, n)
+	zeros := make(Vector, n)
 	for i := range zeros {
 		zeros[i] = rand.NormFloat64()
 	}
 	return zeros
 }
 
-func Zeros(n int) Array {
-	zeros := make(Array, n)
+func Zeros(n int) Vector {
+	zeros := make(Vector, n)
 	for i := range zeros {
 		zeros[i] = 0
 	}
 	return zeros
 }
 
-func ZerosLike(x Array) Array {
-	zeros := make(Array, len(x))
+func ZerosLike(x Vector) Vector {
+	zeros := make(Vector, len(x))
 	for i := range zeros {
 		zeros[i] = 0
 	}
 	return zeros
 }
 
-func (x1 Array) Pow(x2 float64) Array {
+func (x1 Vector) Pow(x2 float64) Vector {
 	result := make([]float64, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = math.Pow(x1[i], x2)
@@ -66,18 +66,18 @@ func (x1 Array) Pow(x2 float64) Array {
 	return result
 }
 
-func (x1 Array) Add(x2 Array) Array {
+func (x1 Vector) Add(x2 Vector) Vector {
 	if len(x1) != len(x2) {
 		return nil
 	}
-	result := make(Array, len(x1))
+	result := make(Vector, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = x1[i] + x2[i]
 	}
 	return result
 }
 
-func (x1 Array) Sub(x2 Array) Array {
+func (x1 Vector) Sub(x2 Vector) Vector {
 	if len(x1) != len(x2) {
 		return nil
 	}
@@ -88,7 +88,7 @@ func (x1 Array) Sub(x2 Array) Array {
 	return result
 }
 
-func (x1 Array) Multi(x2 Array) Array {
+func (x1 Vector) Multi(x2 Vector) Vector {
 	if len(x1) != len(x2) {
 		return nil
 	}
@@ -99,7 +99,7 @@ func (x1 Array) Multi(x2 Array) Array {
 	return result
 }
 
-func (x1 Array) Divide(x2 Array) Array {
+func (x1 Vector) Divide(x2 Vector) Vector {
 	if len(x1) != len(x2) {
 		return nil
 	}
@@ -110,15 +110,15 @@ func (x1 Array) Divide(x2 Array) Array {
 	return result
 }
 
-func (x1 Array) AddAll(x2 float64) Array {
-	result := make(Array, len(x1))
+func (x1 Vector) AddAll(x2 float64) Vector {
+	result := make(Vector, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = x1[i] + x2
 	}
 	return result
 }
 
-func (x1 Array) SubAll(x2 float64) Array {
+func (x1 Vector) SubAll(x2 float64) Vector {
 	result := make([]float64, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = x1[i] - x2
@@ -126,7 +126,7 @@ func (x1 Array) SubAll(x2 float64) Array {
 	return result
 }
 
-func (x1 Array) MultiAll(x2 float64) Array {
+func (x1 Vector) MultiAll(x2 float64) Vector {
 	result := make([]float64, len(x1))
 	for i := 0; i < len(x1); i++ {
 		result[i] = x1[i] * x2
@@ -134,15 +134,15 @@ func (x1 Array) MultiAll(x2 float64) Array {
 	return result
 }
 
-func (x Array) DivideAll(y float64) Array {
-	result := make(Array, len(x))
+func (x Vector) DivideAll(y float64) Vector {
+	result := make(Vector, len(x))
 	for i, v := range x {
 		result[i] = v / y
 	}
 	return result
 }
 
-func Sum(ary Array) float64 {
+func Sum(ary Vector) float64 {
 	sum := 0.0
 	for _, num := range ary {
 		sum += num
@@ -150,16 +150,16 @@ func Sum(ary Array) float64 {
 	return sum
 }
 
-func Relu(x Array) Array {
-	result := make(Array, len(x))
+func Relu(x Vector) Vector {
+	result := make(Vector, len(x))
 	for i, v := range x {
 		result[i] = scalar.Relu(v)
 	}
 	return result
 }
 
-func Sigmoid(x Array) Array {
-	result := make(Array, len(x))
+func Sigmoid(x Vector) Vector {
+	result := make(Vector, len(x))
 	for i, v := range x {
 		result[i] = scalar.Sigmoid(v)
 	}
@@ -174,7 +174,7 @@ func StepFunction(x []float64) []int {
 	return result
 }
 
-func ArgMax(x Array) int {
+func ArgMax(x Vector) int {
 	max := math.SmallestNonzeroFloat64
 	maxIndex := 0
 	for i, v := range x {
@@ -186,7 +186,7 @@ func ArgMax(x Array) int {
 	return maxIndex
 }
 
-func Max(x Array) float64 {
+func Max(x Vector) float64 {
 	max := math.SmallestNonzeroFloat64
 	for _, v := range x {
 		max = math.Max(max, v)
@@ -194,23 +194,23 @@ func Max(x Array) float64 {
 	return max
 }
 
-func Exp(x Array) Array {
-	result := make(Array, len(x))
+func Exp(x Vector) Vector {
+	result := make(Vector, len(x))
 	for i, v := range x {
 		result[i] = math.Exp(v)
 	}
 	return result
 }
 
-func Log(x Array) Array {
-	result := make(Array, len(x))
+func Log(x Vector) Vector {
+	result := make(Vector, len(x))
 	for i, v := range x {
 		result[i] = math.Log(v)
 	}
 	return result
 }
 
-func Softmax(x Array) Array {
+func Softmax(x Vector) Vector {
 	c := Max(x)
 	expA := Exp(x.SubAll(c))
 	sumExpA := Sum(expA)
@@ -218,22 +218,22 @@ func Softmax(x Array) Array {
 	return result
 }
 
-func IdentityFunction(x Array) Array {
+func IdentityFunction(x Vector) Vector {
 	return x
 }
 
-func MeanSquaredError(y, t Array) float64 {
+func MeanSquaredError(y, t Vector) float64 {
 	sub := y.Sub(t)
 	pow := sub.Pow(2)
 	return 0.5 * Sum(pow)
 }
 
-func CrossEntropyError(y, t Array) float64 {
+func CrossEntropyError(y, t Vector) float64 {
 	log := Log(y.AddAll(delta))
 	return -Sum(log.Multi(t))
 }
 
-func NumericalGradient(f func(Array) float64, x Array) Array {
+func NumericalGradient(f func(Vector) float64, x Vector) Vector {
 	h := 1e-4
 	grad := ZerosLike(x)
 
@@ -254,7 +254,7 @@ func NumericalGradient(f func(Array) float64, x Array) Array {
 	return grad
 }
 
-func GradientDescent(f func(Array) float64, initX Array, lr float64, stepNum int) Array {
+func GradientDescent(f func(Vector) float64, initX Vector, lr float64, stepNum int) Vector {
 	x := initX
 	for i := 0; i < stepNum; i++ {
 		grad := NumericalGradient(f, x)
@@ -263,10 +263,10 @@ func GradientDescent(f func(Array) float64, initX Array, lr float64, stepNum int
 	return x
 }
 
-func function1(x Array) float64 {
+func function1(x Vector) float64 {
 	return (0.01 * x[0] * x[0]) + 0.1*x[0]
 }
 
-func function2(x Array) float64 {
+func function2(x Vector) float64 {
 	return x[0]*x[0] + x[1]*x[1]
 }

@@ -1,7 +1,7 @@
 package network
 
 import (
-	"github.com/naronA/zero_deeplearning/array"
+	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
 )
 
@@ -68,7 +68,7 @@ func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 }
 
 func (tln *TwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
-	lossW := func(wArray array.Array) float64 {
+	lossW := func(wvec vec.vec) float64 {
 		return tln.Loss(x, t)
 	}
 	grads := map[string]*mat.Matrix{}

@@ -1,7 +1,7 @@
 package network
 
 import (
-	"github.com/naronA/zero_deeplearning/array"
+	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
 )
 
@@ -14,26 +14,26 @@ type BasicNetwork struct {
 func NewBasicNetwork() *BasicNetwork {
 	network := map[string]*mat.Matrix{}
 
-	network["W1"], _ = mat.NewMat64(2, 3, array.Array{
+	network["W1"], _ = mat.NewMat64(2, 3, vec.Vector{
 		0.1, 0.3, 0.5,
 		0.2, 0.4, 0.6,
 	})
-	network["b1"], _ = mat.NewMat64(1, 3, array.Array{
+	network["b1"], _ = mat.NewMat64(1, 3, vec.Vector{
 		0.1, 0.2, 0.3,
 	})
-	network["W2"], _ = mat.NewMat64(3, 2, array.Array{
+	network["W2"], _ = mat.NewMat64(3, 2, vec.Vector{
 		0.1, 0.4,
 		0.2, 0.5,
 		0.3, 0.6,
 	})
-	network["b2"], _ = mat.NewMat64(1, 2, array.Array{
+	network["b2"], _ = mat.NewMat64(1, 2, vec.Vector{
 		0.1, 0.2,
 	})
-	network["W3"], _ = mat.NewMat64(2, 2, array.Array{
+	network["W3"], _ = mat.NewMat64(2, 2, vec.Vector{
 		0.1, 0.3,
 		0.2, 0.4,
 	})
-	network["b3"], _ = mat.NewMat64(1, 2, array.Array{
+	network["b3"], _ = mat.NewMat64(1, 2, vec.Vector{
 		0.1, 0.2,
 	})
 	return &BasicNetwork{
@@ -41,7 +41,7 @@ func NewBasicNetwork() *BasicNetwork {
 	}
 }
 
-func (bn *BasicNetwork) Forward(x *mat.Matrix) array.Array {
+func (bn *BasicNetwork) Forward(x *mat.Matrix) vec.Vector {
 	W1 := bn.Network["W1"]
 	W2 := bn.Network["W2"]
 	W3 := bn.Network["W3"]
@@ -59,6 +59,6 @@ func (bn *BasicNetwork) Forward(x *mat.Matrix) array.Array {
 
 	mul3 := z2.Dot(W3)
 	a3 := mul3.Add(b3)
-	y := array.IdentityFunction(a3.Array)
+	y := vec.IdentityFunction(a3.vec)
 	return y
 }
