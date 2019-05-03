@@ -1,8 +1,8 @@
 package network
 
 import (
-	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 // BasicNetworkはゼロから作るディープラーニングのp64 Ch3.4.3の
@@ -49,15 +49,15 @@ func (bn *BasicNetwork) Forward(x *mat.Matrix) vec.Vector {
 	b2 := bn.Network["b2"]
 	b3 := bn.Network["b3"]
 
-	mul1 := x.Dot(W1)
+	mul1 := mat.Dot(x, W1)
 	a1 := mul1.Add(b1)
 	z1 := mat.Sigmoid(a1)
 
-	mul2 := z1.Dot(W2)
+	mul2 := mat.Dot(z1, W2)
 	a2 := mul2.Add(b2)
 	z2 := mat.Sigmoid(a2)
 
-	mul3 := z2.Dot(W3)
+	mul3 := mat.Dot(z2, W3)
 	a3 := mul3.Add(b3)
 	y := vec.IdentityFunction(a3.Array)
 	return y

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 // TestBasicNetwork はp64-p65のニューラルネットワークの動作確認をします

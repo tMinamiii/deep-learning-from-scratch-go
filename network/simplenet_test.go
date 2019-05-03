@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 // TestSimpleNetwork は、p111のSimpleNetの精度と損失関数計算の動作確認をす
