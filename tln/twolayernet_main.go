@@ -15,7 +15,7 @@ import (
 const (
 	ImageLength  = 784
 	ItersNum     = 10000
-	BatchSize    = 50
+	BatchSize    = 100
 	Hidden       = 20
 	LearningRate = 0.1
 )
