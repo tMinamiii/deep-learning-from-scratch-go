@@ -126,4 +126,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    x = np.array([[1, 2, 3], [4, 5, 6]])
+    t = np.array([[1, 3, 3], [5, 5, 6]])
+    cee = cross_entropy_error(x, t)
+    print(cee)
+

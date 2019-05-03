@@ -3,19 +3,19 @@ package logic
 import (
 	"log"
 
-	"github.com/naronA/zero_deeplearning/array"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 // AND is 論理和
 func AND(x1 float64, x2 float64) int {
-	x := array.Vector{x1, x2}
-	w := array.Vector{0.5, 0.5}
+	x := vec.Vector{x1, x2}
+	w := vec.Vector{0.5, 0.5}
 	const b = -0.7
-	mul := x.MultiArray(w)
+	mul := x.Mul(w)
 	if mul == nil {
 		return 0
 	}
-	tmp := array.Sum(mul) + b
+	tmp := vec.Sum(mul) + b
 	if tmp <= 0 {
 		return 0
 	}
@@ -25,14 +25,14 @@ func AND(x1 float64, x2 float64) int {
 
 // NAND is 論理和
 func NAND(x1 float64, x2 float64) int {
-	x := array.Vector{x1, x2}
-	w := array.Vector{-0.5, -0.5}
+	x := vec.Vector{x1, x2}
+	w := vec.Vector{-0.5, -0.5}
 	const b = 0.7
-	mul := x.MultiArray(w)
+	mul := x.Mul(w)
 	if mul == nil {
 		return 0
 	}
-	tmp := array.Sum(mul) + b
+	tmp := vec.Sum(mul) + b
 	if tmp <= 0 {
 		return 0
 	}
@@ -41,14 +41,14 @@ func NAND(x1 float64, x2 float64) int {
 
 // OR is 論理和
 func OR(x1 float64, x2 float64) int {
-	x := array.Vector{x1, x2}
-	w := array.Vector{0.5, 0.5}
+	x := vec.Vector{x1, x2}
+	w := vec.Vector{0.5, 0.5}
 	const b = -0.2
-	mul := x.MultiArray(w)
+	mul := x.Mul(w)
 	if mul == nil {
 		return 0
 	}
-	tmp := array.Sum(mul) + b
+	tmp := vec.Sum(mul) + b
 	if tmp <= 0 {
 		return 0
 	}

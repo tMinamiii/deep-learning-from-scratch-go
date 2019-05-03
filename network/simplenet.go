@@ -15,7 +15,7 @@ func NewSimpleNet(weight *mat.Matrix) *SimpleNet {
 }
 
 func (sn *SimpleNet) Predict(x *mat.Matrix) *mat.Matrix {
-	return x.Dot(sn.W)
+	return mat.Dot(x, sn.W)
 }
 
 func (sn *SimpleNet) Loss(x, t *mat.Matrix) float64 {

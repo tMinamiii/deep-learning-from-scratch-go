@@ -8,12 +8,6 @@ import (
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-type Mat interface {
-	Element(int, int) interface{}
-	Shape() (int, int)
-	SliceRow(r int) vec.Vector
-}
-
 type Matrix struct {
 	Array   vec.Vector
 	Rows    int
@@ -33,11 +27,14 @@ func (m *Matrix) Element(r int, c int) float64 {
 
 func (m *Matrix) SliceRow(r int) vec.Vector {
 	slice := m.Array[r*m.Columns : (r+1)*m.Columns]
+	return slice
+}
 
-	// slice := make(vec.Vector, m.Columns)
-	// for i := 0; i < len(slice); i++ {
-	// 	slice[i] = m.Array[i+r*m.Columns]
-	// }
+func (m *Matrix) SliceColumn(c int) vec.Vector {
+	slice := vec.Zeros(m.Columns)
+	for i := 0; i < m.Rows; i++ {
+		slice[i] = m.Element(i, c)
+	}
 	return slice
 }
 
@@ -70,7 +67,7 @@ func ZerosLike(x *Matrix) *Matrix {
 
 func NewMatrix(row int, column int, vec vec.Vector) (*Matrix, error) {
 	if row == 0 || column == 0 {
-		return nil, errors.New("row/columns is zero.")
+		return nil, errors.New("row/columns is zero")
 	}
 	return &Matrix{
 		Array:   vec,
@@ -81,7 +78,7 @@ func NewMatrix(row int, column int, vec vec.Vector) (*Matrix, error) {
 
 func NewRandnMatrix(row int, column int) (*Matrix, error) {
 	if row == 0 || column == 0 {
-		return nil, errors.New("row/columns is zero.")
+		return nil, errors.New("row/columns is zero")
 	}
 	vec := vec.Randn(row * column)
 	return &Matrix{
@@ -91,34 +88,34 @@ func NewRandnMatrix(row int, column int) (*Matrix, error) {
 	}, nil
 }
 
-func (m1 *Matrix) NotEqual(m2 *Matrix) bool {
-	return !m1.Equal(m2)
+func (m *Matrix) NotEqual(m2 *Matrix) bool {
+	return !m.Equal(m2)
 }
 
-func (m1 *Matrix) Equal(m2 *Matrix) bool {
-	if m1.Rows == m2.Rows &&
-		m1.Columns == m2.Columns &&
-		m1.Array.Equal(m2.Array) {
+func (m *Matrix) Equal(m2 *Matrix) bool {
+	if m.Rows == m2.Rows &&
+		m.Columns == m2.Columns &&
+		m.Array.Equal(m2.Array) {
 		return true
 	}
 	return false
 }
 
-func (m1 *Matrix) DotGo(m2 *Matrix) *Matrix {
-	if m1.Columns != m2.Rows {
+func (m *Matrix) DotGo(m2 *Matrix) *Matrix {
+	if m.Columns != m2.Rows {
 		return nil
 	}
-	sum := vec.Zeros(m1.Rows * m2.Columns)
+	sum := vec.Zeros(m.Rows * m2.Columns)
 	wg := &sync.WaitGroup{}
 	ch := make(chan int)
-	for i := 0; i < m1.Columns; i++ {
+	for i := 0; i < m.Columns; i++ {
 		wg.Add(1)
 		go func(ch chan int) {
 			defer wg.Done()
 			i := <-ch
 			for c := 0; c < m2.Columns; c++ {
-				for r := 0; r < m1.Rows; r++ {
-					sum[r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
+				for r := 0; r < m.Rows; r++ {
+					sum[r*m2.Columns+c] += m.Element(r, i) * m2.Element(i, c)
 				}
 			}
 		}(ch)
@@ -128,12 +125,12 @@ func (m1 *Matrix) DotGo(m2 *Matrix) *Matrix {
 	close(ch)
 	return &Matrix{
 		Array:   sum,
-		Rows:    m1.Rows,
+		Rows:    m.Rows,
 		Columns: m2.Columns,
 	}
 }
 
-func (m1 *Matrix) Dot(m2 *Matrix) *Matrix {
+func Dot(m1 *Matrix, m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
@@ -159,160 +156,160 @@ func isTheSameShape(m1 *Matrix, m2 *Matrix) bool {
 	return false
 }
 
-func (m1 *Matrix) Add(arg interface{}) *Matrix {
+func (m *Matrix) Add(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
-		if !isTheSameShape(m1, v) {
+		if !isTheSameShape(m, v) {
 			return nil
 		}
-		mat := m1.Array.Add(v.Array)
+		mat := m.Array.Add(v.Array)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case vec.Vector:
-		if m1.Columns != len(v) {
+		if m.Columns != len(v) {
 			return nil
 		}
-		mat := make(vec.Vector, m1.Rows*m1.Columns)
-		for r := 0; r < m1.Rows; r++ {
+		mat := make(vec.Vector, m.Rows*m.Columns)
+		for r := 0; r < m.Rows; r++ {
 			for c := 0; c < len(v); c++ {
-				index := r*m1.Columns + c
-				mat[index] = m1.Element(r, c) + v[c]
+				index := r*m.Columns + c
+				mat[index] = m.Element(r, c) + v[c]
 			}
 		}
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case float64:
-		mat := m1.Array.Add(v)
+		mat := m.Array.Add(v)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	default:
 		return nil
 	}
 }
 
-func (m1 *Matrix) Sub(arg interface{}) *Matrix {
+func (m *Matrix) Sub(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
-		if !isTheSameShape(m1, v) {
+		if !isTheSameShape(m, v) {
 			return nil
 		}
-		mat := m1.Array.Sub(v.Array)
+		mat := m.Array.Sub(v.Array)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case vec.Vector:
-		if m1.Columns != len(v) {
+		if m.Columns != len(v) {
 			return nil
 		}
-		mat := make(vec.Vector, m1.Rows*m1.Columns)
-		for r := 0; r < m1.Rows; r++ {
+		mat := make(vec.Vector, m.Rows*m.Columns)
+		for r := 0; r < m.Rows; r++ {
 			for c := 0; c < len(v); c++ {
-				index := r*m1.Columns + c
-				mat[index] = m1.Element(r, c) - v[c]
+				index := r*m.Columns + c
+				mat[index] = m.Element(r, c) - v[c]
 			}
 		}
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case float64:
-		mat := m1.Array.Sub(v)
+		mat := m.Array.Sub(v)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	default:
 		return nil
 	}
 }
 
-func (m1 *Matrix) Mul(arg interface{}) *Matrix {
+func (m *Matrix) Mul(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
-		if !isTheSameShape(m1, v) {
+		if !isTheSameShape(m, v) {
 			return nil
 		}
-		mat := m1.Array.Mul(v.Array)
+		mat := m.Array.Mul(v.Array)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case vec.Vector:
-		if m1.Columns != len(v) {
+		if m.Columns != len(v) {
 			return nil
 		}
-		mat := make(vec.Vector, m1.Rows*m1.Columns)
-		for r := 0; r < m1.Rows; r++ {
+		mat := make(vec.Vector, m.Rows*m.Columns)
+		for r := 0; r < m.Rows; r++ {
 			for c := 0; c < len(v); c++ {
-				index := r*m1.Columns + c
-				mat[index] = m1.Element(r, c) * v[c]
+				index := r*m.Columns + c
+				mat[index] = m.Element(r, c) * v[c]
 			}
 		}
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case float64:
-		mat := m1.Array.Mul(v)
+		mat := m.Array.Mul(v)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	default:
 		return nil
 	}
 }
 
-func (m1 *Matrix) Div(arg interface{}) *Matrix {
+func (m *Matrix) Div(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
-		if !isTheSameShape(m1, v) {
+		if !isTheSameShape(m, v) {
 			return nil
 		}
-		mat := m1.Array.Div(v.Array)
+		mat := m.Array.Div(v.Array)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case vec.Vector:
-		if m1.Columns != len(v) {
+		if m.Columns != len(v) {
 			return nil
 		}
-		mat := make(vec.Vector, m1.Rows*m1.Columns)
-		for r := 0; r < m1.Rows; r++ {
+		mat := make(vec.Vector, m.Rows*m.Columns)
+		for r := 0; r < m.Rows; r++ {
 			for c := 0; c < len(v); c++ {
-				index := r*m1.Columns + c
-				mat[index] = m1.Element(r, c) / v[c]
+				index := r*m.Columns + c
+				mat[index] = m.Element(r, c) / v[c]
 			}
 		}
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	case float64:
-		mat := m1.Array.Div(v)
+		mat := m.Array.Div(v)
 		return &Matrix{
 			Array:   mat,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
+			Rows:    m.Rows,
+			Columns: m.Columns,
 		}
 	default:
 		return nil
@@ -346,30 +343,67 @@ func Log(m *Matrix) *Matrix {
 	}
 }
 
-func Sum(m *Matrix) float64 {
+func SumAll(m *Matrix) float64 {
 	return vec.Sum(m.Array)
 }
 
-func ArgMax(x *Matrix) []int {
-	r := make([]int, x.Rows)
-	for i := 0; i < x.Rows; i++ {
-		row := x.SliceRow(i)
-		r[i] = vec.ArgMax(row)
+func Sum(m *Matrix, axis int) *Matrix {
+	if axis == 0 {
+		v := make(vec.Vector, m.Columns)
+		for i := 0; i < m.Columns; i++ {
+			col := m.SliceColumn(i)
+			v[i] = vec.Sum(col)
+		}
+		return &Matrix{
+			Array:   v,
+			Rows:    1,
+			Columns: m.Rows,
+		}
+	} else if axis == 1 {
+		v := make(vec.Vector, m.Rows)
+		for i := 0; i < m.Rows; i++ {
+			row := m.SliceRow(i)
+			v[i] = vec.Sum(row)
+		}
+		return &Matrix{
+			Array:   v,
+			Rows:    1,
+			Columns: m.Rows,
+		}
 	}
-	return r
+	return nil
+}
+
+func ArgMaxAll(x *Matrix) int {
+	return vec.ArgMax(x.Array)
+}
+
+func ArgMax(m *Matrix, axis int) []int {
+	if axis == 0 {
+		v := make([]int, m.Columns)
+		for i := 0; i < m.Columns; i++ {
+			col := m.SliceColumn(i)
+			v[i] = vec.ArgMax(col)
+		}
+		return v
+	} else if axis == 1 {
+		v := make([]int, m.Rows)
+		for i := 0; i < m.Rows; i++ {
+			row := m.SliceRow(i)
+			v[i] = vec.ArgMax(row)
+		}
+		return v
+	}
+	return nil
 }
 
 func Softmax(x *Matrix) *Matrix {
-	m := vec.Vector{}
-	for i := 0; i < x.Rows; i++ {
-		xRow := x.SliceRow(i)
-		m = append(m, vec.Softmax(xRow)...)
+	softmax := vec.Softmax(x.Array)
+	return &Matrix{
+		Array:   softmax,
+		Rows:    x.Rows,
+		Columns: x.Columns,
 	}
-	r, err := NewMatrix(x.Rows, x.Columns, m)
-	if err != nil {
-		panic(err)
-	}
-	return r
 }
 
 func CrossEntropyError(y, t *Matrix) float64 {
@@ -384,6 +418,6 @@ func CrossEntropyError(y, t *Matrix) float64 {
 
 func NumericalGradient(f func(vec.Vector) float64, x *Matrix) *Matrix {
 	grad := vec.NumericalGradient(f, x.Array)
-	mat, _ := NewMatrix(x.Rows, x.Columns, grad)
+	mat := &Matrix{Rows: x.Rows, Columns: x.Columns, Array: grad}
 	return mat
 }
