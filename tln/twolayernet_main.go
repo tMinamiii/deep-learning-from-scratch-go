@@ -5,10 +5,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/naronA/zero_deeplearning/vec"
 	"github.com/naronA/zero_deeplearning/mat"
 	"github.com/naronA/zero_deeplearning/mnist"
 	"github.com/naronA/zero_deeplearning/network"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 // ハイパーパラメタ
@@ -75,13 +75,13 @@ func train() {
 		end := time.Now()
 
 		fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
-		trainLossList = append(trainLossList, loss)
+		// trainLossList = append(trainLossList, loss)
 
 		if i%iterPerEpoch == 0 {
 			trainAcc := net.Accuracy(xTrain, tTrain)
 			testAcc := net.Accuracy(xTest, tTest)
-			trainAccList = append(trainAccList, trainAcc)
-			testAccList = append(testAccList, testAcc)
+			// trainAccList = append(trainAccList, trainAcc)
+			// testAccList = append(testAccList, testAcc)
 			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
 		}
 	}
