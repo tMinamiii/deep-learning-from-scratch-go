@@ -12,7 +12,7 @@ type Vector []float64
 
 const delta = 1e-7
 
-func (x1 Vector) Equal(x2 Vector) bool {
+func Equal(x1, x2 Vector) bool {
 	if len(x1) != len(x2) {
 		return false
 	}
@@ -29,8 +29,8 @@ func (x1 Vector) Equal(x2 Vector) bool {
 	return true
 }
 
-func (x1 Vector) NotEqual(x2 Vector) bool {
-	return !x1.Equal(x2)
+func NotEqual(x1, x2 Vector) bool {
+	return !Equal(x1, x2)
 }
 
 func Randn(n int) Vector {
@@ -212,6 +212,34 @@ func Log(x Vector) Vector {
 	return result
 }
 
+func Sqrt(x Vector) Vector {
+	result := make(Vector, len(x))
+	for i, v := range x {
+		result[i] = math.Sqrt(v)
+	}
+	return result
+}
+
+func Abs(x Vector) Vector {
+	result := make(Vector, len(x))
+	for i, v := range x {
+		result[i] = math.Abs(v)
+	}
+	return result
+}
+
+/*
+def softmax(x):
+    if x.ndim == 2:
+        x = x.T
+        x = x - np.max(x, axis=0)
+        y = np.exp(x) / np.sum(np.exp(x), axis=0)
+        return y.T
+
+    x = x - np.max(x) # オーバーフロー対策
+    return np.exp(x) / np.sum(np.exp(x))
+Vectorのsoftmaxなので常にndim == 1
+*/
 func Softmax(x Vector) Vector {
 	c := Max(x)
 	expA := Exp(x.Sub(c))

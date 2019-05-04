@@ -1,9 +1,13 @@
 # coding: utf-8
-import sys, os
-sys.path.append(os.pardir)  # 親ディレクトリのファイルをインポートするための設定
+import os
+import sys
+
 import numpy as np
+
 from dataset.mnist import load_mnist
 from two_layer_net import TwoLayerNet
+
+sys.path.append(os.pardir)  # 親ディレクトリのファイルをインポートするための設定
 
 # データの読み込み
 (x_train, t_train), (x_test, t_test) = load_mnist(normalize=True, one_hot_label=True)
@@ -17,5 +21,5 @@ grad_numerical = network.numerical_gradient(x_batch, t_batch)
 grad_backprop = network.gradient(x_batch, t_batch)
 
 for key in grad_numerical.keys():
-    diff = np.average( np.abs(grad_backprop[key] - grad_numerical[key]) )
+    diff = np.average(np.abs(grad_backprop[key] - grad_numerical[key]))
     print(key + ":" + str(diff))

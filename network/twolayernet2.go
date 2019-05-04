@@ -6,16 +6,16 @@ import (
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-type TwoLayerNet2 struct {
-	Params  map[string]*mat.Matrix
-	Affine1 *layer.Affine
-	Relu    *layer.Relu
-	Affine2 *layer.Affine
-	Last    *layer.SoftmaxWithLoss
+type LayeredTwoLayerNet struct {
+	Params    map[string]*mat.Matrix
+	Affine1   *layer.Affine
+	Relu1     *layer.Relu
+	Affine2   *layer.Affine
+	LastLayer *layer.SoftmaxWithLoss
 }
 
 // NewTwoLayerNet は、TwoLayerNetのコンストラクタ
-func NewTwoLayerNet2(inputSize, hiddenSize, outputSize int, weightInitStd float64) *TwoLayerNet2 {
+func NewLayeredTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64) *LayeredTwoLayerNet {
 	params := map[string]*mat.Matrix{}
 
 	W1, err := mat.NewRandnMatrix(inputSize, hiddenSize)
@@ -26,39 +26,39 @@ func NewTwoLayerNet2(inputSize, hiddenSize, outputSize int, weightInitStd float6
 	if err != nil {
 		panic(err)
 	}
-	params["W1"] = W1.Mul(weightInitStd)
+	params["W1"], _ = W1.Mul(weightInitStd)
 	params["b1"] = mat.Zeros(1, hiddenSize)
-	params["W2"] = W2.Mul(weightInitStd)
+	params["W2"], _ = W2.Mul(weightInitStd)
 	params["b2"] = mat.Zeros(1, outputSize)
 	aff1 := layer.NewAffine(params["W1"], params["b1"])
 	relu := layer.NewRelu()
 	aff2 := layer.NewAffine(params["W2"], params["b2"])
 	last := layer.NewSfotmaxWithLoss()
 
-	return &TwoLayerNet2{
-		Params:  params,
-		Affine1: aff1,
-		Relu:    relu,
-		Affine2: aff2,
-		Last:    last,
+	return &LayeredTwoLayerNet{
+		Params:    params,
+		Affine1:   aff1,
+		Relu1:     relu,
+		Affine2:   aff2,
+		LastLayer: last,
 	}
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (tln *TwoLayerNet2) Predict(x *mat.Matrix) *mat.Matrix {
-	a1 := tln.Affine1.Forward(x)
-	r := tln.Relu.Forward(a1)
-	a2 := tln.Affine2.Forward(r)
-	return a2
+func (tln *LayeredTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+	f := tln.Affine1.Forward(x)
+	f = tln.Relu1.Forward(f)
+	f = tln.Affine2.Forward(f)
+	return f
 }
 
-func (tln *TwoLayerNet2) Loss(x, t *mat.Matrix) float64 {
+func (tln *LayeredTwoLayerNet) Loss(x, t *mat.Matrix) float64 {
 	y := tln.Predict(x)
-	cee := tln.Last.Forward(y, t)
+	cee := tln.LastLayer.Forward(y, t)
 	return cee
 }
 
-func (tln *TwoLayerNet2) Accuracy(x, t *mat.Matrix) float64 {
+func (tln *LayeredTwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	y := tln.Predict(x)
 	yMax := mat.ArgMax(y, 1)
 	tMax := mat.ArgMax(t, 1)
@@ -73,27 +73,35 @@ func (tln *TwoLayerNet2) Accuracy(x, t *mat.Matrix) float64 {
 	return accuracy
 }
 
-func (tln *TwoLayerNet2) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (tln *LayeredTwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	// forward
 	tln.Loss(x, t)
 
 	// backward
-	dout := tln.Last.Backward(1.0)
-	daff2 := tln.Affine2.Backward(dout)
-	drelu := tln.Relu.Backward(daff2)
-	tln.Affine1.Backward(drelu)
+	dout := tln.LastLayer.Backward(1.0)
+	dout = tln.Affine2.Backward(dout)
+	dout = tln.Relu1.Backward(dout)
+	tln.Affine1.Backward(dout)
 
 	grads := map[string]*mat.Matrix{}
-	grads["W1"] = tln.Affine1.AdW
-	grads["b1"] = tln.Affine1.Adb
-	grads["W2"] = tln.Affine2.AdW
-	grads["b2"] = tln.Affine2.Adb
+	grads["W1"] = tln.Affine1.DW
+	grads["b1"] = tln.Affine1.DB
+	grads["W2"] = tln.Affine2.DW
+	grads["b2"] = tln.Affine2.DB
 	return grads
 }
 
-func (tln *TwoLayerNet2) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (tln *LayeredTwoLayerNet) UpdateParams(params map[string]*mat.Matrix) {
+	tln.Params = params
+	tln.Affine1.W = params["W1"]
+	tln.Affine1.B = params["b1"]
+	tln.Affine2.W = params["W2"]
+	tln.Affine2.B = params["b2"]
+}
+
+func (tln *LayeredTwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	lossW := func(wvec vec.Vector) float64 {
-		return tln.Loss(x, t)
+		return tln.LossOld(x, t)
 	}
 	grads := map[string]*mat.Matrix{}
 	grads["W1"] = mat.NumericalGradient(lossW, tln.Params["W1"])
@@ -101,4 +109,26 @@ func (tln *TwoLayerNet2) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Mat
 	grads["W2"] = mat.NumericalGradient(lossW, tln.Params["W2"])
 	grads["b2"] = mat.NumericalGradient(lossW, tln.Params["b2"])
 	return grads
+}
+
+// Predict は、TwoLayerNetの精度計算をします
+func (tln *LayeredTwoLayerNet) PredictOld(x *mat.Matrix) *mat.Matrix {
+	W1 := tln.Params["W1"]
+	b1 := tln.Params["b1"]
+	W2 := tln.Params["W2"]
+	b2 := tln.Params["b2"]
+
+	dota1 := mat.Dot(x, W1)
+	a1, _ := dota1.Add(b1)
+	z1 := mat.Sigmoid(a1)
+	a2, _ := mat.Dot(z1, W2).Add(b2)
+	y := mat.Softmax(a2)
+
+	return y
+}
+
+func (tln *LayeredTwoLayerNet) LossOld(x, t *mat.Matrix) float64 {
+	y := tln.PredictOld(x)
+	cee := mat.CrossEntropyError(y, t)
+	return cee
 }

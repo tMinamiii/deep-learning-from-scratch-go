@@ -16,7 +16,7 @@ const (
 	ImageLength  = 784
 	ItersNum     = 10000
 	BatchSize    = 100
-	Hidden       = 20
+	Hidden       = 10
 	LearningRate = 0.1
 )
 
@@ -38,7 +38,7 @@ func train() {
 	train, test := mnist.LoadMnist()
 
 	TrainSize := len(train.Labels)
-	net := network.NewTwoLayerNet2(ImageLength, Hidden, 10, 0.01)
+	net := network.NewLayeredTwoLayerNet(ImageLength, Hidden, 10, 0.01)
 
 	trainLossList := []float64{}
 	trainAccList := []float64{}
@@ -53,10 +53,8 @@ func train() {
 		return 1
 	}()
 
-	fmt.Println(iterPerEpoch)
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < ItersNum; i++ {
-
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		image := vec.Vector{}
@@ -69,16 +67,38 @@ func train() {
 		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
 		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
 		// gradNum := net.NumericalGradient(xBatch, tBatch)
-		grad := net.Gradient(xBatch, tBatch)
+
+		grads := net.Gradient(xBatch, tBatch)
+		newParams := map[string]*mat.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
-			net.Params[k] = net.Params[k].Sub(grad[k].Mul(LearningRate))
+			// diff := grad[k].Sub(gradNum[k])
+			// abs := mat.Abs(diff)
+			// avg := vec.Sum(abs.Vector) / float64(len(abs.Vector))
+			// fmt.Printf("%v : %v \n", k, avg)
+			mullr, _ := grads[k].Mul(LearningRate)
+			// fmt.Println(mullr)
+			fmt.Println(grads[k])
+			newParams[k], _ = net.Params[k].Sub(mullr)
+			// gradAbs := mat.Abs(grads[k])
+			// gradAvg := vec.Sum(gradAbs.Vector) / float64(len(gradAbs.Vector))
+			// diff := newParams[k].Sub(net.Params[k])
+			// abs := mat.Abs(diff)
+			// avg := vec.Sum(abs.Vector) / float64(len(abs.Vector))
+			// fmt.Printf("%v : diff avg %v // grad avg %v\n", k, avg, gradAvg)
 		}
-		loss := net.Loss(xBatch, tBatch)
+		// fmt.Println(newParams)
+		net.UpdateParams(newParams)
 
+		// lossOld := net.LossOld(xBatch, tBatch)
+		loss := net.Loss(xBatch, tBatch)
+		// end := time.Now()
+		// fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
+
+		// fmt.Printf("elapstime = %v loss = %v lossOld = %v\n", end.Sub(start), loss, lossOld)
 		// trainLossList = append(trainLossList, loss)
 
-		if i%iterPerEpoch == 0 {
+		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
 			trainAcc := net.Accuracy(xTrain, tTrain)
 			testAcc := net.Accuracy(xTest, tTest)
 			// trainAccList = append(trainAccList, trainAcc)

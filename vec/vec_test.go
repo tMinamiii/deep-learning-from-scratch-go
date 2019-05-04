@@ -13,16 +13,16 @@ func TestVectorMulti(t *testing.T) {
 	if result == nil {
 		t.Fail()
 	}
-	if !result.Equal(Vector{2, 8, 15}) {
+	if NotEqual(result, Vector{2, 8, 15}) {
 		t.Fail()
 	}
-	if result.Equal(Vector{1, 4, 10}) {
+	if Equal(result, Vector{1, 4, 10}) {
 		t.Fail()
 	}
-	if result.Equal(Vector{2, 9, 15}) {
+	if Equal(result, Vector{2, 9, 15}) {
 		t.Fail()
 	}
-	if result.Equal(Vector{2, 9}) {
+	if Equal(result, Vector{2, 9}) {
 		t.Fail()
 	}
 }
@@ -45,9 +45,9 @@ func TestVectorMax(t *testing.T) {
 
 func TestVectorDivide(t *testing.T) {
 	ary := Vector{1, 2, 3, 4, 5}
-	result := ary.Div(10)
+	result := ary.Div(10.0)
 	expected := Vector{1.0 / 10.0, 2.0 / 10.0, 3.0 / 10.0, 4.0 / 10.0, 5.0 / 10.0}
-	if !result.Equal(expected) {
+	if NotEqual(result, expected) {
 		log.Println(result, expected)
 		t.Fail()
 	}
@@ -55,9 +55,9 @@ func TestVectorDivide(t *testing.T) {
 
 func TestVectorSub(t *testing.T) {
 	ary := Vector{1, 2, 3, 4, 5}
-	result := ary.Sub(2)
+	result := ary.Sub(2.0)
 	expected := Vector{1 - 2, 2 - 2, 3 - 2, 4 - 2, 5 - 2}
-	if !result.Equal(expected) {
+	if NotEqual(result, expected) {
 		log.Println(result, expected)
 		t.Fail()
 	}
@@ -67,7 +67,7 @@ func TestVectorExp(t *testing.T) {
 	ary := Vector{1, 2, 3, 4, 5}
 	result := Exp(ary)
 	expected := Vector{math.Exp(1.0), math.Exp(2.0), math.Exp(3.0), math.Exp(4.0), math.Exp(5.0)}
-	if !result.Equal(expected) {
+	if NotEqual(result, expected) {
 		log.Println(result, expected)
 		t.Fail()
 	}
@@ -76,7 +76,7 @@ func TestVectorExp(t *testing.T) {
 func TestSoftmax(t *testing.T) {
 	actual := Softmax(Vector{-1, 0, 1, 10})
 	expected := Vector{1.669860300844509e-05, 4.539150911850783e-05, 0.0001233869144031729, 0.9998145229734698}
-	if !actual.Equal(expected) {
+	if NotEqual(actual, expected) {
 		log.Println(actual, expected)
 		t.Fail()
 	}
@@ -136,7 +136,7 @@ func TestCrossEntropyError2(t *testing.T) {
 func TestNumericalDiff1(t *testing.T) {
 	actual := NumericalGradient(function1, Vector{5})
 	expected := Vector{0.1999999999990898}
-	if actual.NotEqual(expected) {
+	if NotEqual(actual, expected) {
 		log.Println(actual, expected)
 		t.Fail()
 	}
@@ -145,7 +145,7 @@ func TestNumericalDiff1(t *testing.T) {
 func TestNumericalDiff2(t *testing.T) {
 	actual := NumericalGradient(function1, Vector{10})
 	expected := Vector{0.2999999999997449}
-	if actual.NotEqual(expected) {
+	if NotEqual(actual, expected) {
 		log.Println(actual, expected)
 		t.Fail()
 	}
@@ -155,7 +155,7 @@ func TestGradientDescent1(t *testing.T) {
 	initX := []float64{-3.0, 4.0}
 	actual := GradientDescent(function2, initX, 0.1, 100)
 	expected := Vector{-6.111107928998789e-10, 8.148143905314271e-10}
-	if actual.NotEqual(expected) {
+	if NotEqual(actual, expected) {
 		log.Println(actual, expected)
 		t.Fail()
 	}
@@ -165,7 +165,7 @@ func TestGradientDescent2(t *testing.T) {
 	initX := []float64{-3.0, 4.0}
 	actual := GradientDescent(function2, initX, 10.0, 100)
 	expected := Vector{-2.5898374737328363e+13, -1.2952486168965398e+12}
-	if actual.NotEqual(expected) {
+	if NotEqual(actual, expected) {
 		log.Println(actual, expected)
 		t.Fail()
 	}
@@ -175,7 +175,7 @@ func TestGradientDescent3(t *testing.T) {
 	initX := []float64{-3.0, 4.0}
 	actual := GradientDescent(function2, initX, 1e-10, 100)
 	expected := Vector{-2.999999939999995, 3.9999999199999934}
-	if actual.NotEqual(expected) {
+	if NotEqual(actual, expected) {
 		log.Println(actual, expected)
 		t.Fail()
 	}

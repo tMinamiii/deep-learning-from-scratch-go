@@ -66,10 +66,24 @@ func train() {
 
 		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
 		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
-		grad := net.NumericalGradient(xBatch, tBatch)
+		grads := net.NumericalGradient(xBatch, tBatch)
+
+		newParams := map[string]*mat.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
-			net.Params[k] = net.Params[k].Sub(grad[k].Mul(LearningRate))
+			mullr, _ := grads[k].Mul(LearningRate)
+			// fmt.Println(mullr)
+			// fmt.Println(grads[k])
+			newParams[k], _ = net.Params[k].Sub(mullr)
+
+			gradAbs := mat.Abs(grads[k])
+			gradAvg := vec.Sum(gradAbs.Vector) / float64(len(gradAbs.Vector))
+			diff, _ := newParams[k].Sub(net.Params[k])
+			abs := mat.Abs(diff)
+			avg := vec.Sum(abs.Vector) / float64(len(abs.Vector))
+			fmt.Printf("%v : diff avg %v // grad avg %v\n", k, avg, gradAvg)
+			net.Params[k] = newParams[k]
+			// net.Params[k] = net.Params[k].Sub(grad[k].Mul(LearningRate))
 		}
 		loss := net.Loss(xBatch, tBatch)
 		end := time.Now()
