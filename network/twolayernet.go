@@ -36,9 +36,9 @@ func (tln *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 
 	// start := time.Now()
 	dota1 := mat.Dot(x, W1)
-	a1 := dota1.Add(b1.Array)
+	a1 := dota1.Add(b1.Vector)
 	z1 := mat.Sigmoid(a1)
-	a2 := mat.Dot(z1, W2).Add(b2.Array)
+	a2 := mat.Dot(z1, W2).Add(b2.Vector)
 	y := mat.Softmax(a2)
 	// end := time.Now()
 	// fmt.Println(end.Sub(start))

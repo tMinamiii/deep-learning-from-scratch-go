@@ -59,6 +59,6 @@ func (bn *BasicNetwork) Forward(x *mat.Matrix) vec.Vector {
 
 	mul3 := mat.Dot(z2, W3)
 	a3 := mul3.Add(b3)
-	y := vec.IdentityFunction(a3.Array)
+	y := vec.IdentityFunction(a3.Vector)
 	return y
 }

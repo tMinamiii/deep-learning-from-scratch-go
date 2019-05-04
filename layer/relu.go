@@ -10,7 +10,7 @@ type Relu struct {
 }
 
 func (r *Relu) forward(x *mat.Matrix) *mat.Matrix {
-	v := x.Array
+	v := x.Vector
 	r.Mask = make([]bool, len(v))
 	out := make(vec.Vector, len(v))
 	for i := 0; i < len(v); i++ {
@@ -23,21 +23,21 @@ func (r *Relu) forward(x *mat.Matrix) *mat.Matrix {
 	}
 
 	return &mat.Matrix{
-		Array:   out,
+		Vector:   out,
 		Rows:    x.Rows,
 		Columns: x.Columns,
 	}
 }
 
 func (r *Relu) backward(dout *mat.Matrix) *mat.Matrix {
-	v := dout.Array
+	v := dout.Vector
 	for i := 0; i < len(v); i++ {
 		if r.Mask[i] {
 			v[i] = 0
 		}
 	}
 	dx := &mat.Matrix{
-		Array:   v,
+		Vector:   v,
 		Rows:    dout.Rows,
 		Columns: dout.Columns,
 	}

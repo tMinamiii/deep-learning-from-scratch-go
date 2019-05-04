@@ -27,7 +27,7 @@ func TestSimpleNetwork(t *testing.T) {
 	expectedPredict, _ := mat.NewMatrix(1, 3, vec.Vector{
 		1.054148091, 0.630716529, 1.132807401,
 	})
-	if actualPredict.NotEqual(expectedPredict) {
+	if mat.NotEqual(actualPredict, expectedPredict) {
 		fmt.Println(actualPredict, expectedPredict)
 		t.Fail()
 	}
@@ -70,7 +70,7 @@ func TestSimpleNetworkGradient(t *testing.T) {
 		0.2192475712392561, 0.14356242984070455, -0.3628100010055757,
 		0.3288713569016277, 0.21534364482433954, -0.5442150014750569,
 	})
-	if actual.NotEqual(expected) {
+	if mat.NotEqual(actual, expected) {
 		fmt.Println(actual, expected)
 		t.Fail()
 	}

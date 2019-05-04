@@ -12,7 +12,7 @@ type Affine struct {
 
 func (a *Affine) forward(x *mat.Matrix) *mat.Matrix {
 	a.x = x
-	out := mat.Dot(x,a.W).Add(a.b)
+	out := mat.Dot(x, a.W).Add(a.b)
 	return out
 }
 
