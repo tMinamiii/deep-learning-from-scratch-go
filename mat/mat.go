@@ -509,6 +509,15 @@ func ArgMax(m *Matrix, axis int) []int {
 	return nil
 }
 
+func Pow(x *Matrix, p float64) *Matrix {
+	sqrt := vec.Pow(x.Vector, p)
+	return &Matrix{
+		Vector:  sqrt,
+		Rows:    x.Rows,
+		Columns: x.Columns,
+	}
+}
+
 func Sqrt(x *Matrix) *Matrix {
 	sqrt := vec.Sqrt(x.Vector)
 	return &Matrix{

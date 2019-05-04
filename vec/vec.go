@@ -212,6 +212,14 @@ func Log(x Vector) Vector {
 	return result
 }
 
+func Pow(x Vector, p float64) Vector {
+	result := make(Vector, len(x))
+	for i, v := range x {
+		result[i] = math.Pow(v, p)
+	}
+	return result
+}
+
 func Sqrt(x Vector) Vector {
 	result := make(Vector, len(x))
 	for i, v := range x {

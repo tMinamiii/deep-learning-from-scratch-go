@@ -10,6 +10,7 @@ type LayeredTwoLayerNet struct {
 	Params    map[string]*mat.Matrix
 	Affine1   *layer.Affine
 	Relu1     *layer.Relu
+	Sigmoid1  *layer.Sigmoid
 	Affine2   *layer.Affine
 	LastLayer *layer.SoftmaxWithLoss
 }
@@ -32,6 +33,7 @@ func NewLayeredTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd 
 	params["b2"] = mat.Zeros(1, outputSize)
 	aff1 := layer.NewAffine(params["W1"], params["b1"])
 	relu := layer.NewRelu()
+	sig := layer.NewSigmoid()
 	aff2 := layer.NewAffine(params["W2"], params["b2"])
 	last := layer.NewSfotmaxWithLoss()
 
@@ -39,6 +41,7 @@ func NewLayeredTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd 
 		Params:    params,
 		Affine1:   aff1,
 		Relu1:     relu,
+		Sigmoid1:  sig,
 		Affine2:   aff2,
 		LastLayer: last,
 	}
@@ -47,7 +50,8 @@ func NewLayeredTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd 
 // Predict は、TwoLayerNetの精度計算をします
 func (tln *LayeredTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 	f := tln.Affine1.Forward(x)
-	f = tln.Relu1.Forward(f)
+	// f = tln.Relu1.Forward(f)
+	f = tln.Sigmoid1.Forward(f)
 	f = tln.Affine2.Forward(f)
 	return f
 }
@@ -80,7 +84,8 @@ func (tln *LayeredTwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix
 	// backward
 	dout := tln.LastLayer.Backward(1.0)
 	dout = tln.Affine2.Backward(dout)
-	dout = tln.Relu1.Backward(dout)
+	// dout = tln.Relu1.Backward(dout)
+	dout = tln.Sigmoid1.Backward(dout)
 	tln.Affine1.Backward(dout)
 
 	grads := map[string]*mat.Matrix{}

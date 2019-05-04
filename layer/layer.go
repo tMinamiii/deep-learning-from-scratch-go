@@ -36,6 +36,31 @@ func (a *Affine) Backward(dout *mat.Matrix) *mat.Matrix {
 	return dx
 }
 
+type Sigmoid struct {
+	Out *mat.Matrix
+}
+
+func NewSigmoid() *Sigmoid {
+	return &Sigmoid{}
+}
+
+func (s *Sigmoid) Forward(x *mat.Matrix) *mat.Matrix {
+	minusX, _ := x.Mul(-1.0)
+	exp := mat.Exp(minusX)
+	plusX, _ := exp.Add(1.0)
+	out := mat.Pow(plusX, -1)
+	s.Out = out
+	return out
+}
+
+func (s *Sigmoid) Backward(dout *mat.Matrix) *mat.Matrix {
+	minus, _ := s.Out.Mul(-1.0)
+	sub, _ := minus.Add(1.0)
+	mul, _ := dout.Mul(sub)
+	dx, _ := mul.Mul(s.Out)
+	return dx
+}
+
 type Relu struct {
 	mask []bool
 }

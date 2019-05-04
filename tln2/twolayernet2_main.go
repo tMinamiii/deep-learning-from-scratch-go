@@ -14,9 +14,9 @@ import (
 // ハイパーパラメタ
 const (
 	ImageLength  = 784
-	ItersNum     = 10000
+	ItersNum     = 100000
 	BatchSize    = 100
-	Hidden       = 10
+	Hidden       = 50
 	LearningRate = 0.1
 )
 
@@ -78,7 +78,7 @@ func train() {
 			// fmt.Printf("%v : %v \n", k, avg)
 			mullr, _ := grads[k].Mul(LearningRate)
 			// fmt.Println(mullr)
-			fmt.Println(grads[k])
+			// fmt.Println(grads[k])
 			newParams[k], _ = net.Params[k].Sub(mullr)
 			// gradAbs := mat.Abs(grads[k])
 			// gradAvg := vec.Sum(gradAbs.Vector) / float64(len(gradAbs.Vector))
