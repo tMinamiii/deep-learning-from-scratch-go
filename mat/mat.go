@@ -9,9 +9,23 @@ import (
 )
 
 type Matrix struct {
-	Vector   vec.Vector
+	Vector  vec.Vector
 	Rows    int
 	Columns int
+}
+
+func (m *Matrix) T() *Matrix {
+	trans := vec.Vector{}
+	for i := 0; i < m.Columns; i++ {
+		col := m.SliceColumn(i)
+		// fmt.Println(len(col))
+		trans = append(trans, col...)
+	}
+	return &Matrix{
+		Vector:  trans,
+		Rows:    m.Columns,
+		Columns: m.Rows,
+	}
 }
 
 func (m *Matrix) Shape() (int, int) {
@@ -31,7 +45,7 @@ func (m *Matrix) SliceRow(r int) vec.Vector {
 }
 
 func (m *Matrix) SliceColumn(c int) vec.Vector {
-	slice := vec.Zeros(m.Columns)
+	slice := vec.Zeros(m.Rows)
 	for i := 0; i < m.Rows; i++ {
 		slice[i] = m.Element(i, c)
 	}
@@ -50,7 +64,7 @@ func (m *Matrix) String() string {
 func Zeros(rows int, cols int) *Matrix {
 	zeros := vec.Zeros(rows * cols)
 	return &Matrix{
-		Vector:   zeros,
+		Vector:  zeros,
 		Rows:    rows,
 		Columns: cols,
 	}
@@ -59,7 +73,7 @@ func Zeros(rows int, cols int) *Matrix {
 func ZerosLike(x *Matrix) *Matrix {
 	zeros := vec.Zeros(x.Rows * x.Columns)
 	return &Matrix{
-		Vector:   zeros,
+		Vector:  zeros,
 		Rows:    x.Rows,
 		Columns: x.Columns,
 	}
@@ -70,7 +84,7 @@ func NewMatrix(row int, column int, vec vec.Vector) (*Matrix, error) {
 		return nil, errors.New("row/columns is zero")
 	}
 	return &Matrix{
-		Vector:   vec,
+		Vector:  vec,
 		Rows:    row,
 		Columns: column,
 	}, nil
@@ -82,7 +96,7 @@ func NewRandnMatrix(row int, column int) (*Matrix, error) {
 	}
 	vec := vec.Randn(row * column)
 	return &Matrix{
-		Vector:   vec,
+		Vector:  vec,
 		Rows:    row,
 		Columns: column,
 	}, nil
@@ -124,7 +138,7 @@ func (m *Matrix) DotGo(m2 *Matrix) *Matrix {
 	wg.Wait()
 	close(ch)
 	return &Matrix{
-		Vector:   sum,
+		Vector:  sum,
 		Rows:    m.Rows,
 		Columns: m2.Columns,
 	}
@@ -143,7 +157,7 @@ func Dot(m1 *Matrix, m2 *Matrix) *Matrix {
 		}
 	}
 	return &Matrix{
-		Vector:   mat,
+		Vector:  mat,
 		Rows:    m1.Rows,
 		Columns: m2.Columns,
 	}
@@ -164,7 +178,7 @@ func (m *Matrix) Add(arg interface{}) *Matrix {
 		}
 		mat := m.Vector.Add(v.Vector)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -180,14 +194,14 @@ func (m *Matrix) Add(arg interface{}) *Matrix {
 			}
 		}
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
 	case float64:
 		mat := m.Vector.Add(v)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -204,7 +218,7 @@ func (m *Matrix) Sub(arg interface{}) *Matrix {
 		}
 		mat := m.Vector.Sub(v.Vector)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -220,14 +234,14 @@ func (m *Matrix) Sub(arg interface{}) *Matrix {
 			}
 		}
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
 	case float64:
 		mat := m.Vector.Sub(v)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -244,7 +258,7 @@ func (m *Matrix) Mul(arg interface{}) *Matrix {
 		}
 		mat := m.Vector.Mul(v.Vector)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -260,14 +274,14 @@ func (m *Matrix) Mul(arg interface{}) *Matrix {
 			}
 		}
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
 	case float64:
 		mat := m.Vector.Mul(v)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -284,7 +298,7 @@ func (m *Matrix) Div(arg interface{}) *Matrix {
 		}
 		mat := m.Vector.Div(v.Vector)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -300,14 +314,14 @@ func (m *Matrix) Div(arg interface{}) *Matrix {
 			}
 		}
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
 	case float64:
 		mat := m.Vector.Div(v)
 		return &Matrix{
-			Vector:   mat,
+			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
 		}
@@ -319,7 +333,7 @@ func (m *Matrix) Div(arg interface{}) *Matrix {
 func Sigmoid(m *Matrix) *Matrix {
 	mat := vec.Sigmoid(m.Vector)
 	return &Matrix{
-		Vector:   mat,
+		Vector:  mat,
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
@@ -328,7 +342,7 @@ func Sigmoid(m *Matrix) *Matrix {
 func Relu(m *Matrix) *Matrix {
 	mat := vec.Relu(m.Vector)
 	return &Matrix{
-		Vector:   mat,
+		Vector:  mat,
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
@@ -337,7 +351,7 @@ func Relu(m *Matrix) *Matrix {
 func Log(m *Matrix) *Matrix {
 	log := vec.Log(m.Vector)
 	return &Matrix{
-		Vector:   log,
+		Vector:  log,
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
@@ -355,9 +369,9 @@ func Sum(m *Matrix, axis int) *Matrix {
 			v[i] = vec.Sum(col)
 		}
 		return &Matrix{
-			Vector:   v,
+			Vector:  v,
 			Rows:    1,
-			Columns: m.Rows,
+			Columns: m.Columns,
 		}
 	} else if axis == 1 {
 		v := make(vec.Vector, m.Rows)
@@ -366,7 +380,7 @@ func Sum(m *Matrix, axis int) *Matrix {
 			v[i] = vec.Sum(row)
 		}
 		return &Matrix{
-			Vector:   v,
+			Vector:  v,
 			Rows:    1,
 			Columns: m.Rows,
 		}
@@ -400,7 +414,7 @@ func ArgMax(m *Matrix, axis int) []int {
 func Softmax(x *Matrix) *Matrix {
 	softmax := vec.Softmax(x.Vector)
 	return &Matrix{
-		Vector:   softmax,
+		Vector:  softmax,
 		Rows:    x.Rows,
 		Columns: x.Columns,
 	}
