@@ -132,7 +132,7 @@ func TestSum_1(t *testing.T) {
 		1, 2, 3,
 		4, 5, 6,
 	})
-	actual := Sum(m, 0)
+	actual := Sum(m, 0).Vector
 	expected := vec.Vector{5, 7, 9}
 	if vec.NotEqual(actual, expected) {
 		t.Fail()
@@ -145,7 +145,7 @@ func TestSum_2(t *testing.T) {
 		4, 5, 6,
 		7, 8, 9,
 	})
-	actual := Sum(m, 0)
+	actual := Sum(m, 0).Vector
 	expected := vec.Vector{12, 15, 18}
 	if vec.NotEqual(actual, expected) {
 		t.Fail()

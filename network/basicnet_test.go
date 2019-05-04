@@ -16,7 +16,7 @@ func TestBasicNetwork(t *testing.T) {
 	})
 	actual := network.Forward(x)
 	expected := vec.Vector{0.3168270764110298, 0.6962790898619668}
-	if actual.NotEqual(expected) {
+	if vec.NotEqual(actual, expected) {
 		fmt.Println(actual, expected)
 		t.Fail()
 	}

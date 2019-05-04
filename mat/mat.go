@@ -169,13 +169,13 @@ func isTheSameShape(m1 *Matrix, m2 *Matrix) bool {
 	return false
 }
 
-func (m *Matrix) Add(arg interface{}) (*Matrix, error) {
+func (m *Matrix) Add(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
 		if !isTheSameShape(m, v) {
 			if v.Rows == 1 {
 				if m.Columns != v.Columns {
-					return nil, errors.New("cannot add")
+					return nil
 				}
 				mat := vec.Zeros(m.Rows * m.Columns)
 				for r := 0; r < m.Rows; r++ {
@@ -188,10 +188,10 @@ func (m *Matrix) Add(arg interface{}) (*Matrix, error) {
 					Vector:  mat,
 					Rows:    m.Rows,
 					Columns: m.Columns,
-				}, nil
+				}
 
 			}
-			return nil, errors.New("cannot add")
+			return nil
 
 		}
 		mat := m.Vector.Add(v.Vector)
@@ -199,10 +199,10 @@ func (m *Matrix) Add(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case vec.Vector:
 		if m.Columns != len(v) {
-			return nil, errors.New("cannot add")
+			return nil
 		}
 		mat := make(vec.Vector, m.Rows*m.Columns)
 		for r := 0; r < m.Rows; r++ {
@@ -215,26 +215,26 @@ func (m *Matrix) Add(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case float64:
 		mat := m.Vector.Add(v)
 		return &Matrix{
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	default:
-		return nil, errors.New("cannot add")
+		return nil
 	}
 }
 
-func (m *Matrix) Sub(arg interface{}) (*Matrix, error) {
+func (m *Matrix) Sub(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
 		if !isTheSameShape(m, v) {
 			if v.Rows == 1 {
 				if m.Columns != v.Columns {
-					return nil, errors.New("cannot sub")
+					return nil
 				}
 				mat := make(vec.Vector, m.Rows*m.Columns)
 				for r := 0; r < m.Rows; r++ {
@@ -247,10 +247,10 @@ func (m *Matrix) Sub(arg interface{}) (*Matrix, error) {
 					Vector:  mat,
 					Rows:    m.Rows,
 					Columns: m.Columns,
-				}, nil
+				}
 
 			}
-			return nil, errors.New("cannot sub")
+			return nil
 
 		}
 		mat := m.Vector.Sub(v.Vector)
@@ -258,10 +258,10 @@ func (m *Matrix) Sub(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case vec.Vector:
 		if m.Columns != len(v) {
-			return nil, errors.New("cannot sub")
+			return nil
 		}
 		mat := make(vec.Vector, m.Rows*m.Columns)
 		for r := 0; r < m.Rows; r++ {
@@ -274,26 +274,26 @@ func (m *Matrix) Sub(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case float64:
 		mat := m.Vector.Sub(v)
 		return &Matrix{
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	default:
-		return nil, errors.New("cannot sub")
+		return nil
 	}
 }
 
-func (m *Matrix) Mul(arg interface{}) (*Matrix, error) {
+func (m *Matrix) Mul(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
 		if !isTheSameShape(m, v) {
 			if v.Rows == 1 {
 				if m.Columns != v.Columns {
-					return nil, errors.New("cannot mul")
+					return nil
 				}
 				mat := make(vec.Vector, m.Rows*m.Columns)
 				for r := 0; r < m.Rows; r++ {
@@ -306,10 +306,10 @@ func (m *Matrix) Mul(arg interface{}) (*Matrix, error) {
 					Vector:  mat,
 					Rows:    m.Rows,
 					Columns: m.Columns,
-				}, nil
+				}
 
 			}
-			return nil, errors.New("cannot add")
+			return nil
 
 		}
 		mat := m.Vector.Mul(v.Vector)
@@ -317,10 +317,10 @@ func (m *Matrix) Mul(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case vec.Vector:
 		if m.Columns != len(v) {
-			return nil, errors.New("cannot mul")
+			return nil
 		}
 		mat := make(vec.Vector, m.Rows*m.Columns)
 		for r := 0; r < m.Rows; r++ {
@@ -333,26 +333,26 @@ func (m *Matrix) Mul(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case float64:
 		mat := m.Vector.Mul(v)
 		return &Matrix{
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	default:
-		return nil, errors.New("cannot mul")
+		return nil
 	}
 }
 
-func (m *Matrix) Div(arg interface{}) (*Matrix, error) {
+func (m *Matrix) Div(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
 		if !isTheSameShape(m, v) {
 			if v.Rows == 1 {
 				if m.Columns != v.Columns {
-					return nil, errors.New("cannot div")
+					return nil
 				}
 				mat := make(vec.Vector, m.Rows*m.Columns)
 				for r := 0; r < m.Rows; r++ {
@@ -365,10 +365,10 @@ func (m *Matrix) Div(arg interface{}) (*Matrix, error) {
 					Vector:  mat,
 					Rows:    m.Rows,
 					Columns: m.Columns,
-				}, nil
+				}
 
 			}
-			return nil, errors.New("cannot div")
+			return nil
 
 		}
 		mat := m.Vector.Div(v.Vector)
@@ -376,10 +376,10 @@ func (m *Matrix) Div(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case vec.Vector:
 		if m.Columns != len(v) {
-			return nil, errors.New("cannot div")
+			return nil
 		}
 		mat := make(vec.Vector, m.Rows*m.Columns)
 		for r := 0; r < m.Rows; r++ {
@@ -392,16 +392,16 @@ func (m *Matrix) Div(arg interface{}) (*Matrix, error) {
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	case float64:
 		mat := m.Vector.Div(v)
 		return &Matrix{
 			Vector:  mat,
 			Rows:    m.Rows,
 			Columns: m.Columns,
-		}, nil
+		}
 	default:
-		return nil, errors.New("cannot div")
+		return nil
 	}
 }
 
@@ -553,16 +553,10 @@ return y.T
 */
 func Softmax(x *Matrix) *Matrix {
 	xt := x.T()
-	sub, err := xt.Sub(Max(xt, 0))
-	if err != nil {
-		panic(err)
-	}
+	sub := xt.Sub(Max(xt, 0))
 	expX := Exp(sub)
 	sumExpX := Sum(expX, 0)
-	softmax, err := expX.Div(sumExpX.Vector)
-	if err != nil {
-		panic(err)
-	}
+	softmax := expX.Div(sumExpX.Vector)
 	return softmax.T()
 }
 

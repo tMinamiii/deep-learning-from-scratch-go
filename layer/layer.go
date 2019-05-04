@@ -22,10 +22,7 @@ func NewAffine(w, b *mat.Matrix) *Affine {
 
 func (a *Affine) Forward(x *mat.Matrix) *mat.Matrix {
 	a.X = x
-	out, err := mat.Dot(x, a.W).Add(a.B)
-	if err != nil {
-		panic(err)
-	}
+	out := mat.Dot(x, a.W).Add(a.B)
 	return out
 }
 
@@ -45,19 +42,19 @@ func NewSigmoid() *Sigmoid {
 }
 
 func (s *Sigmoid) Forward(x *mat.Matrix) *mat.Matrix {
-	minusX, _ := x.Mul(-1.0)
+	minusX := x.Mul(-1.0)
 	exp := mat.Exp(minusX)
-	plusX, _ := exp.Add(1.0)
+	plusX := exp.Add(1.0)
 	out := mat.Pow(plusX, -1)
 	s.Out = out
 	return out
 }
 
 func (s *Sigmoid) Backward(dout *mat.Matrix) *mat.Matrix {
-	minus, _ := s.Out.Mul(-1.0)
-	sub, _ := minus.Add(1.0)
-	mul, _ := dout.Mul(sub)
-	dx, _ := mul.Mul(s.Out)
+	minus := s.Out.Mul(-1.0)
+	sub := minus.Add(1.0)
+	mul := dout.Mul(sub)
+	dx := mul.Mul(s.Out)
 	return dx
 }
 
@@ -72,13 +69,13 @@ func NewRelu() *Relu {
 func (r *Relu) Forward(x *mat.Matrix) *mat.Matrix {
 	v := x.Vector
 	r.mask = make([]bool, len(v))
-	out := make(vec.Vector, len(v))
-	for i := 0; i < len(v); i++ {
-		if v[i] <= 0 {
+	out := vec.ZerosLike(v)
+	for i, e := range v {
+		if e <= 0 {
 			r.mask[i] = true
 			out[i] = 0
 		} else {
-			out[i] = v[i]
+			out[i] = e
 		}
 	}
 
@@ -91,12 +88,12 @@ func (r *Relu) Forward(x *mat.Matrix) *mat.Matrix {
 
 func (r *Relu) Backward(dout *mat.Matrix) *mat.Matrix {
 	v := dout.Vector
-	dv := make(vec.Vector, len(v))
-	for i := 0; i < len(v); i++ {
+	dv := vec.ZerosLike(v)
+	for i, e := range v {
 		if r.mask[i] {
 			dv[i] = 0
 		} else {
-			dv[i] = v[i]
+			dv[i] = e
 		}
 	}
 	dx := &mat.Matrix{
@@ -126,14 +123,7 @@ func (s *SoftmaxWithLoss) Forward(x, t *mat.Matrix) float64 {
 
 func (s *SoftmaxWithLoss) Backward(_ float64) *mat.Matrix {
 	batchSize, _ := s.t.Shape()
-	sub, err := s.y.Sub(s.t)
-	if err != nil {
-		panic(err)
-	}
-
-	dx, err := sub.Div(float64(batchSize))
-	if err != nil {
-		panic(err)
-	}
+	sub := s.y.Sub(s.t)
+	dx := sub.Div(float64(batchSize))
 	return dx
 }

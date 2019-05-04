@@ -50,15 +50,15 @@ func (bn *BasicNetwork) Forward(x *mat.Matrix) vec.Vector {
 	b3 := bn.Network["b3"]
 
 	mul1 := mat.Dot(x, W1)
-	a1, _ := mul1.Add(b1)
+	a1 := mul1.Add(b1)
 	z1 := mat.Sigmoid(a1)
 
 	mul2 := mat.Dot(z1, W2)
-	a2, _ := mul2.Add(b2)
+	a2 := mul2.Add(b2)
 	z2 := mat.Sigmoid(a2)
 
 	mul3 := mat.Dot(z2, W3)
-	a3, _ := mul3.Add(b3)
+	a3 := mul3.Add(b3)
 	y := vec.IdentityFunction(a3.Vector)
 	return y
 }

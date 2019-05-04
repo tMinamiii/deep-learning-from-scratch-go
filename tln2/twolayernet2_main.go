@@ -16,7 +16,7 @@ const (
 	ImageLength  = 784
 	ItersNum     = 100000
 	BatchSize    = 100
-	Hidden       = 50
+	Hidden       = 30
 	LearningRate = 0.1
 )
 
@@ -53,9 +53,9 @@ func train() {
 		return 1
 	}()
 
-	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < ItersNum; i++ {
 		start := time.Now()
+		rand.Seed(time.Now().UnixNano())
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		image := vec.Vector{}
 		label := vec.Vector{}

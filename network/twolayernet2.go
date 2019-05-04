@@ -27,9 +27,9 @@ func NewLayeredTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd 
 	if err != nil {
 		panic(err)
 	}
-	params["W1"], _ = W1.Mul(weightInitStd)
+	params["W1"] = W1.Mul(weightInitStd)
 	params["b1"] = mat.Zeros(1, hiddenSize)
-	params["W2"], _ = W2.Mul(weightInitStd)
+	params["W2"] = W2.Mul(weightInitStd)
 	params["b2"] = mat.Zeros(1, outputSize)
 	aff1 := layer.NewAffine(params["W1"], params["b1"])
 	relu := layer.NewRelu()
@@ -124,9 +124,9 @@ func (tln *LayeredTwoLayerNet) PredictOld(x *mat.Matrix) *mat.Matrix {
 	b2 := tln.Params["b2"]
 
 	dota1 := mat.Dot(x, W1)
-	a1, _ := dota1.Add(b1)
+	a1 := dota1.Add(b1)
 	z1 := mat.Sigmoid(a1)
-	a2, _ := mat.Dot(z1, W2).Add(b2)
+	a2 := mat.Dot(z1, W2).Add(b2)
 	y := mat.Softmax(a2)
 
 	return y
