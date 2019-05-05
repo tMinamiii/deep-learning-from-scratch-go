@@ -100,6 +100,24 @@ func vecFloat(a Arithmetic, v Vector, f float64) Vector {
 	return result
 }
 
+func floatVec(a Arithmetic, f float64, v Vector) Vector {
+	result := Zeros(len(v))
+	for i := 0; i < len(v); i++ {
+		switch a {
+		case ADD:
+			result[i] = f + v[i]
+		case SUB:
+			result[i] = f - v[i]
+		case MUL:
+			result[i] = f * v[i]
+		case DIV:
+			result[i] = f / v[i]
+		}
+
+	}
+	return result
+}
+
 func Add(x1, x2 interface{}) Vector {
 	if v, ok := x1.(Vector); ok {
 		switch x2v := x2.(type) {
@@ -110,7 +128,7 @@ func Add(x1, x2 interface{}) Vector {
 		}
 	} else if v, ok := x2.(Vector); ok {
 		if x1v, ok := x1.(float64); ok {
-			return vecFloat(ADD, v, x1v)
+			return floatVec(ADD, x1v, v)
 		}
 	}
 	return nil
@@ -126,7 +144,7 @@ func Sub(x1, x2 interface{}) Vector {
 		}
 	} else if v, ok := x2.(Vector); ok {
 		if x1v, ok := x1.(float64); ok {
-			return vecFloat(SUB, v, x1v)
+			return floatVec(SUB, x1v, v)
 		}
 	}
 	return nil
@@ -142,7 +160,7 @@ func Mul(x1, x2 interface{}) Vector {
 		}
 	} else if v, ok := x2.(Vector); ok {
 		if x1v, ok := x1.(float64); ok {
-			return vecFloat(MUL, v, x1v)
+			return floatVec(MUL, x1v, v)
 		}
 	}
 	return nil
@@ -158,7 +176,7 @@ func Div(x1, x2 interface{}) Vector {
 		}
 	} else if v, ok := x2.(Vector); ok {
 		if x1v, ok := x1.(float64); ok {
-			return vecFloat(DIV, v, x1v)
+			return floatVec(DIV, x1v, v)
 		}
 	}
 	return nil

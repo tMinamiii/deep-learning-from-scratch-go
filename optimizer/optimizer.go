@@ -18,8 +18,8 @@ func NewSGD(lr float64) *SGD {
 
 func (sgd *SGD) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
 	newParams := map[string]*mat.Matrix{}
-	for k, v := range grads {
-		newParams[k] = mat.Sub(params[k], mat.Mul(v, sgd.LR))
+	for k, g := range grads {
+		newParams[k] = mat.Sub(params[k], mat.Mul(g, sgd.LR))
 	}
 	return newParams
 }
@@ -47,8 +47,8 @@ func (mo *Momentum) Update(params, grads map[string]*mat.Matrix) map[string]*mat
 	}
 
 	newParams := map[string]*mat.Matrix{}
-	for k, v := range grads {
-		mo.V[k] = mat.Sub(mat.Mul(mo.V[k], mo.Momentum), mat.Mul(mo.LR, v))
+	for k, g := range grads {
+		mo.V[k] = mat.Sub(mat.Mul(mo.Momentum, mo.V[k]), mat.Mul(mo.LR, g))
 		newParams[k] = mat.Add(params[k], mo.V[k])
 	}
 	return newParams
@@ -74,9 +74,9 @@ func (ad *AdaGrad) Update(params, grads map[string]*mat.Matrix) map[string]*mat.
 		}
 	}
 	newParams := map[string]*mat.Matrix{}
-	for k, v := range grads {
-		ad.H[k] = mat.Add(mat.Pow(v, 2), ad.H[k])
-		delta := mat.Div(mat.Mul(v, ad.LR), mat.Add(mat.Sqrt(ad.H[k]), 1e-7))
+	for k, g := range grads {
+		ad.H[k] = mat.Add(ad.H[k], mat.Pow(g, 2))
+		delta := mat.Div(mat.Mul(ad.LR, g), mat.Add(mat.Sqrt(ad.H[k]), 1e-7))
 		newParams[k] = mat.Sub(params[k], delta)
 	}
 	return newParams

@@ -276,84 +276,130 @@ func matFloat(a Arithmetic, m1 *Matrix, m2 float64) *Matrix {
 	}
 }
 
+func vecMat(a Arithmetic, m1 vec.Vector, m2 *Matrix) *Matrix {
+	if m2.Columns != len(m1) {
+		return nil
+	}
+	vector := vec.Zeros(m2.Rows * m2.Columns)
+	for r := 0; r < m2.Rows; r++ {
+		for c := 0; c < len(m1); c++ {
+			index := r*m2.Columns + c
+			switch a {
+			case ADD:
+				vector[index] = m1[c] + m2.Element(r, c)
+			case SUB:
+				vector[index] = m1[c] - m2.Element(r, c)
+			case MUL:
+				vector[index] = m1[c] * m2.Element(r, c)
+			case DIV:
+				vector[index] = m1[c] / m2.Element(r, c)
+			}
+		}
+	}
+	return &Matrix{
+		Vector:  vector,
+		Rows:    m2.Rows,
+		Columns: m2.Columns,
+	}
+}
+
+func floatMat(a Arithmetic, m1 float64, m2 *Matrix) *Matrix {
+	vector := vec.ZerosLike(m2.Vector)
+	switch a {
+	case ADD:
+		vector = vec.Add(m1, m2.Vector)
+	case SUB:
+		vector = vec.Sub(m1, m2.Vector)
+	case MUL:
+		vector = vec.Mul(m1, m2.Vector)
+	case DIV:
+		vector = vec.Div(m1, m2.Vector)
+	}
+	return &Matrix{
+		Vector:  vector,
+		Rows:    m2.Rows,
+		Columns: m2.Columns,
+	}
+}
+
 func Add(x1 interface{}, x2 interface{}) *Matrix {
-	if mat, ok := x1.(*Matrix); ok {
+	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
-			return matMat(ADD, mat, x2v)
+			return matMat(ADD, x1v, x2v)
 		case vec.Vector:
-			return matVec(ADD, mat, x2v)
+			return matVec(ADD, x1v, x2v)
 		case float64:
-			return matFloat(ADD, mat, x2v)
+			return matFloat(ADD, x1v, x2v)
 		}
-	} else if mat, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
-			return matVec(ADD, mat, x1v)
+			return vecMat(ADD, x1v, x2v)
 		case float64:
-			return matFloat(ADD, mat, x1v)
+			return floatMat(ADD, x1v, x2v)
 		}
 	}
 	return nil
 }
 func Sub(x1 interface{}, x2 interface{}) *Matrix {
-	if mat, ok := x1.(*Matrix); ok {
+	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
-			return matMat(SUB, mat, x2v)
+			return matMat(SUB, x1v, x2v)
 		case vec.Vector:
-			return matVec(SUB, mat, x2v)
+			return matVec(SUB, x1v, x2v)
 		case float64:
-			return matFloat(SUB, mat, x2v)
+			return matFloat(SUB, x1v, x2v)
 		}
-	} else if mat, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
-			return matVec(SUB, mat, x1v)
+			return vecMat(SUB, x1v, x2v)
 		case float64:
-			return matFloat(SUB, mat, x1v)
+			return floatMat(SUB, x1v, x2v)
 		}
 	}
 	return nil
 }
 
 func Mul(x1 interface{}, x2 interface{}) *Matrix {
-	if mat, ok := x1.(*Matrix); ok {
+	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
-			return matMat(MUL, mat, x2v)
+			return matMat(MUL, x1v, x2v)
 		case vec.Vector:
-			return matVec(MUL, mat, x2v)
+			return matVec(MUL, x1v, x2v)
 		case float64:
-			return matFloat(MUL, mat, x2v)
+			return matFloat(MUL, x1v, x2v)
 		}
-	} else if mat, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
-			return matVec(MUL, mat, x1v)
+			return vecMat(MUL, x1v, x2v)
 		case float64:
-			return matFloat(MUL, mat, x1v)
+			return floatMat(MUL, x1v, x2v)
 		}
 	}
 	return nil
 }
 
 func Div(x1 interface{}, x2 interface{}) *Matrix {
-	if mat, ok := x1.(*Matrix); ok {
+	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
-			return matMat(DIV, mat, x2v)
+			return matMat(DIV, x1v, x2v)
 		case vec.Vector:
-			return matVec(DIV, mat, x2v)
+			return matVec(DIV, x1v, x2v)
 		case float64:
-			return matFloat(DIV, mat, x2v)
+			return matFloat(DIV, x1v, x2v)
 		}
-	} else if mat, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
-			return matVec(DIV, mat, x1v)
+			return vecMat(DIV, x1v, x2v)
 		case float64:
-			return matFloat(DIV, mat, x1v)
+			return floatMat(DIV, x1v, x2v)
 		}
 	}
 	return nil

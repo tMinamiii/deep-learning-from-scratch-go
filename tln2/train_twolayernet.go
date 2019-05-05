@@ -40,9 +40,9 @@ func train() {
 
 	TrainSize := len(train.Labels)
 	// opt := optimizer.NewSGD(LearningRate)
-	opt := optimizer.NewMomentum(LearningRate)
+	// opt := optimizer.NewMomentum(LearningRate)
 	// opt := optimizer.NewAdaGrad(LearningRate)
-	// opt := optimizer.NewAdam(LearningRate)
+	opt := optimizer.NewAdam(LearningRate)
 
 	net := network.NewTwoLayerNet(opt, ImageLength, Hidden, 10)
 

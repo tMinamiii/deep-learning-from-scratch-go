@@ -78,11 +78,11 @@ func (a *Adam) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matr
 	lrT := a.LR * math.Sqrt(1.0-math.Pow(a.Beta2, fIter)) / (1.0 - math.Pow(a.Beta1, fIter))
 
 	newParams := map[string]*mat.Matrix{}
-	for k, v := range params {
+	for k, g := range grads {
 		// self.m[key] += (1 - self.beta1) * (grads[key] - self.m[key])
 		// self.v[key] += (1 - self.beta2) * (grads[key]**2 - self.v[key])
-		a.M[k] = mat.Add(a.M[k], mat.Mul(1.0-a.Beta1, mat.Sub(v, a.M[k])))
-		a.V[k] = mat.Add(a.V[k], mat.Mul(1.0-a.Beta2, mat.Sub(mat.Pow(v, 2), a.V[k])))
+		a.M[k] = mat.Add(a.M[k], mat.Mul(1.0-a.Beta1, mat.Sub(g, a.M[k])))
+		a.V[k] = mat.Add(a.V[k], mat.Mul(1.0-a.Beta2, mat.Sub(mat.Pow(g, 2), a.V[k])))
 
 		// params[key] -= lr_t * self.m[key] / (np.sqrt(self.v[key]) + 1e-7)
 		delta := mat.Div(mat.Mul(lrT, a.M[k]), mat.Add(mat.Sqrt(a.V[k]), 1e-7))
