@@ -5,6 +5,11 @@ import (
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
+type Layer interface {
+	Forward(*mat.Matrix) *mat.Matrix
+	Backward(*mat.Matrix) *mat.Matrix
+}
+
 type Affine struct {
 	W  *mat.Matrix
 	B  *mat.Matrix
@@ -58,15 +63,15 @@ func (s *Sigmoid) Backward(dout *mat.Matrix) *mat.Matrix {
 	return dx
 }
 
-type Relu struct {
+type ReLU struct {
 	mask []bool
 }
 
-func NewRelu() *Relu {
-	return &Relu{}
+func NewRelu() *ReLU {
+	return &ReLU{}
 }
 
-func (r *Relu) Forward(x *mat.Matrix) *mat.Matrix {
+func (r *ReLU) Forward(x *mat.Matrix) *mat.Matrix {
 	v := x.Vector
 	r.mask = make([]bool, len(v))
 	out := vec.ZerosLike(v)
@@ -86,7 +91,7 @@ func (r *Relu) Forward(x *mat.Matrix) *mat.Matrix {
 	}
 }
 
-func (r *Relu) Backward(dout *mat.Matrix) *mat.Matrix {
+func (r *ReLU) Backward(dout *mat.Matrix) *mat.Matrix {
 	v := dout.Vector
 	dv := vec.ZerosLike(v)
 	for i, e := range v {

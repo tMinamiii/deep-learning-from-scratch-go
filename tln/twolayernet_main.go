@@ -20,7 +20,7 @@ const (
 	LearningRate = 0.1
 )
 
-func MnistMatrix(set *mnist.MnistDataSet) (*mat.Matrix, *mat.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
 	size := len(set.Labels)
 	image := vec.Vector{}
 	label := vec.Vector{}

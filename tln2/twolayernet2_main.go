@@ -16,11 +16,11 @@ const (
 	ImageLength  = 784
 	ItersNum     = 100000
 	BatchSize    = 100
-	Hidden       = 30
-	LearningRate = 0.1
+	Hidden       = 50
+	LearningRate = 0.0001
 )
 
-func MnistMatrix(set *mnist.MnistDataSet) (*mat.Matrix, *mat.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
 	size := len(set.Labels)
 	image := vec.Vector{}
 	label := vec.Vector{}
@@ -46,16 +46,16 @@ func train() {
 	xTrain, tTrain := MnistMatrix(train)
 	xTest, tTest := MnistMatrix(test)
 	iterPerEpoch := func() int {
-		// return 5
 		if TrainSize/BatchSize > 1.0 {
 			return TrainSize / BatchSize
 		}
 		return 1
 	}()
 
+	rand.Seed(time.Now().UnixNano())
+
 	for i := 0; i < ItersNum; i++ {
 		start := time.Now()
-		rand.Seed(time.Now().UnixNano())
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		image := vec.Vector{}
 		label := vec.Vector{}
@@ -66,37 +66,16 @@ func train() {
 
 		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
 		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
-		// gradNum := net.NumericalGradient(xBatch, tBatch)
-
 		grads := net.Gradient(xBatch, tBatch)
 		newParams := map[string]*mat.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
-			// diff := grad[k].Sub(gradNum[k])
-			// abs := mat.Abs(diff)
-			// avg := vec.Sum(abs.Vector) / float64(len(abs.Vector))
-			// fmt.Printf("%v : %v \n", k, avg)
-			mullr, _ := grads[k].Mul(LearningRate)
-			// fmt.Println(mullr)
-			// fmt.Println(grads[k])
-			newParams[k], _ = net.Params[k].Sub(mullr)
-			// gradAbs := mat.Abs(grads[k])
-			// gradAvg := vec.Sum(gradAbs.Vector) / float64(len(gradAbs.Vector))
-			// diff := newParams[k].Sub(net.Params[k])
-			// abs := mat.Abs(diff)
-			// avg := vec.Sum(abs.Vector) / float64(len(abs.Vector))
-			// fmt.Printf("%v : diff avg %v // grad avg %v\n", k, avg, gradAvg)
+			mullr := grads[k].Mul(LearningRate)
+			newParams[k] = net.Params[k].Sub(mullr)
 		}
-		// fmt.Println(newParams)
 		net.UpdateParams(newParams)
 
-		// lossOld := net.LossOld(xBatch, tBatch)
 		loss := net.Loss(xBatch, tBatch)
-		// end := time.Now()
-		// fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
-
-		// fmt.Printf("elapstime = %v loss = %v lossOld = %v\n", end.Sub(start), loss, lossOld)
-		// trainLossList = append(trainLossList, loss)
 
 		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
 			trainAcc := net.Accuracy(xTrain, tTrain)

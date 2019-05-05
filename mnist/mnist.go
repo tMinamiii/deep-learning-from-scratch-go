@@ -18,7 +18,7 @@ const (
 	Height     = 28
 )
 
-type MnistDataSet struct {
+type DataSet struct {
 	Rows      int
 	Cols      int
 	RawImages []RawImage
@@ -26,7 +26,7 @@ type MnistDataSet struct {
 	Labels    []vec.Vector
 }
 
-func LoadMnist() (*MnistDataSet, *MnistDataSet) {
+func LoadMnist() (*DataSet, *DataSet) {
 
 	trainImagesFile, err := os.Open("./mnist/train-images-idx3-ubyte.gz")
 	if err != nil {
@@ -51,7 +51,7 @@ func LoadMnist() (*MnistDataSet, *MnistDataSet) {
 
 	trainRows, trainColumns, trainImages, trainFImages := readImages(trainImagesFile)
 	trainLabels := readLabels(trainLabelsFile)
-	train := &MnistDataSet{
+	train := &DataSet{
 		Rows:      trainRows,
 		Cols:      trainColumns,
 		RawImages: trainImages,
@@ -60,7 +60,7 @@ func LoadMnist() (*MnistDataSet, *MnistDataSet) {
 	}
 	testRows, testColumns, testImages, testFImages := readImages(testImagesFile)
 	testLabels := readLabels(testLabelsFile)
-	test := &MnistDataSet{
+	test := &DataSet{
 		Rows:      testRows,
 		Cols:      testColumns,
 		RawImages: testImages,
@@ -76,7 +76,7 @@ func oneHot(n uint8) vec.Vector {
 	return oneHot
 }
 
-func readLabels(file *os.File) []vec.Vector {
+func readLabels(file io.Reader) []vec.Vector {
 	r, err := gzip.NewReader(file)
 	if err != nil {
 		return nil
@@ -127,7 +127,7 @@ func (img RawImage) Bounds() image.Rectangle {
 	}
 }
 
-func readImages(file *os.File) (int, int, []RawImage, []vec.Vector) {
+func readImages(file io.Reader) (int, int, []RawImage, []vec.Vector) {
 	r, err := gzip.NewReader(file)
 	if err != nil {
 		panic(err)
@@ -162,17 +162,21 @@ func readImages(file *os.File) (int, int, []RawImage, []vec.Vector) {
 	for i := 0; i < int(n); i++ {
 		imgs[i] = make(RawImage, m)
 		fimgs[i] = make(vec.Vector, m)
-		m_, err := io.ReadFull(r, imgs[i])
+		mfull, err := io.ReadFull(r, imgs[i])
+
 		if err != nil {
 			panic(err)
 		}
-		if m_ != int(m) {
+		if mfull != m {
 			return 0, 0, nil, nil
 		}
 
 		for j, b := range imgs[i] {
 			fimgs[i][j] = float64(b)
 		}
+		// fmt.Println(imgs[i])
+		// fmt.Println(fimgs[i])
+		// panic(nil)
 	}
 	return int(nrow), int(ncol), imgs, fimgs
 }
