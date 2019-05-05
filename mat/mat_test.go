@@ -68,7 +68,7 @@ func TestDot_4(t *testing.T) {
 func TestAdd_1(t *testing.T) {
 	m1, _ := NewMatrix(1, 2, vec.Vector{1, 2})
 	m2, _ := NewMatrix(1, 2, vec.Vector{3, 4})
-	actual := m1.Add(m2)
+	actual := Add(m1, m2)
 	expected, _ := NewMatrix(1, 2, vec.Vector{4, 6})
 	if NotEqual(actual, expected) {
 		t.Fail()
@@ -84,7 +84,7 @@ func TestAdd_2(t *testing.T) {
 		3, 4,
 		4, 5,
 	})
-	actual := m1.Add(m2)
+	actual := Add(m1, m2)
 	expected, _ := NewMatrix(2, 2, vec.Vector{
 		4, 6,
 		7, 9,

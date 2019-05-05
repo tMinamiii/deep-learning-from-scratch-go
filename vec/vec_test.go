@@ -9,7 +9,7 @@ import (
 func TestVectorMulti(t *testing.T) {
 	x := Vector{2, 4, 5}
 	w := Vector{1, 2, 3}
-	result := x.Mul(w)
+	result := Mul(x, w)
 	if result == nil {
 		t.Fail()
 	}
@@ -45,7 +45,7 @@ func TestVectorMax(t *testing.T) {
 
 func TestVectorDivide(t *testing.T) {
 	ary := Vector{1, 2, 3, 4, 5}
-	result := ary.Div(10.0)
+	result := Div(ary, 10.0)
 	expected := Vector{1.0 / 10.0, 2.0 / 10.0, 3.0 / 10.0, 4.0 / 10.0, 5.0 / 10.0}
 	if NotEqual(result, expected) {
 		log.Println(result, expected)
@@ -55,7 +55,7 @@ func TestVectorDivide(t *testing.T) {
 
 func TestVectorSub(t *testing.T) {
 	ary := Vector{1, 2, 3, 4, 5}
-	result := ary.Sub(2.0)
+	result := Sub(ary, 2.0)
 	expected := Vector{1 - 2, 2 - 2, 3 - 2, 4 - 2, 5 - 2}
 	if NotEqual(result, expected) {
 		log.Println(result, expected)

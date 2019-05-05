@@ -19,9 +19,9 @@ func NewSlowTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd flo
 	if err != nil {
 		panic(err)
 	}
-	params["W1"] = W1.Mul(weightInitStd)
+	params["W1"] = mat.Mul(W1, weightInitStd)
 	params["b1"] = mat.Zeros(1, hiddenSize)
-	params["W2"] = W2.Mul(weightInitStd)
+	params["W2"] = mat.Mul(W2, weightInitStd)
 	params["b2"] = mat.Zeros(1, outputSize)
 	return &SlowTwoLayerNet{Params: params}
 }
@@ -33,9 +33,9 @@ func (net *SlowTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 	b2 := net.Params["b2"]
 
 	dota1 := mat.Dot(x, W1)
-	a1 := dota1.Add(b1.Vector)
+	a1 := mat.Add(dota1, b1.Vector)
 	z1 := mat.Relu(a1)
-	a2 := mat.Dot(z1, W2).Add(b2.Vector)
+	a2 := mat.Add(mat.Dot(z1, W2), b2.Vector)
 	y := mat.Softmax(a2)
 
 	return y

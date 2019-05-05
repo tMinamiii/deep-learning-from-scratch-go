@@ -27,7 +27,7 @@ func NewAffine(w, b *mat.Matrix) *Affine {
 
 func (af *Affine) Forward(x *mat.Matrix) *mat.Matrix {
 	af.X = x
-	out := mat.Dot(x, af.W).Add(af.B)
+	out := mat.Add(mat.Dot(x, af.W), af.B)
 	return out
 }
 
@@ -47,19 +47,19 @@ func NewSigmoid() *Sigmoid {
 }
 
 func (si *Sigmoid) Forward(x *mat.Matrix) *mat.Matrix {
-	minusX := x.Mul(-1.0)
+	minusX := mat.Mul(x, -1.0)
 	exp := mat.Exp(minusX)
-	plusX := exp.Add(1.0)
+	plusX := mat.Add(exp, 1.0)
 	out := mat.Pow(plusX, -1)
 	si.Out = out
 	return out
 }
 
 func (si *Sigmoid) Backward(dout *mat.Matrix) *mat.Matrix {
-	minus := si.Out.Mul(-1.0)
-	sub := minus.Add(1.0)
-	mul := dout.Mul(sub)
-	dx := mul.Mul(si.Out)
+	minus := mat.Mul(si.Out, -1.0)
+	sub := mat.Add(minus, 1.0)
+	mul := mat.Mul(dout, sub)
+	dx := mat.Mul(mul, si.Out)
 	return dx
 }
 
@@ -128,7 +128,7 @@ func (so *SoftmaxWithLoss) Forward(x, t *mat.Matrix) float64 {
 
 func (so *SoftmaxWithLoss) Backward(_ float64) *mat.Matrix {
 	batchSize, _ := so.t.Shape()
-	sub := so.y.Sub(so.t)
-	dx := sub.Div(float64(batchSize))
+	sub := mat.Sub(so.y, so.t)
+	dx := mat.Div(sub, float64(batchSize))
 	return dx
 }

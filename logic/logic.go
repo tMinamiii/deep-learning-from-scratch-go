@@ -11,7 +11,7 @@ func AND(x1 float64, x2 float64) int {
 	x := vec.Vector{x1, x2}
 	w := vec.Vector{0.5, 0.5}
 	const b = -0.7
-	mul := x.Mul(w)
+	mul := vec.Mul(x, w)
 	if mul == nil {
 		return 0
 	}
@@ -28,7 +28,7 @@ func NAND(x1 float64, x2 float64) int {
 	x := vec.Vector{x1, x2}
 	w := vec.Vector{-0.5, -0.5}
 	const b = 0.7
-	mul := x.Mul(w)
+	mul := vec.Mul(x, w)
 	if mul == nil {
 		return 0
 	}
@@ -44,7 +44,7 @@ func OR(x1 float64, x2 float64) int {
 	x := vec.Vector{x1, x2}
 	w := vec.Vector{0.5, 0.5}
 	const b = -0.2
-	mul := x.Mul(w)
+	mul := vec.Mul(x, w)
 	if mul == nil {
 		return 0
 	}

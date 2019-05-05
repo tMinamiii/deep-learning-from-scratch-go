@@ -55,10 +55,10 @@ func ZerosLike(x Vector) Vector {
 type Arithmetic int
 
 const (
-	Add Arithmetic = iota
-	Sub
-	Mul
-	Div
+	ADD Arithmetic = iota
+	SUB
+	MUL
+	DIV
 )
 
 func vecVec(a Arithmetic, v1, v2 Vector) Vector {
@@ -68,13 +68,13 @@ func vecVec(a Arithmetic, v1, v2 Vector) Vector {
 	result := Zeros(len(v1))
 	for i := 0; i < len(v1); i++ {
 		switch a {
-		case Add:
+		case ADD:
 			result[i] = v1[i] + v2[i]
-		case Sub:
+		case SUB:
 			result[i] = v1[i] - v2[i]
-		case Mul:
+		case MUL:
 			result[i] = v1[i] * v2[i]
-		case Div:
+		case DIV:
 			result[i] = v1[i] / v2[i]
 		}
 
@@ -86,13 +86,13 @@ func vecFloat(a Arithmetic, v Vector, f float64) Vector {
 	result := Zeros(len(v))
 	for i := 0; i < len(v); i++ {
 		switch a {
-		case Add:
+		case ADD:
 			result[i] = v[i] + f
-		case Sub:
+		case SUB:
 			result[i] = v[i] - f
-		case Mul:
+		case MUL:
 			result[i] = v[i] * f
-		case Div:
+		case DIV:
 			result[i] = v[i] / f
 		}
 
@@ -100,42 +100,66 @@ func vecFloat(a Arithmetic, v Vector, f float64) Vector {
 	return result
 }
 
-func (v Vector) Add(arg interface{}) Vector {
-	switch x2 := arg.(type) {
-	case Vector:
-		return vecVec(Add, v, x2)
-	case float64:
-		return vecFloat(Add, v, x2)
+func Add(x1, x2 interface{}) Vector {
+	if v, ok := x1.(Vector); ok {
+		switch x2v := x2.(type) {
+		case Vector:
+			return vecVec(ADD, v, x2v)
+		case float64:
+			return vecFloat(ADD, v, x2v)
+		}
+	} else if v, ok := x2.(Vector); ok {
+		if x1v, ok := x1.(float64); ok {
+			return vecFloat(ADD, v, x1v)
+		}
 	}
 	return nil
 }
 
-func (v Vector) Sub(arg interface{}) Vector {
-	switch x2 := arg.(type) {
-	case Vector:
-		return vecVec(Sub, v, x2)
-	case float64:
-		return vecFloat(Sub, v, x2)
+func Sub(x1, x2 interface{}) Vector {
+	if v, ok := x1.(Vector); ok {
+		switch x2v := x2.(type) {
+		case Vector:
+			return vecVec(SUB, v, x2v)
+		case float64:
+			return vecFloat(SUB, v, x2v)
+		}
+	} else if v, ok := x2.(Vector); ok {
+		if x1v, ok := x1.(float64); ok {
+			return vecFloat(SUB, v, x1v)
+		}
 	}
 	return nil
 }
 
-func (v Vector) Mul(arg interface{}) Vector {
-	switch x2 := arg.(type) {
-	case Vector:
-		return vecVec(Mul, v, x2)
-	case float64:
-		return vecFloat(Mul, v, x2)
+func Mul(x1, x2 interface{}) Vector {
+	if v, ok := x1.(Vector); ok {
+		switch x2v := x2.(type) {
+		case Vector:
+			return vecVec(MUL, v, x2v)
+		case float64:
+			return vecFloat(MUL, v, x2v)
+		}
+	} else if v, ok := x2.(Vector); ok {
+		if x1v, ok := x1.(float64); ok {
+			return vecFloat(MUL, v, x1v)
+		}
 	}
 	return nil
 }
 
-func (v Vector) Div(arg interface{}) Vector {
-	switch x2 := arg.(type) {
-	case Vector:
-		return vecVec(Div, v, x2)
-	case float64:
-		return vecFloat(Div, v, x2)
+func Div(x1, x2 interface{}) Vector {
+	if v, ok := x1.(Vector); ok {
+		switch x2v := x2.(type) {
+		case Vector:
+			return vecVec(DIV, v, x2v)
+		case float64:
+			return vecFloat(DIV, v, x2v)
+		}
+	} else if v, ok := x2.(Vector); ok {
+		if x1v, ok := x1.(float64); ok {
+			return vecFloat(DIV, v, x1v)
+		}
 	}
 	return nil
 }
@@ -246,9 +270,9 @@ Vectorのsoftmaxなので常にndim == 1
 */
 func Softmax(x Vector) Vector {
 	c := Max(x)
-	expA := Exp(x.Sub(c))
+	expA := Exp(Sub(x, c))
 	sumExpA := Sum(expA)
-	result := expA.Div(sumExpA)
+	result := Div(expA, sumExpA)
 	return result
 }
 
@@ -257,14 +281,14 @@ func IdentityFunction(x Vector) Vector {
 }
 
 func MeanSquaredError(y, t Vector) float64 {
-	sub := y.Sub(t)
+	sub := Sub(y, t)
 	pow := Pow(sub, 2)
 	return 0.5 * Sum(pow)
 }
 
 func CrossEntropyError(y, t Vector) float64 {
-	log := Log(y.Add(delta))
-	return -Sum(log.Mul(t))
+	log := Log(Add(y, delta))
+	return -Sum(Mul(log, t))
 }
 
 func NumericalGradient(f func(Vector) float64, x Vector) Vector {
@@ -292,7 +316,7 @@ func GradientDescent(f func(Vector) float64, initX Vector, lr float64, stepNum i
 	x := initX
 	for i := 0; i < stepNum; i++ {
 		grad := NumericalGradient(f, x)
-		x = grad.Mul(lr).Sub(x)
+		x = Sub(Mul(grad, lr), x)
 	}
 	return x
 }

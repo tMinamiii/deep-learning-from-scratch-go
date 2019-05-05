@@ -71,8 +71,8 @@ func train() {
 		newParams := map[string]*mat.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
-			mullr := grads[k].Mul(LearningRate)
-			newParams[k] = net.Params[k].Sub(mullr)
+			mullr := mat.Mul(grads[k], LearningRate)
+			newParams[k] = mat.Sub(net.Params[k], mullr)
 			net.Params[k] = newParams[k]
 		}
 		loss := net.Loss(xBatch, tBatch)

@@ -81,12 +81,12 @@ func (a *Adam) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matr
 	for k, v := range params {
 		// self.m[key] += (1 - self.beta1) * (grads[key] - self.m[key])
 		// self.v[key] += (1 - self.beta2) * (grads[key]**2 - self.v[key])
-		a.M[k] = a.M[k].Add(v.Sub(a.M[k]).Mul(1.0 - a.Beta1))
-		a.V[k] = a.V[k].Add(mat.Pow(v, 2).Sub(a.V[k]).Mul(1.0 - a.Beta2))
+		a.M[k] = mat.Add(a.M[k], mat.Mul(1.0-a.Beta1, mat.Sub(v, a.M[k])))
+		a.V[k] = mat.Add(a.V[k], mat.Mul(1.0-a.Beta2, mat.Sub(mat.Pow(v, 2), a.V[k])))
 
 		// params[key] -= lr_t * self.m[key] / (np.sqrt(self.v[key]) + 1e-7)
-		delta := (a.M[k].Mul(lrT)).Div(mat.Sqrt(a.V[k]).Add(1e-7))
-		newParams[k] = params[k].Sub(delta)
+		delta := mat.Div(mat.Mul(lrT, a.M[k]), mat.Add(mat.Sqrt(a.V[k]), 1e-7))
+		newParams[k] = mat.Sub(params[k], delta)
 	}
 	return newParams
 }
