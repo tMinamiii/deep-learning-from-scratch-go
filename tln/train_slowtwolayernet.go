@@ -14,10 +14,10 @@ import (
 // ハイパーパラメタ
 const (
 	ImageLength  = 784
-	ItersNum     = 100000
+	ItersNum     = 10000
 	BatchSize    = 100
-	Hidden       = 50
-	LearningRate = 0.0001
+	Hidden       = 20
+	LearningRate = 0.1
 )
 
 func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
@@ -38,7 +38,7 @@ func train() {
 	train, test := mnist.LoadMnist()
 
 	TrainSize := len(train.Labels)
-	net := network.NewLayeredTwoLayerNet(ImageLength, Hidden, 10, 0.01)
+	net := network.NewSlowTwoLayerNet(ImageLength, Hidden, 10, 0.01)
 
 	trainLossList := []float64{}
 	trainAccList := []float64{}
@@ -46,15 +46,15 @@ func train() {
 	xTrain, tTrain := MnistMatrix(train)
 	xTest, tTest := MnistMatrix(test)
 	iterPerEpoch := func() int {
-		if TrainSize/BatchSize > 1.0 {
-			return TrainSize / BatchSize
-		}
-		return 1
+		return 5
+		// if TrainSize/BatchSize > 1 {
+		// 	return TrainSize / BatchSize
+		// }
+		// return 1
 	}()
-
 	rand.Seed(time.Now().UnixNano())
-
 	for i := 0; i < ItersNum; i++ {
+
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		image := vec.Vector{}
@@ -66,24 +66,26 @@ func train() {
 
 		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
 		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
-		grads := net.Gradient(xBatch, tBatch)
+		grads := net.NumericalGradient(xBatch, tBatch)
+
 		newParams := map[string]*mat.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
 			mullr := grads[k].Mul(LearningRate)
 			newParams[k] = net.Params[k].Sub(mullr)
+			net.Params[k] = newParams[k]
 		}
-		net.UpdateParams(newParams)
-
 		loss := net.Loss(xBatch, tBatch)
+		end := time.Now()
 
-		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
+		fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
+		// trainLossList = append(trainLossList, loss)
+
+		if i%iterPerEpoch == 0 {
 			trainAcc := net.Accuracy(xTrain, tTrain)
 			testAcc := net.Accuracy(xTest, tTest)
 			// trainAccList = append(trainAccList, trainAcc)
 			// testAccList = append(testAccList, testAcc)
-			end := time.Now()
-			fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
 			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
 		}
 	}
