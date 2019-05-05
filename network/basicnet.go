@@ -41,13 +41,13 @@ func NewBasicNetwork() *BasicNetwork {
 	}
 }
 
-func (self *BasicNetwork) Forward(x *mat.Matrix) vec.Vector {
-	W1 := self.Network["W1"]
-	W2 := self.Network["W2"]
-	W3 := self.Network["W3"]
-	b1 := self.Network["b1"]
-	b2 := self.Network["b2"]
-	b3 := self.Network["b3"]
+func (net *BasicNetwork) Forward(x *mat.Matrix) vec.Vector {
+	W1 := net.Network["W1"]
+	W2 := net.Network["W2"]
+	W3 := net.Network["W3"]
+	b1 := net.Network["b1"]
+	b2 := net.Network["b2"]
+	b3 := net.Network["b3"]
 
 	mul1 := mat.Dot(x, W1)
 	a1 := mul1.Add(b1)

@@ -48,21 +48,21 @@ func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (self *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
-	for _, k := range self.Sequence {
-		x = self.Layers[k].Forward(x)
+func (net *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+	for _, k := range net.Sequence {
+		x = net.Layers[k].Forward(x)
 	}
 	return x
 }
 
-func (self *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
-	y := self.Predict(x)
-	cee := self.LastLayer.Forward(y, t)
+func (net *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
+	y := net.Predict(x)
+	cee := net.LastLayer.Forward(y, t)
 	return cee
 }
 
-func (self *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
-	y := self.Predict(x)
+func (net *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
+	y := net.Predict(x)
 	yMax := mat.ArgMax(y, 1)
 	tMax := mat.ArgMax(t, 1)
 	sum := 0.0
@@ -76,25 +76,25 @@ func (self *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	return accuracy
 }
 
-func (self *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (net *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	// forward
-	self.Loss(x, t)
+	net.Loss(x, t)
 
 	// backward
-	dout := self.LastLayer.Backward(1.0)
+	dout := net.LastLayer.Backward(1.0)
 
-	for i := len(self.Sequence) - 1; i >= 0; i-- {
-		key := self.Sequence[i]
-		dout = self.Layers[key].Backward(dout)
+	for i := len(net.Sequence) - 1; i >= 0; i-- {
+		key := net.Sequence[i]
+		dout = net.Layers[key].Backward(dout)
 	}
 
 	grads := map[string]*mat.Matrix{}
 
-	for i := 1; i <= self.AffineNum; i++ {
+	for i := 1; i <= net.AffineNum; i++ {
 		l := fmt.Sprintf("Affine%d", i)
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
-		if v, ok := self.Layers[l].(*layer.Affine); ok {
+		if v, ok := net.Layers[l].(*layer.Affine); ok {
 			grads[w] = v.DW
 			grads[b] = v.DB
 		}
@@ -102,14 +102,14 @@ func (self *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	return grads
 }
 
-func (tln *TwoLayerNet) UpdateParams(params map[string]*mat.Matrix) {
-	tln.Params = params
+func (net *TwoLayerNet) UpdateParams(params map[string]*mat.Matrix) {
+	net.Params = params
 
-	for i := 1; i <= tln.AffineNum; i++ {
+	for i := 1; i <= net.AffineNum; i++ {
 		l := fmt.Sprintf("Affine%d", i)
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
-		if v, ok := tln.Layers[l].(*layer.Affine); ok {
+		if v, ok := net.Layers[l].(*layer.Affine); ok {
 			v.W = params[w]
 			v.B = params[b]
 

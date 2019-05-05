@@ -5,15 +5,15 @@ type MulLayer struct {
 	Y float64
 }
 
-func (self *MulLayer) forward(x, y float64) float64 {
-	self.X = x
-	self.Y = y
+func (mu *MulLayer) forward(x, y float64) float64 {
+	mu.X = x
+	mu.Y = y
 	out := x * y
 	return out
 }
 
-func (self *MulLayer) backward(dout float64) (float64, float64) {
-	dx := dout * self.Y
-	dy := dout * self.X
+func (mu *MulLayer) backward(dout float64) (float64, float64) {
+	dx := dout * mu.Y
+	dy := dout * mu.X
 	return dx, dy
 }

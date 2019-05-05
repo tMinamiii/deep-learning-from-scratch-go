@@ -14,12 +14,12 @@ func NewSimpleNet(weight *mat.Matrix) *SimpleNet {
 	}
 }
 
-func (self *SimpleNet) Predict(x *mat.Matrix) *mat.Matrix {
-	return mat.Dot(x, self.W)
+func (net *SimpleNet) Predict(x *mat.Matrix) *mat.Matrix {
+	return mat.Dot(x, net.W)
 }
 
-func (self *SimpleNet) Loss(x, t *mat.Matrix) float64 {
-	z := self.Predict(x)
+func (net *SimpleNet) Loss(x, t *mat.Matrix) float64 {
+	z := net.Predict(x)
 	y := mat.Softmax(z)
 	return mat.CrossEntropyError(y, t)
 }

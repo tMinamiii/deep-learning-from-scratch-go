@@ -25,16 +25,16 @@ func NewAffine(w, b *mat.Matrix) *Affine {
 	}
 }
 
-func (self *Affine) Forward(x *mat.Matrix) *mat.Matrix {
-	self.X = x
-	out := mat.Dot(x, self.W).Add(self.B)
+func (af *Affine) Forward(x *mat.Matrix) *mat.Matrix {
+	af.X = x
+	out := mat.Dot(x, af.W).Add(af.B)
 	return out
 }
 
-func (self *Affine) Backward(dout *mat.Matrix) *mat.Matrix {
-	dx := mat.Dot(dout, self.W.T())
-	self.DW = mat.Dot(self.X.T(), dout)
-	self.DB = mat.Sum(dout, 0)
+func (af *Affine) Backward(dout *mat.Matrix) *mat.Matrix {
+	dx := mat.Dot(dout, af.W.T())
+	af.DW = mat.Dot(af.X.T(), dout)
+	af.DB = mat.Sum(dout, 0)
 	return dx
 }
 
@@ -46,20 +46,20 @@ func NewSigmoid() *Sigmoid {
 	return &Sigmoid{}
 }
 
-func (self *Sigmoid) Forward(x *mat.Matrix) *mat.Matrix {
+func (si *Sigmoid) Forward(x *mat.Matrix) *mat.Matrix {
 	minusX := x.Mul(-1.0)
 	exp := mat.Exp(minusX)
 	plusX := exp.Add(1.0)
 	out := mat.Pow(plusX, -1)
-	self.Out = out
+	si.Out = out
 	return out
 }
 
-func (self *Sigmoid) Backward(dout *mat.Matrix) *mat.Matrix {
-	minus := self.Out.Mul(-1.0)
+func (si *Sigmoid) Backward(dout *mat.Matrix) *mat.Matrix {
+	minus := si.Out.Mul(-1.0)
 	sub := minus.Add(1.0)
 	mul := dout.Mul(sub)
-	dx := mul.Mul(self.Out)
+	dx := mul.Mul(si.Out)
 	return dx
 }
 
@@ -71,13 +71,13 @@ func NewRelu() *ReLU {
 	return &ReLU{}
 }
 
-func (self *ReLU) Forward(x *mat.Matrix) *mat.Matrix {
+func (r *ReLU) Forward(x *mat.Matrix) *mat.Matrix {
 	v := x.Vector
-	self.mask = make([]bool, len(v))
+	r.mask = make([]bool, len(v))
 	out := vec.ZerosLike(v)
 	for i, e := range v {
 		if e <= 0 {
-			self.mask[i] = true
+			r.mask[i] = true
 			out[i] = 0
 		} else {
 			out[i] = e
@@ -91,11 +91,11 @@ func (self *ReLU) Forward(x *mat.Matrix) *mat.Matrix {
 	}
 }
 
-func (self *ReLU) Backward(dout *mat.Matrix) *mat.Matrix {
+func (r *ReLU) Backward(dout *mat.Matrix) *mat.Matrix {
 	v := dout.Vector
 	dv := vec.ZerosLike(v)
 	for i, e := range v {
-		if self.mask[i] {
+		if r.mask[i] {
 			dv[i] = 0
 		} else {
 			dv[i] = e
@@ -119,16 +119,16 @@ func NewSfotmaxWithLoss() *SoftmaxWithLoss {
 	return &SoftmaxWithLoss{}
 }
 
-func (self *SoftmaxWithLoss) Forward(x, t *mat.Matrix) float64 {
-	self.t = t
-	self.y = mat.Softmax(x)
-	self.loss = mat.CrossEntropyError(self.y, self.t)
-	return self.loss
+func (so *SoftmaxWithLoss) Forward(x, t *mat.Matrix) float64 {
+	so.t = t
+	so.y = mat.Softmax(x)
+	so.loss = mat.CrossEntropyError(so.y, so.t)
+	return so.loss
 }
 
-func (self *SoftmaxWithLoss) Backward(_ float64) *mat.Matrix {
-	batchSize, _ := self.t.Shape()
-	sub := self.y.Sub(self.t)
+func (so *SoftmaxWithLoss) Backward(_ float64) *mat.Matrix {
+	batchSize, _ := so.t.Shape()
+	sub := so.y.Sub(so.t)
 	dx := sub.Div(float64(batchSize))
 	return dx
 }

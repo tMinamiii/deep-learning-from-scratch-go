@@ -26,11 +26,11 @@ func NewSlowTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd flo
 	return &SlowTwoLayerNet{Params: params}
 }
 
-func (self *SlowTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
-	W1 := self.Params["W1"]
-	b1 := self.Params["b1"]
-	W2 := self.Params["W2"]
-	b2 := self.Params["b2"]
+func (net *SlowTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+	W1 := net.Params["W1"]
+	b1 := net.Params["b1"]
+	W2 := net.Params["W2"]
+	b2 := net.Params["b2"]
 
 	dota1 := mat.Dot(x, W1)
 	a1 := dota1.Add(b1.Vector)
@@ -41,14 +41,14 @@ func (self *SlowTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 	return y
 }
 
-func (self *SlowTwoLayerNet) Loss(x, t *mat.Matrix) float64 {
-	y := self.Predict(x)
+func (net *SlowTwoLayerNet) Loss(x, t *mat.Matrix) float64 {
+	y := net.Predict(x)
 	cee := mat.CrossEntropyError(y, t)
 	return cee
 }
 
-func (self *SlowTwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
-	y := self.Predict(x)
+func (net *SlowTwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
+	y := net.Predict(x)
 	yMax := mat.ArgMax(y, 1)
 	tMax := mat.ArgMax(t, 1)
 	sum := 0.0
@@ -62,14 +62,14 @@ func (self *SlowTwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	return accuracy
 }
 
-func (self *SlowTwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (net *SlowTwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	lossW := func(wvec vec.Vector) float64 {
-		return self.Loss(x, t)
+		return net.Loss(x, t)
 	}
 	grads := map[string]*mat.Matrix{}
-	grads["W1"] = mat.NumericalGradient(lossW, self.Params["W1"])
-	grads["b1"] = mat.NumericalGradient(lossW, self.Params["b1"])
-	grads["W2"] = mat.NumericalGradient(lossW, self.Params["W2"])
-	grads["b2"] = mat.NumericalGradient(lossW, self.Params["b2"])
+	grads["W1"] = mat.NumericalGradient(lossW, net.Params["W1"])
+	grads["b1"] = mat.NumericalGradient(lossW, net.Params["b1"])
+	grads["W2"] = mat.NumericalGradient(lossW, net.Params["W2"])
+	grads["b2"] = mat.NumericalGradient(lossW, net.Params["b2"])
 	return grads
 }
