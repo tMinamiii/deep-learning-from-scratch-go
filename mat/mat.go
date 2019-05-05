@@ -185,44 +185,44 @@ func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
 			if m1.Columns != m2.Columns {
 				return nil
 			}
-			mat := vec.Zeros(m1.Rows * m1.Columns)
+			vector := vec.Zeros(m1.Rows * m1.Columns)
 			for r := 0; r < m1.Rows; r++ {
 				for c := 0; c < m2.Columns; c++ {
 					index := r*m1.Columns + c
 					switch a {
 					case Add:
-						mat[index] = m1.Element(r, c) + m2.Element(0, c)
+						vector[index] = m1.Element(r, c) + m2.Element(0, c)
 					case Sub:
-						mat[index] = m1.Element(r, c) - m2.Element(0, c)
+						vector[index] = m1.Element(r, c) - m2.Element(0, c)
 					case Mul:
-						mat[index] = m1.Element(r, c) * m2.Element(0, c)
+						vector[index] = m1.Element(r, c) * m2.Element(0, c)
 					case Div:
-						mat[index] = m1.Element(r, c) / m2.Element(0, c)
+						vector[index] = m1.Element(r, c) / m2.Element(0, c)
 					}
 				}
 			}
 			return &Matrix{
-				Vector:  mat,
+				Vector:  vector,
 				Rows:    m1.Rows,
 				Columns: m1.Columns,
 			}
 
 		}
 	} else {
-		mat := vec.Zeros(m1.Rows * m1.Columns)
+		vector := vec.Zeros(m1.Rows * m1.Columns)
 		switch a {
 		case Add:
-			mat = m1.Vector.Add(m2.Vector)
+			vector = m1.Vector.Add(m2.Vector)
 		case Sub:
-			mat = m1.Vector.Sub(m2.Vector)
+			vector = m1.Vector.Sub(m2.Vector)
 		case Mul:
-			mat = m1.Vector.Mul(m2.Vector)
+			vector = m1.Vector.Mul(m2.Vector)
 		case Div:
-			mat = m1.Vector.Div(m2.Vector)
+			vector = m1.Vector.Div(m2.Vector)
 		}
 
 		return &Matrix{
-			Vector:  mat,
+			Vector:  vector,
 			Rows:    m1.Rows,
 			Columns: m1.Columns,
 		}
@@ -234,24 +234,24 @@ func matVec(a Arithmetic, m1 *Matrix, m2 vec.Vector) *Matrix {
 	if m1.Columns != len(m2) {
 		return nil
 	}
-	mat := make(vec.Vector, m1.Rows*m1.Columns)
+	vector := vec.Zeros(m1.Rows * m1.Columns)
 	for r := 0; r < m1.Rows; r++ {
 		for c := 0; c < len(m2); c++ {
 			index := r*m1.Columns + c
 			switch a {
 			case Add:
-				mat[index] = m1.Element(r, c) + m2[c]
+				vector[index] = m1.Element(r, c) + m2[c]
 			case Sub:
-				mat[index] = m1.Element(r, c) - m2[c]
+				vector[index] = m1.Element(r, c) - m2[c]
 			case Mul:
-				mat[index] = m1.Element(r, c) * m2[c]
+				vector[index] = m1.Element(r, c) * m2[c]
 			case Div:
-				mat[index] = m1.Element(r, c) / m2[c]
+				vector[index] = m1.Element(r, c) / m2[c]
 			}
 		}
 	}
 	return &Matrix{
-		Vector:  mat,
+		Vector:  vector,
 		Rows:    m1.Rows,
 		Columns: m1.Columns,
 	}
@@ -359,7 +359,7 @@ func SumAll(m *Matrix) float64 {
 
 func Sum(m *Matrix, axis int) *Matrix {
 	if axis == 0 {
-		v := make(vec.Vector, m.Columns)
+		v := vec.Zeros(m.Columns)
 		for i := 0; i < m.Columns; i++ {
 			col := m.SliceColumn(i)
 			v[i] = vec.Sum(col)
@@ -370,7 +370,7 @@ func Sum(m *Matrix, axis int) *Matrix {
 			Columns: m.Columns,
 		}
 	} else if axis == 1 {
-		v := make(vec.Vector, m.Rows)
+		v := vec.Zeros(m.Rows)
 		for i := 0; i < m.Rows; i++ {
 			row := m.SliceRow(i)
 			v[i] = vec.Sum(row)
@@ -390,14 +390,14 @@ func MaxAll(x *Matrix) float64 {
 
 func Max(m *Matrix, axis int) vec.Vector {
 	if axis == 0 {
-		v := make(vec.Vector, m.Columns)
+		v := vec.Zeros(m.Columns)
 		for i := 0; i < m.Columns; i++ {
 			col := m.SliceColumn(i)
 			v[i] = vec.Max(col)
 		}
 		return v
 	} else if axis == 1 {
-		v := make(vec.Vector, m.Rows)
+		v := vec.Zeros(m.Rows)
 		for i := 0; i < m.Rows; i++ {
 			row := m.SliceRow(i)
 			v[i] = vec.Max(row)
@@ -496,7 +496,7 @@ def cross_entropy_error(y, t):
 
 */
 func CrossEntropyError(y, t *Matrix) float64 {
-	r := make(vec.Vector, y.Rows)
+	r := vec.Zeros(y.Rows)
 	for i := 0; i < y.Rows; i++ {
 		yRow := y.SliceRow(i)
 		tRow := t.SliceRow(i)

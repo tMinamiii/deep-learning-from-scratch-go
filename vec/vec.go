@@ -35,7 +35,7 @@ func NotEqual(x1, x2 Vector) bool {
 
 func Randn(n int) Vector {
 	rand.Seed(time.Now().UnixNano())
-	zeros := make(Vector, n)
+	zeros := Zeros(n)
 	for i := range zeros {
 		zeros[i] = rand.NormFloat64()
 	}
@@ -48,7 +48,7 @@ func Zeros(n int) Vector {
 }
 
 func ZerosLike(x Vector) Vector {
-	zeros := make(Vector, len(x))
+	zeros := Zeros(len(x))
 	return zeros
 }
 
@@ -65,7 +65,7 @@ func vecVec(a Arithmetic, v1, v2 Vector) Vector {
 	if len(v1) != len(v2) {
 		return nil
 	}
-	result := make([]float64, len(v1))
+	result := Zeros(len(v1))
 	for i := 0; i < len(v1); i++ {
 		switch a {
 		case Add:
@@ -83,7 +83,7 @@ func vecVec(a Arithmetic, v1, v2 Vector) Vector {
 }
 
 func vecFloat(a Arithmetic, v Vector, f float64) Vector {
-	result := make([]float64, len(v))
+	result := Zeros(len(v))
 	for i := 0; i < len(v); i++ {
 		switch a {
 		case Add:
@@ -149,7 +149,7 @@ func Sum(ary Vector) float64 {
 }
 
 func Relu(x Vector) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = scalar.Relu(v)
 	}
@@ -157,7 +157,7 @@ func Relu(x Vector) Vector {
 }
 
 func Sigmoid(x Vector) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = scalar.Sigmoid(v)
 	}
@@ -193,7 +193,7 @@ func Max(x Vector) float64 {
 }
 
 func Exp(x Vector) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = math.Exp(v)
 	}
@@ -201,7 +201,7 @@ func Exp(x Vector) Vector {
 }
 
 func Log(x Vector) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = math.Log(v)
 	}
@@ -209,7 +209,7 @@ func Log(x Vector) Vector {
 }
 
 func Pow(x Vector, p float64) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = math.Pow(v, p)
 	}
@@ -217,7 +217,7 @@ func Pow(x Vector, p float64) Vector {
 }
 
 func Sqrt(x Vector) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = math.Sqrt(v)
 	}
@@ -225,7 +225,7 @@ func Sqrt(x Vector) Vector {
 }
 
 func Abs(x Vector) Vector {
-	result := make(Vector, len(x))
+	result := Zeros(len(x))
 	for i, v := range x {
 		result[i] = math.Abs(v)
 	}
