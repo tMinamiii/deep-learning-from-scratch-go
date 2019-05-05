@@ -2,9 +2,11 @@ package network
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/naronA/zero_deeplearning/layer"
 	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/optimizer"
 )
 
 type TwoLayerNet struct {
@@ -13,10 +15,11 @@ type TwoLayerNet struct {
 	Sequence  []string
 	LastLayer *layer.SoftmaxWithLoss
 	AffineNum int
+	Optimizer optimizer.Optimizer
 }
 
 // NewTwoLayerNet は、TwoLayerNetのコンストラクタ
-func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64) *TwoLayerNet {
+func NewTwoLayerNet(opt optimizer.Optimizer, inputSize, hiddenSize, outputSize int) *TwoLayerNet {
 	params := map[string]*mat.Matrix{}
 	layers := map[string]layer.Layer{}
 
@@ -28,9 +31,11 @@ func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64
 	if err != nil {
 		panic(err)
 	}
-	params["W1"] = W1.Mul(weightInitStd)
+	params["W1"] = W1.Div(math.Sqrt(2.0 * float64(inputSize))) // weightInitStd
+	// params["W1"] = W1.Mul(0.01) // weightInitStd
 	params["b1"] = mat.Zeros(1, hiddenSize)
-	params["W2"] = W2.Mul(weightInitStd)
+	params["W2"] = W2.Div(math.Sqrt(2.0 * float64(hiddenSize)))
+	// params["W2"] = W2.Mul(0.01) // weightInitStd
 	params["b2"] = mat.Zeros(1, outputSize)
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])
 	layers["Relu1"] = layer.NewRelu()
@@ -44,6 +49,7 @@ func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64
 		LastLayer: last,
 		Sequence:  seq,
 		AffineNum: 2,
+		Optimizer: opt,
 	}
 }
 
@@ -102,17 +108,16 @@ func (net *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	return grads
 }
 
-func (net *TwoLayerNet) UpdateParams(params map[string]*mat.Matrix) {
-	net.Params = params
+func (net *TwoLayerNet) UpdateParams(grads map[string]*mat.Matrix) {
+	net.Params = net.Optimizer.Update(net.Params, grads)
 
 	for i := 1; i <= net.AffineNum; i++ {
 		l := fmt.Sprintf("Affine%d", i)
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
 		if v, ok := net.Layers[l].(*layer.Affine); ok {
-			v.W = params[w]
-			v.B = params[b]
-
+			v.W = net.Params[w]
+			v.B = net.Params[b]
 		}
 	}
 }

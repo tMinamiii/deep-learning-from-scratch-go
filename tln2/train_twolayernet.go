@@ -8,6 +8,7 @@ import (
 	"github.com/naronA/zero_deeplearning/mat"
 	"github.com/naronA/zero_deeplearning/mnist"
 	"github.com/naronA/zero_deeplearning/network"
+	"github.com/naronA/zero_deeplearning/optimizer"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -17,7 +18,7 @@ const (
 	ItersNum     = 100000
 	BatchSize    = 100
 	Hidden       = 50
-	LearningRate = 0.0001
+	LearningRate = 0.001
 )
 
 func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
@@ -38,11 +39,13 @@ func train() {
 	train, test := mnist.LoadMnist()
 
 	TrainSize := len(train.Labels)
-	net := network.NewTwoLayerNet(ImageLength, Hidden, 10, 0.01)
+	// opt := optimizer.NewSGD(LearningRate)
+	opt := optimizer.NewMomentum(LearningRate)
+	// opt := optimizer.NewAdaGrad(LearningRate)
+	// opt := optimizer.NewAdam(LearningRate)
 
-	trainLossList := []float64{}
-	trainAccList := []float64{}
-	testAccList := []float64{}
+	net := network.NewTwoLayerNet(opt, ImageLength, Hidden, 10)
+
 	xTrain, tTrain := MnistMatrix(train)
 	xTest, tTest := MnistMatrix(test)
 	iterPerEpoch := func() int {
@@ -67,29 +70,17 @@ func train() {
 		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
 		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
 		grads := net.Gradient(xBatch, tBatch)
-		newParams := map[string]*mat.Matrix{}
-		keys := []string{"W1", "b1", "W2", "b2"}
-		for _, k := range keys {
-			mullr := grads[k].Mul(LearningRate)
-			newParams[k] = net.Params[k].Sub(mullr)
-		}
-		net.UpdateParams(newParams)
-
+		net.UpdateParams(grads)
 		loss := net.Loss(xBatch, tBatch)
 
 		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
 			trainAcc := net.Accuracy(xTrain, tTrain)
 			testAcc := net.Accuracy(xTest, tTest)
-			// trainAccList = append(trainAccList, trainAcc)
-			// testAccList = append(testAccList, testAcc)
 			end := time.Now()
 			fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
 			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
 		}
 	}
-	fmt.Println(trainLossList)
-	fmt.Println(trainAccList)
-	fmt.Println(testAccList)
 }
 
 func main() {

@@ -16,10 +16,10 @@ func NewSGD(lr float64) *SGD {
 	}
 }
 
-func (self *SGD) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
+func (sgd *SGD) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
 	newParams := map[string]*mat.Matrix{}
 	for k, v := range grads {
-		newParams[k] = params[k].Sub(v.Mul(self.LR))
+		newParams[k] = params[k].Sub(v.Mul(sgd.LR))
 	}
 	return newParams
 }
@@ -30,26 +30,26 @@ type Momentum struct {
 	V        map[string]*mat.Matrix
 }
 
-func NewMomentum(lr, momentum float64) *Momentum {
+func NewMomentum(lr float64) *Momentum {
 	return &Momentum{
 		LR:       lr,
-		Momentum: momentum,
+		Momentum: 0.9,
 		V:        nil,
 	}
 }
 
-func (self *Momentum) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
-	if self.V == nil {
-		self.V = map[string]*mat.Matrix{}
+func (mo *Momentum) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
+	if mo.V == nil {
+		mo.V = map[string]*mat.Matrix{}
 		for k, v := range params {
-			self.V[k] = mat.ZerosLike(v)
+			mo.V[k] = mat.ZerosLike(v)
 		}
 	}
 
 	newParams := map[string]*mat.Matrix{}
 	for k, v := range grads {
-		self.V[k] = self.V[k].Mul(self.Momentum).Sub(v.Mul(self.LR))
-		newParams[k] = params[k].Add(self.V[k])
+		mo.V[k] = mo.V[k].Mul(mo.Momentum).Sub(v.Mul(mo.LR))
+		newParams[k] = params[k].Add(mo.V[k])
 	}
 	return newParams
 }
@@ -66,17 +66,17 @@ func NewAdaGrad(lr float64) *AdaGrad {
 	}
 }
 
-func (self *AdaGrad) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
-	if self.H == nil {
-		self.H = map[string]*mat.Matrix{}
+func (ad *AdaGrad) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
+	if ad.H == nil {
+		ad.H = map[string]*mat.Matrix{}
 		for k, v := range params {
-			self.H[k] = mat.ZerosLike(v)
+			ad.H[k] = mat.ZerosLike(v)
 		}
 	}
 	newParams := map[string]*mat.Matrix{}
 	for k, v := range grads {
-		self.H[k] = mat.Pow(v, 2).Add(self.H[k])
-		delta := v.Mul(self.LR).Div(mat.Sqrt(self.H[k]).Add(1e-10))
+		ad.H[k] = mat.Pow(v, 2).Add(ad.H[k])
+		delta := v.Mul(ad.LR).Div(mat.Sqrt(ad.H[k]).Add(1e-7))
 		newParams[k] = params[k].Sub(delta)
 	}
 	return newParams

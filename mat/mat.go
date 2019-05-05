@@ -288,6 +288,7 @@ func (m *Matrix) Add(arg interface{}) *Matrix {
 		return nil
 	}
 }
+
 func (m *Matrix) Sub(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
@@ -300,6 +301,7 @@ func (m *Matrix) Sub(arg interface{}) *Matrix {
 		return nil
 	}
 }
+
 func (m *Matrix) Mul(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 
@@ -313,6 +315,7 @@ func (m *Matrix) Mul(arg interface{}) *Matrix {
 		return nil
 	}
 }
+
 func (m *Matrix) Div(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
