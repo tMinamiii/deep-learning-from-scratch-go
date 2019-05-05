@@ -14,47 +14,47 @@ type Matrix struct {
 	Columns int
 }
 
-func (self *Matrix) T() *Matrix {
+func (m *Matrix) T() *Matrix {
 	trans := vec.Vector{}
-	for i := 0; i < self.Columns; i++ {
-		col := self.SliceColumn(i)
+	for i := 0; i < m.Columns; i++ {
+		col := m.SliceColumn(i)
 		trans = append(trans, col...)
 	}
 	return &Matrix{
 		Vector:  trans,
-		Rows:    self.Columns,
-		Columns: self.Rows,
+		Rows:    m.Columns,
+		Columns: m.Rows,
 	}
 }
 
-func (self *Matrix) Shape() (int, int) {
-	if self.Rows == 1 {
-		return self.Columns, 0
+func (m *Matrix) Shape() (int, int) {
+	if m.Rows == 1 {
+		return m.Columns, 0
 	}
-	return self.Rows, self.Columns
+	return m.Rows, m.Columns
 }
 
-func (self *Matrix) Element(r int, c int) float64 {
-	return self.Vector[r*self.Columns+c]
+func (m *Matrix) Element(r int, c int) float64 {
+	return m.Vector[r*m.Columns+c]
 }
 
-func (self *Matrix) SliceRow(r int) vec.Vector {
-	slice := self.Vector[r*self.Columns : (r+1)*self.Columns]
+func (m *Matrix) SliceRow(r int) vec.Vector {
+	slice := m.Vector[r*m.Columns : (r+1)*m.Columns]
 	return slice
 }
 
-func (self *Matrix) SliceColumn(c int) vec.Vector {
-	slice := vec.Zeros(self.Rows)
-	for i := 0; i < self.Rows; i++ {
-		slice[i] = self.Element(i, c)
+func (m *Matrix) SliceColumn(c int) vec.Vector {
+	slice := vec.Zeros(m.Rows)
+	for i := 0; i < m.Rows; i++ {
+		slice[i] = m.Element(i, c)
 	}
 	return slice
 }
 
-func (self *Matrix) String() string {
+func (m *Matrix) String() string {
 	str := "[\n"
-	for i := 0; i < self.Rows; i++ {
-		str += fmt.Sprintf("  %v,\n", self.SliceRow(i))
+	for i := 0; i < m.Rows; i++ {
+		str += fmt.Sprintf("  %v,\n", m.SliceRow(i))
 	}
 	str += "]"
 	return str
@@ -114,21 +114,21 @@ func Equal(m1 *Matrix, m2 *Matrix) bool {
 	return false
 }
 
-func (self *Matrix) DotGo(m2 *Matrix) *Matrix {
-	if self.Columns != m2.Rows {
+func (m *Matrix) DotGo(m2 *Matrix) *Matrix {
+	if m.Columns != m2.Rows {
 		return nil
 	}
-	sum := vec.Zeros(self.Rows * m2.Columns)
+	sum := vec.Zeros(m.Rows * m2.Columns)
 	wg := &sync.WaitGroup{}
 	ch := make(chan int)
-	for i := 0; i < self.Columns; i++ {
+	for i := 0; i < m.Columns; i++ {
 		wg.Add(1)
 		go func(ch chan int) {
 			defer wg.Done()
 			i := <-ch
 			for c := 0; c < m2.Columns; c++ {
-				for r := 0; r < self.Rows; r++ {
-					sum[r*m2.Columns+c] += self.Element(r, i) * m2.Element(i, c)
+				for r := 0; r < m.Rows; r++ {
+					sum[r*m2.Columns+c] += m.Element(r, i) * m2.Element(i, c)
 				}
 			}
 		}(ch)
@@ -138,7 +138,7 @@ func (self *Matrix) DotGo(m2 *Matrix) *Matrix {
 	close(ch)
 	return &Matrix{
 		Vector:  sum,
-		Rows:    self.Rows,
+		Rows:    m.Rows,
 		Columns: m2.Columns,
 	}
 }
@@ -169,237 +169,158 @@ func isTheSameShape(m1 *Matrix, m2 *Matrix) bool {
 	return false
 }
 
-func (self *Matrix) Add(arg interface{}) *Matrix {
-	switch v := arg.(type) {
-	case *Matrix:
-		if !isTheSameShape(self, v) {
-			if v.Rows == 1 {
-				if self.Columns != v.Columns {
-					return nil
-				}
-				mat := vec.Zeros(self.Rows * self.Columns)
-				for r := 0; r < self.Rows; r++ {
-					for c := 0; c < v.Columns; c++ {
-						index := r*self.Columns + c
-						mat[index] = self.Element(r, c) + v.Element(0, c)
+type Arithmetic int
+
+const (
+	Add Arithmetic = iota
+	Sub
+	Mul
+	Div
+)
+
+func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
+	if !isTheSameShape(m1, m2) {
+		// 片方がベクトル(1行多列)だった場合
+		if m1.Rows == 1 || m2.Rows == 1 {
+			if m1.Columns != m2.Columns {
+				return nil
+			}
+			mat := vec.Zeros(m1.Rows * m1.Columns)
+			for r := 0; r < m1.Rows; r++ {
+				for c := 0; c < m2.Columns; c++ {
+					index := r*m1.Columns + c
+					switch a {
+					case Add:
+						mat[index] = m1.Element(r, c) + m2.Element(0, c)
+					case Sub:
+						mat[index] = m1.Element(r, c) - m2.Element(0, c)
+					case Mul:
+						mat[index] = m1.Element(r, c) * m2.Element(0, c)
+					case Div:
+						mat[index] = m1.Element(r, c) / m2.Element(0, c)
 					}
 				}
-				return &Matrix{
-					Vector:  mat,
-					Rows:    self.Rows,
-					Columns: self.Columns,
-				}
-
 			}
-			return nil
+			return &Matrix{
+				Vector:  mat,
+				Rows:    m1.Rows,
+				Columns: m1.Columns,
+			}
 
 		}
-		mat := self.Vector.Add(v.Vector)
+	} else {
+		mat := vec.Zeros(m1.Rows * m1.Columns)
+		switch a {
+		case Add:
+			mat = m1.Vector.Add(m2.Vector)
+		case Sub:
+			mat = m1.Vector.Sub(m2.Vector)
+		case Mul:
+			mat = m1.Vector.Mul(m2.Vector)
+		case Div:
+			mat = m1.Vector.Div(m2.Vector)
+		}
+
 		return &Matrix{
 			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
+			Rows:    m1.Rows,
+			Columns: m1.Columns,
 		}
+	}
+	return nil
+}
+
+func matVec(a Arithmetic, m1 *Matrix, m2 vec.Vector) *Matrix {
+	if m1.Columns != len(m2) {
+		return nil
+	}
+	mat := make(vec.Vector, m1.Rows*m1.Columns)
+	for r := 0; r < m1.Rows; r++ {
+		for c := 0; c < len(m2); c++ {
+			index := r*m1.Columns + c
+			switch a {
+			case Add:
+				mat[index] = m1.Element(r, c) + m2[c]
+			case Sub:
+				mat[index] = m1.Element(r, c) - m2[c]
+			case Mul:
+				mat[index] = m1.Element(r, c) * m2[c]
+			case Div:
+				mat[index] = m1.Element(r, c) / m2[c]
+			}
+		}
+	}
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m1.Rows,
+		Columns: m1.Columns,
+	}
+}
+
+func matFloat(a Arithmetic, m1 *Matrix, m2 float64) *Matrix {
+	vector := vec.ZerosLike(m1.Vector)
+	switch a {
+	case Add:
+		vector = m1.Vector.Add(m2)
+	case Sub:
+		vector = m1.Vector.Sub(m2)
+	case Mul:
+		vector = m1.Vector.Mul(m2)
+	case Div:
+		vector = m1.Vector.Div(m2)
+	}
+	return &Matrix{
+		Vector:  vector,
+		Rows:    m1.Rows,
+		Columns: m1.Columns,
+	}
+}
+
+func (m *Matrix) Add(arg interface{}) *Matrix {
+	switch v := arg.(type) {
+	case *Matrix:
+		return matMat(Add, m, v)
 	case vec.Vector:
-		if self.Columns != len(v) {
-			return nil
-		}
-		mat := make(vec.Vector, self.Rows*self.Columns)
-		for r := 0; r < self.Rows; r++ {
-			for c := 0; c < len(v); c++ {
-				index := r*self.Columns + c
-				mat[index] = self.Element(r, c) + v[c]
-			}
-		}
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matVec(Add, m, v)
 	case float64:
-		mat := self.Vector.Add(v)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matFloat(Add, m, v)
 	default:
 		return nil
 	}
 }
-
-func (self *Matrix) Sub(arg interface{}) *Matrix {
+func (m *Matrix) Sub(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
-		if !isTheSameShape(self, v) {
-			if v.Rows == 1 {
-				if self.Columns != v.Columns {
-					return nil
-				}
-				mat := make(vec.Vector, self.Rows*self.Columns)
-				for r := 0; r < self.Rows; r++ {
-					for c := 0; c < v.Columns; c++ {
-						index := r*self.Columns + c
-						mat[index] = self.Element(r, c) - v.Element(0, c)
-					}
-				}
-				return &Matrix{
-					Vector:  mat,
-					Rows:    self.Rows,
-					Columns: self.Columns,
-				}
-
-			}
-			return nil
-
-		}
-		mat := self.Vector.Sub(v.Vector)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matMat(Sub, m, v)
 	case vec.Vector:
-		if self.Columns != len(v) {
-			return nil
-		}
-		mat := make(vec.Vector, self.Rows*self.Columns)
-		for r := 0; r < self.Rows; r++ {
-			for c := 0; c < len(v); c++ {
-				index := r*self.Columns + c
-				mat[index] = self.Element(r, c) - v[c]
-			}
-		}
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matVec(Sub, m, v)
 	case float64:
-		mat := self.Vector.Sub(v)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matFloat(Sub, m, v)
 	default:
 		return nil
 	}
 }
-
-func (self *Matrix) Mul(arg interface{}) *Matrix {
+func (m *Matrix) Mul(arg interface{}) *Matrix {
 	switch v := arg.(type) {
+
 	case *Matrix:
-		if !isTheSameShape(self, v) {
-			if v.Rows == 1 {
-				if self.Columns != v.Columns {
-					return nil
-				}
-				mat := make(vec.Vector, self.Rows*self.Columns)
-				for r := 0; r < self.Rows; r++ {
-					for c := 0; c < v.Columns; c++ {
-						index := r*self.Columns + c
-						mat[index] = self.Element(r, c) * v.Element(0, c)
-					}
-				}
-				return &Matrix{
-					Vector:  mat,
-					Rows:    self.Rows,
-					Columns: self.Columns,
-				}
-
-			}
-			return nil
-
-		}
-		mat := self.Vector.Mul(v.Vector)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matMat(Mul, m, v)
 	case vec.Vector:
-		if self.Columns != len(v) {
-			return nil
-		}
-		mat := make(vec.Vector, self.Rows*self.Columns)
-		for r := 0; r < self.Rows; r++ {
-			for c := 0; c < len(v); c++ {
-				index := r*self.Columns + c
-				mat[index] = self.Element(r, c) * v[c]
-			}
-		}
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matVec(Mul, m, v)
 	case float64:
-		mat := self.Vector.Mul(v)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matFloat(Mul, m, v)
 	default:
 		return nil
 	}
 }
-
-func (self *Matrix) Div(arg interface{}) *Matrix {
+func (m *Matrix) Div(arg interface{}) *Matrix {
 	switch v := arg.(type) {
 	case *Matrix:
-		if !isTheSameShape(self, v) {
-			if v.Rows == 1 {
-				if self.Columns != v.Columns {
-					return nil
-				}
-				mat := make(vec.Vector, self.Rows*self.Columns)
-				for r := 0; r < self.Rows; r++ {
-					for c := 0; c < v.Columns; c++ {
-						index := r*self.Columns + c
-						mat[index] = self.Element(r, c) / v.Element(0, c)
-					}
-				}
-				return &Matrix{
-					Vector:  mat,
-					Rows:    self.Rows,
-					Columns: self.Columns,
-				}
-
-			}
-			return nil
-
-		}
-		mat := self.Vector.Div(v.Vector)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matMat(Div, m, v)
 	case vec.Vector:
-		if self.Columns != len(v) {
-			return nil
-		}
-		mat := make(vec.Vector, self.Rows*self.Columns)
-		for r := 0; r < self.Rows; r++ {
-			for c := 0; c < len(v); c++ {
-				index := r*self.Columns + c
-				mat[index] = self.Element(r, c) / v[c]
-			}
-		}
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matVec(Div, m, v)
 	case float64:
-		mat := self.Vector.Div(v)
-		return &Matrix{
-			Vector:  mat,
-			Rows:    self.Rows,
-			Columns: self.Columns,
-		}
+		return matFloat(Div, m, v)
 	default:
 		return nil
 	}

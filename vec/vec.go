@@ -52,86 +52,90 @@ func ZerosLike(x Vector) Vector {
 	return zeros
 }
 
-func (self Vector) Add(arg interface{}) Vector {
+type Arithmetic int
+
+const (
+	Add Arithmetic = iota
+	Sub
+	Mul
+	Div
+)
+
+func vecVec(a Arithmetic, v1, v2 Vector) Vector {
+	if len(v1) != len(v2) {
+		return nil
+	}
+	result := make([]float64, len(v1))
+	for i := 0; i < len(v1); i++ {
+		switch a {
+		case Add:
+			result[i] = v1[i] + v2[i]
+		case Sub:
+			result[i] = v1[i] - v2[i]
+		case Mul:
+			result[i] = v1[i] * v2[i]
+		case Div:
+			result[i] = v1[i] / v2[i]
+		}
+
+	}
+	return result
+}
+
+func vecFloat(a Arithmetic, v Vector, f float64) Vector {
+	result := make([]float64, len(v))
+	for i := 0; i < len(v); i++ {
+		switch a {
+		case Add:
+			result[i] = v[i] + f
+		case Sub:
+			result[i] = v[i] - f
+		case Mul:
+			result[i] = v[i] * f
+		case Div:
+			result[i] = v[i] / f
+		}
+
+	}
+	return result
+}
+
+func (v Vector) Add(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(self) != len(x2) {
-			return nil
-		}
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] + x2[i]
-		}
-		return result
+		return vecVec(Add, v, x2)
 	case float64:
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] + x2
-		}
-		return result
+		return vecFloat(Add, v, x2)
 	}
 	return nil
 }
 
-func (self Vector) Sub(arg interface{}) Vector {
+func (v Vector) Sub(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(self) != len(x2) {
-			return nil
-		}
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] - x2[i]
-		}
-		return result
+		return vecVec(Sub, v, x2)
 	case float64:
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] - x2
-		}
-		return result
+		return vecFloat(Sub, v, x2)
 	}
 	return nil
 }
 
-func (self Vector) Mul(arg interface{}) Vector {
+func (v Vector) Mul(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(self) != len(x2) {
-			return nil
-		}
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] * x2[i]
-		}
-		return result
+		return vecVec(Mul, v, x2)
 	case float64:
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] * x2
-		}
-		return result
+		return vecFloat(Mul, v, x2)
 	}
 	return nil
 }
 
-func (self Vector) Div(arg interface{}) Vector {
+func (v Vector) Div(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(self) != len(x2) {
-			return nil
-		}
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] / x2[i]
-		}
-		return result
+		return vecVec(Div, v, x2)
 	case float64:
-		result := make([]float64, len(self))
-		for i := 0; i < len(self); i++ {
-			result[i] = self[i] / x2
-		}
-		return result
+		return vecFloat(Div, v, x2)
 	}
 	return nil
 }
