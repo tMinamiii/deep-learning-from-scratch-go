@@ -48,21 +48,21 @@ func NewTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (tln *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
-	for _, k := range tln.Sequence {
-		x = tln.Layers[k].Forward(x)
+func (self *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+	for _, k := range self.Sequence {
+		x = self.Layers[k].Forward(x)
 	}
 	return x
 }
 
-func (tln *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
-	y := tln.Predict(x)
-	cee := tln.LastLayer.Forward(y, t)
+func (self *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
+	y := self.Predict(x)
+	cee := self.LastLayer.Forward(y, t)
 	return cee
 }
 
-func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
-	y := tln.Predict(x)
+func (self *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
+	y := self.Predict(x)
 	yMax := mat.ArgMax(y, 1)
 	tMax := mat.ArgMax(t, 1)
 	sum := 0.0
@@ -76,25 +76,25 @@ func (tln *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	return accuracy
 }
 
-func (tln *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (self *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	// forward
-	tln.Loss(x, t)
+	self.Loss(x, t)
 
 	// backward
-	dout := tln.LastLayer.Backward(1.0)
+	dout := self.LastLayer.Backward(1.0)
 
-	for i := len(tln.Sequence) - 1; i >= 0; i-- {
-		key := tln.Sequence[i]
-		dout = tln.Layers[key].Backward(dout)
+	for i := len(self.Sequence) - 1; i >= 0; i-- {
+		key := self.Sequence[i]
+		dout = self.Layers[key].Backward(dout)
 	}
 
 	grads := map[string]*mat.Matrix{}
 
-	for i := 1; i <= tln.AffineNum; i++ {
+	for i := 1; i <= self.AffineNum; i++ {
 		l := fmt.Sprintf("Affine%d", i)
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
-		if v, ok := tln.Layers[l].(*layer.Affine); ok {
+		if v, ok := self.Layers[l].(*layer.Affine); ok {
 			grads[w] = v.DW
 			grads[b] = v.DB
 		}

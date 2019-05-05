@@ -52,92 +52,84 @@ func ZerosLike(x Vector) Vector {
 	return zeros
 }
 
-func (x1 Vector) Pow(x2 float64) Vector {
-	result := make([]float64, len(x1))
-	for i := 0; i < len(x1); i++ {
-		result[i] = math.Pow(x1[i], x2)
-	}
-	return result
-}
-
-func (x1 Vector) Add(arg interface{}) Vector {
+func (self Vector) Add(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(x1) != len(x2) {
+		if len(self) != len(x2) {
 			return nil
 		}
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] + x2[i]
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] + x2[i]
 		}
 		return result
 	case float64:
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] + x2
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] + x2
 		}
 		return result
 	}
 	return nil
 }
 
-func (x1 Vector) Sub(arg interface{}) Vector {
+func (self Vector) Sub(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(x1) != len(x2) {
+		if len(self) != len(x2) {
 			return nil
 		}
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] - x2[i]
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] - x2[i]
 		}
 		return result
 	case float64:
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] - x2
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] - x2
 		}
 		return result
 	}
 	return nil
 }
 
-func (x1 Vector) Mul(arg interface{}) Vector {
+func (self Vector) Mul(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(x1) != len(x2) {
+		if len(self) != len(x2) {
 			return nil
 		}
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] * x2[i]
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] * x2[i]
 		}
 		return result
 	case float64:
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] * x2
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] * x2
 		}
 		return result
 	}
 	return nil
 }
 
-func (x1 Vector) Div(arg interface{}) Vector {
+func (self Vector) Div(arg interface{}) Vector {
 	switch x2 := arg.(type) {
 	case Vector:
-		if len(x1) != len(x2) {
+		if len(self) != len(x2) {
 			return nil
 		}
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] / x2[i]
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] / x2[i]
 		}
 		return result
 	case float64:
-		result := make([]float64, len(x1))
-		for i := 0; i < len(x1); i++ {
-			result[i] = x1[i] / x2
+		result := make([]float64, len(self))
+		for i := 0; i < len(self); i++ {
+			result[i] = self[i] / x2
 		}
 		return result
 	}
@@ -262,7 +254,7 @@ func IdentityFunction(x Vector) Vector {
 
 func MeanSquaredError(y, t Vector) float64 {
 	sub := y.Sub(t)
-	pow := sub.Pow(2)
+	pow := Pow(sub, 2)
 	return 0.5 * Sum(pow)
 }
 
