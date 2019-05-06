@@ -150,14 +150,14 @@ func (b *BatchNormalization) Backward(dout *mat.Matrix) *mat.Matrix {
 	dGamma := mat.Sum(mat.Mul(b.Xn, dout), 0)
 	dxn := mat.Mul(b.Gamma, dout)
 	dxc := mat.Div(dxn, b.Std)
-	dstd := mat.Mul(-1, mat.Sum(mat.Div(mat.Mul(dxn, b.Xc), mat.Mul(b.Std, b.Std)), 0))
+	dstd := mat.Mul(-1.0, mat.Sum(mat.Div(mat.Mul(dxn, b.Xc), mat.Mul(b.Std, b.Std)), 0))
 	dvar := mat.Div(mat.Mul(0.5, dstd), b.Std)
-	dxc = mat.Add(dxc, mat.Mul(mat.Mul(mat.Div(2.0, b.BatchSize), b.Xc), dvar))
-	dmu := mat.Sum(dxc, 0)
-	dx := mat.Div(mat.Sub(dxc, dmu), b.BatchSize)
 
+	dxc = mat.Add(dxc, mat.Mul(mat.Mul(2.0/float64(b.BatchSize), b.Xc), dvar))
+	// fmt.Println(dxc.Shape())
+	dmu := mat.Sum(dxc, 0)
+	dx := mat.Sub(dxc, mat.Div(dmu, float64(b.BatchSize)))
 	b.Dgamma = dGamma
 	b.Dbeta = dBeta
-
 	return dx.Reshape(b.InputShape())
 }

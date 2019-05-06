@@ -10,13 +10,11 @@ import (
 )
 
 type MultiLayerNet struct {
-	Params    map[string]*mat.Matrix
-	Layers    map[string]layer.Layer
-	Sequence  []string
-	LastLayer *layer.SoftmaxWithLoss
-	AffineNum int
-	Optimizer optimizer.Optimizer
-
+	Params            map[string]*mat.Matrix
+	Layers            map[string]layer.Layer
+	Sequence          []string
+	LastLayer         *layer.SoftmaxWithLoss
+	Optimizer         optimizer.Optimizer
 	HiddenLayerNum    int
 	WeightDecayLambda float64
 }
@@ -35,20 +33,44 @@ func NewTwoLayerNet(
 	if err != nil {
 		panic(err)
 	}
-	W2, err := mat.NewRandnMatrix(hiddenSize, outputSize)
+	W2, err := mat.NewRandnMatrix(hiddenSize, hiddenSize)
 	if err != nil {
 		panic(err)
 	}
+	W3, err := mat.NewRandnMatrix(hiddenSize, outputSize)
+	if err != nil {
+		panic(err)
+	}
+
 	params["W1"] = mat.Div(W1, math.Sqrt(2.0*float64(inputSize))) // weightInitStd
 	params["b1"] = mat.Zeros(1, hiddenSize)
 	params["W2"] = mat.Div(W2, math.Sqrt(2.0*float64(hiddenSize)))
-	params["b2"] = mat.Zeros(1, outputSize)
+	params["b2"] = mat.Zeros(1, hiddenSize)
+	params["W3"] = mat.Div(W3, math.Sqrt(2.0*float64(hiddenSize)))
+	params["b3"] = mat.Zeros(1, outputSize)
+
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])
 	layers["BatchNorm1"] = layer.NewBatchNorimalization(1.0, 0.0)
 	layers["Relu1"] = layer.NewRelu()
 	layers["Dropout1"] = layer.NewDropout(0.5)
+
 	layers["Affine2"] = layer.NewAffine(params["W2"], params["b2"])
-	seq := []string{"Affine1", "Relu1", "Affine2"}
+	layers["BatchNorm2"] = layer.NewBatchNorimalization(1.0, 0.0)
+	layers["Relu2"] = layer.NewRelu()
+	layers["Dropout2"] = layer.NewDropout(0.5)
+
+	layers["Affine3"] = layer.NewAffine(params["W3"], params["b3"])
+
+	seq := []string{
+		"Affine1",
+		"BatchNorm1",
+		"Relu1",
+		"Affine2",
+		"BatchNorm2",
+		"Relu2",
+		"Affine3",
+	}
+
 	last := layer.NewSfotmaxWithLoss()
 
 	return &MultiLayerNet{
@@ -56,9 +78,8 @@ func NewTwoLayerNet(
 		Layers:            layers,
 		LastLayer:         last,
 		Sequence:          seq,
-		AffineNum:         2,
 		Optimizer:         opt,
-		HiddenLayerNum:    1,
+		HiddenLayerNum:    2,
 		WeightDecayLambda: weightDeceyLambda,
 	}
 }
@@ -113,7 +134,7 @@ func (net *MultiLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 
 	grads := map[string]*mat.Matrix{}
 
-	for i := 1; i <= net.AffineNum; i++ {
+	for i := 1; i < net.HiddenLayerNum+2; i++ {
 		l := fmt.Sprintf("Affine%d", i)
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
@@ -128,7 +149,7 @@ func (net *MultiLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 func (net *MultiLayerNet) UpdateParams(grads map[string]*mat.Matrix) {
 	net.Params = net.Optimizer.Update(net.Params, grads)
 
-	for i := 1; i <= net.AffineNum; i++ {
+	for i := 1; i < net.HiddenLayerNum+2; i++ {
 		l := fmt.Sprintf("Affine%d", i)
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
