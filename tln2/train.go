@@ -18,7 +18,7 @@ const (
 	ItersNum     = 100000
 	BatchSize    = 100
 	Hidden       = 50
-	LearningRate = 0.001
+	LearningRate = 0.0001
 	MNIST        = 10
 )
 

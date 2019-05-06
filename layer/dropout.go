@@ -47,9 +47,9 @@ func (d *Dropout) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 }
 
 func (d *Dropout) Backward(dout *mat.Matrix) *mat.Matrix {
-	v := dout.Vector
-	dv := vec.ZerosLike(v)
-	for i, e := range v {
+	doutv := dout.Vector
+	dv := vec.ZerosLike(doutv)
+	for i, e := range doutv {
 		if d.Mask[i] {
 			dv[i] = e
 		} else {
