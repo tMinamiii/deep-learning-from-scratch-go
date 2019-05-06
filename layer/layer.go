@@ -129,6 +129,6 @@ func (so *SoftmaxWithLoss) Forward(x, t *mat.Matrix) float64 {
 func (so *SoftmaxWithLoss) Backward(_ float64) *mat.Matrix {
 	batchSize, _ := so.t.Shape()
 	sub := mat.Sub(so.y, so.t)
-	dx := mat.Div(sub, float64(batchSize))
+	dx := mat.Div(sub, batchSize)
 	return dx
 }

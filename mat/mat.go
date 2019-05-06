@@ -348,6 +348,8 @@ func Add(x1 interface{}, x2 interface{}) *Matrix {
 			return matVec(ADD, x1v, x2v)
 		case float64:
 			return matFloat(ADD, x1v, x2v)
+		case int:
+			return matFloat(ADD, x1v, float64(x2v))
 		}
 	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
@@ -355,6 +357,8 @@ func Add(x1 interface{}, x2 interface{}) *Matrix {
 			return vecMat(ADD, x1v, x2v)
 		case float64:
 			return floatMat(ADD, x1v, x2v)
+		case int:
+			return floatMat(ADD, float64(x1v), x2v)
 		}
 	}
 	return nil
@@ -368,6 +372,8 @@ func Sub(x1 interface{}, x2 interface{}) *Matrix {
 			return matVec(SUB, x1v, x2v)
 		case float64:
 			return matFloat(SUB, x1v, x2v)
+		case int:
+			return matFloat(SUB, x1v, float64(x2v))
 		}
 	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
@@ -375,6 +381,9 @@ func Sub(x1 interface{}, x2 interface{}) *Matrix {
 			return vecMat(SUB, x1v, x2v)
 		case float64:
 			return floatMat(SUB, x1v, x2v)
+		case int:
+			return floatMat(SUB, float64(x1v), x2v)
+
 		}
 	}
 	return nil
@@ -389,6 +398,9 @@ func Mul(x1 interface{}, x2 interface{}) *Matrix {
 			return matVec(MUL, x1v, x2v)
 		case float64:
 			return matFloat(MUL, x1v, x2v)
+		case int:
+			return matFloat(MUL, x1v, float64(x2v))
+
 		}
 	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
@@ -396,6 +408,8 @@ func Mul(x1 interface{}, x2 interface{}) *Matrix {
 			return vecMat(MUL, x1v, x2v)
 		case float64:
 			return floatMat(MUL, x1v, x2v)
+		case int:
+			return floatMat(MUL, float64(x1v), x2v)
 		}
 	}
 	return nil
@@ -410,6 +424,8 @@ func Div(x1 interface{}, x2 interface{}) *Matrix {
 			return matVec(DIV, x1v, x2v)
 		case float64:
 			return matFloat(DIV, x1v, x2v)
+		case int:
+			return matFloat(DIV, x1v, float64(x2v))
 		}
 	} else if x2v, ok := x2.(*Matrix); ok {
 		switch x1v := x1.(type) {
@@ -417,6 +433,8 @@ func Div(x1 interface{}, x2 interface{}) *Matrix {
 			return vecMat(DIV, x1v, x2v)
 		case float64:
 			return floatMat(DIV, x1v, x2v)
+		case int:
+			return floatMat(DIV, float64(x1v), x2v)
 		}
 	}
 	return nil

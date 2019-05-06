@@ -156,7 +156,7 @@ func (b *BatchNormalization) Backward(dout *mat.Matrix) *mat.Matrix {
 	dxc = mat.Add(dxc, mat.Mul(mat.Mul(2.0/float64(b.BatchSize), b.Xc), dvar))
 	// fmt.Println(dxc.Shape())
 	dmu := mat.Sum(dxc, 0)
-	dx := mat.Sub(dxc, mat.Div(dmu, float64(b.BatchSize)))
+	dx := mat.Sub(dxc, mat.Div(dmu, b.BatchSize))
 	b.Dgamma = dGamma
 	b.Dbeta = dBeta
 	return dx.Reshape(b.InputShape())
