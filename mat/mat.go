@@ -34,6 +34,23 @@ func (m *Matrix) Shape() (int, int) {
 	return m.Rows, m.Columns
 }
 
+// Matrixなのでndimは常に2
+func (m *Matrix) Ndim() int {
+	return 2
+}
+
+func (m *Matrix) Reshape(row, col int) *Matrix {
+	if m.Rows*m.Columns != row*col {
+		return nil
+	}
+
+	return &Matrix{
+		Vector:  m.Vector,
+		Rows:    row,
+		Columns: col,
+	}
+}
+
 func (m *Matrix) Element(r int, c int) float64 {
 	return m.Vector[r*m.Columns+c]
 }
@@ -431,9 +448,38 @@ func Log(m *Matrix) *Matrix {
 		Columns: m.Columns,
 	}
 }
-
+func MeanAll(m *Matrix) float64 {
+	return vec.Sum(m.Vector) / float64(len(m.Vector))
+}
 func SumAll(m *Matrix) float64 {
 	return vec.Sum(m.Vector)
+}
+
+func Mean(m *Matrix, axis int) *Matrix {
+	if axis == 0 {
+		v := vec.Zeros(m.Columns)
+		for i := 0; i < m.Columns; i++ {
+			col := m.SliceColumn(i)
+			v[i] = vec.Sum(col) / float64(m.Rows)
+		}
+		return &Matrix{
+			Vector:  v,
+			Rows:    1,
+			Columns: m.Columns,
+		}
+	} else if axis == 1 {
+		v := vec.Zeros(m.Rows)
+		for i := 0; i < m.Rows; i++ {
+			row := m.SliceRow(i)
+			v[i] = vec.Sum(row) / float64(m.Columns)
+		}
+		return &Matrix{
+			Vector:  v,
+			Rows:    1,
+			Columns: m.Rows,
+		}
+	}
+	return nil
 }
 
 func Sum(m *Matrix, axis int) *Matrix {
