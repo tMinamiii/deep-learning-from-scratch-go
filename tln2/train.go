@@ -19,6 +19,7 @@ const (
 	BatchSize    = 100
 	Hidden       = 50
 	LearningRate = 0.0001
+	MNIST        = 10
 )
 
 func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
@@ -44,7 +45,7 @@ func train() {
 	// opt := optimizer.NewAdaGrad(LearningRate)
 	opt := optimizer.NewAdam(LearningRate)
 	weightDecayLambda := 0.1
-	net := network.NewTwoLayerNet(opt, ImageLength, Hidden, 10, weightDecayLambda)
+	net := network.NewTwoLayerNet(opt, ImageLength, Hidden, MNIST, weightDecayLambda)
 
 	xTrain, tTrain := MnistMatrix(train)
 	xTest, tTest := MnistMatrix(test)

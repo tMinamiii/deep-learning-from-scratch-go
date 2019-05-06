@@ -37,23 +37,23 @@ func NewTwoLayerNet(
 	if err != nil {
 		panic(err)
 	}
-	W3, err := mat.NewRandnMatrix(hiddenSize, hiddenSize)
+	W3, err := mat.NewRandnMatrix(hiddenSize, outputSize)
 	if err != nil {
 		panic(err)
 	}
-	W4, err := mat.NewRandnMatrix(hiddenSize, outputSize)
-	if err != nil {
-		panic(err)
-	}
+	// W4, err := mat.NewRandnMatrix(hiddenSize, outputSize)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	params["W1"] = mat.Div(W1, math.Sqrt(2.0*float64(inputSize))) // weightInitStd
 	params["b1"] = mat.Zeros(1, hiddenSize)
 	params["W2"] = mat.Div(W2, math.Sqrt(2.0*float64(hiddenSize)))
 	params["b2"] = mat.Zeros(1, hiddenSize)
 	params["W3"] = mat.Div(W3, math.Sqrt(2.0*float64(hiddenSize)))
-	params["b3"] = mat.Zeros(1, hiddenSize)
-	params["W4"] = mat.Div(W4, math.Sqrt(2.0*float64(hiddenSize)))
-	params["b4"] = mat.Zeros(1, outputSize)
+	params["b3"] = mat.Zeros(1, outputSize)
+	// params["W4"] = mat.Div(W4, math.Sqrt(2.0*float64(hiddenSize)))
+	// params["b4"] = mat.Zeros(1, outputSize)
 
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])
 	layers["BatchNorm1"] = layer.NewBatchNorimalization(1.0, 0.0)
@@ -66,11 +66,11 @@ func NewTwoLayerNet(
 	layers["Dropout2"] = layer.NewDropout(0.5)
 
 	layers["Affine3"] = layer.NewAffine(params["W3"], params["b3"])
-	layers["BatchNorm3"] = layer.NewBatchNorimalization(1.0, 0.0)
-	layers["Relu3"] = layer.NewRelu()
-	layers["Dropout3"] = layer.NewDropout(0.5)
+	// layers["BatchNorm3"] = layer.NewBatchNorimalization(1.0, 0.0)
+	// layers["Relu3"] = layer.NewRelu()
+	// layers["Dropout3"] = layer.NewDropout(0.5)
 
-	layers["Affine4"] = layer.NewAffine(params["W4"], params["b4"])
+	// layers["Affine4"] = layer.NewAffine(params["W4"], params["b4"])
 
 	seq := []string{
 		"Affine1",
@@ -84,11 +84,11 @@ func NewTwoLayerNet(
 		"Dropout2",
 
 		"Affine3",
-		"BatchNorm3",
-		"Relu3",
-		"Dropout3",
 
-		"Affine4",
+		// "BatchNorm3",
+		// "Relu3",
+		// "Dropout3",
+		// "Affine4",
 	}
 
 	last := layer.NewSfotmaxWithLoss()
@@ -99,7 +99,7 @@ func NewTwoLayerNet(
 		LastLayer:         last,
 		Sequence:          seq,
 		Optimizer:         opt,
-		HiddenLayerNum:    3,
+		HiddenLayerNum:    2,
 		WeightDecayLambda: weightDeceyLambda,
 	}
 }
