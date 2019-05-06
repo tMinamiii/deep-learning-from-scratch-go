@@ -29,7 +29,7 @@ func (m *Matrix) T() *Matrix {
 
 func (m *Matrix) Shape() (int, int) {
 	if m.Rows == 1 {
-		return m.Columns, 0
+		return m.Columns, -1
 	}
 	return m.Rows, m.Columns
 }

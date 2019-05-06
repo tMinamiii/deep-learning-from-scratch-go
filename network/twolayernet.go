@@ -32,10 +32,8 @@ func NewTwoLayerNet(opt optimizer.Optimizer, inputSize, hiddenSize, outputSize i
 		panic(err)
 	}
 	params["W1"] = mat.Div(W1, math.Sqrt(2.0*float64(inputSize))) // weightInitStd
-	// params["W1"] = W1.Mul(0.01) // weightInitStd
 	params["b1"] = mat.Zeros(1, hiddenSize)
 	params["W2"] = mat.Div(W2, math.Sqrt(2.0*float64(hiddenSize)))
-	// params["W2"] = W2.Mul(0.01) // weightInitStd
 	params["b2"] = mat.Zeros(1, outputSize)
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])
 	layers["Relu1"] = layer.NewRelu()
