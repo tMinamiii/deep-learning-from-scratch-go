@@ -68,6 +68,8 @@ func (b *BatchNormalization) Forward(x *mat.Matrix) *mat.Matrix {
 	//     N, D = x.shape
 	//     self.running_mean = np.zeros(D)
 	//     self.running_var = np.zeros(D)
+
+	// 初期化
 	if b.RunningMean == nil {
 		_, D := x.Shape()
 		b.RunningMean = mat.Zeros(1, D)
@@ -94,6 +96,7 @@ func (b *BatchNormalization) Forward(x *mat.Matrix) *mat.Matrix {
 		std := mat.Sqrt(mat.Add(vari, 10e-7))
 		xn := mat.Div(xc, std)
 
+		// 誤差逆伝搬のために状態を保存
 		b.BatchSize, _ = x.Shape()
 		b.Xc = xc
 		b.Xn = xn

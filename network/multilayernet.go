@@ -9,17 +9,25 @@ import (
 	"github.com/naronA/zero_deeplearning/optimizer"
 )
 
-type TwoLayerNet struct {
+type MultiLayerNet struct {
 	Params    map[string]*mat.Matrix
 	Layers    map[string]layer.Layer
 	Sequence  []string
 	LastLayer *layer.SoftmaxWithLoss
 	AffineNum int
 	Optimizer optimizer.Optimizer
+
+	HiddenLayerNum    int
+	WeightDecayLambda float64
 }
 
 // NewTwoLayerNet は、TwoLayerNetのコンストラクタ
-func NewTwoLayerNet(opt optimizer.Optimizer, inputSize, hiddenSize, outputSize int) *TwoLayerNet {
+func NewTwoLayerNet(
+	opt optimizer.Optimizer,
+	inputSize int,
+	hiddenSize int,
+	outputSize int,
+	weightDeceyLambda float64) *MultiLayerNet {
 	params := map[string]*mat.Matrix{}
 	layers := map[string]layer.Layer{}
 
@@ -36,36 +44,46 @@ func NewTwoLayerNet(opt optimizer.Optimizer, inputSize, hiddenSize, outputSize i
 	params["W2"] = mat.Div(W2, math.Sqrt(2.0*float64(hiddenSize)))
 	params["b2"] = mat.Zeros(1, outputSize)
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])
+	layers["BatchNorm1"] = layer.NewBatchNorimalization(1.0, 0.0)
 	layers["Relu1"] = layer.NewRelu()
 	layers["Affine2"] = layer.NewAffine(params["W2"], params["b2"])
 	seq := []string{"Affine1", "Relu1", "Affine2"}
 	last := layer.NewSfotmaxWithLoss()
 
-	return &TwoLayerNet{
-		Params:    params,
-		Layers:    layers,
-		LastLayer: last,
-		Sequence:  seq,
-		AffineNum: 2,
-		Optimizer: opt,
+	return &MultiLayerNet{
+		Params:            params,
+		Layers:            layers,
+		LastLayer:         last,
+		Sequence:          seq,
+		AffineNum:         2,
+		Optimizer:         opt,
+		HiddenLayerNum:    1,
+		WeightDecayLambda: weightDeceyLambda,
 	}
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (net *TwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+func (net *MultiLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
 	for _, k := range net.Sequence {
 		x = net.Layers[k].Forward(x)
 	}
 	return x
 }
 
-func (net *TwoLayerNet) Loss(x, t *mat.Matrix) float64 {
+func (net *MultiLayerNet) Loss(x, t *mat.Matrix) float64 {
 	y := net.Predict(x)
-	cee := net.LastLayer.Forward(y, t)
+
+	weightDecey := 0.0
+	for i := 1; i < net.HiddenLayerNum+2; i++ {
+		k := fmt.Sprintf("W%d", i)
+		W := net.Params[k]
+		weightDecey += 0.5 * net.WeightDecayLambda * mat.SumAll(mat.Pow(W, 2))
+	}
+	cee := net.LastLayer.Forward(y, t) + weightDecey
 	return cee
 }
 
-func (net *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
+func (net *MultiLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	y := net.Predict(x)
 	yMax := mat.ArgMax(y, 1)
 	tMax := mat.ArgMax(t, 1)
@@ -80,7 +98,7 @@ func (net *TwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	return accuracy
 }
 
-func (net *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (net *MultiLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	// forward
 	net.Loss(x, t)
 
@@ -99,14 +117,14 @@ func (net *TwoLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 		w := fmt.Sprintf("W%d", i)
 		b := fmt.Sprintf("b%d", i)
 		if v, ok := net.Layers[l].(*layer.Affine); ok {
-			grads[w] = v.DW
+			grads[w] = mat.Add(v.DW, mat.Mul(net.WeightDecayLambda, v.W))
 			grads[b] = v.DB
 		}
 	}
 	return grads
 }
 
-func (net *TwoLayerNet) UpdateParams(grads map[string]*mat.Matrix) {
+func (net *MultiLayerNet) UpdateParams(grads map[string]*mat.Matrix) {
 	net.Params = net.Optimizer.Update(net.Params, grads)
 
 	for i := 1; i <= net.AffineNum; i++ {
