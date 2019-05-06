@@ -61,8 +61,7 @@ func NewBatchNorimalization(gamma, beta float64) *BatchNormalization {
 
        return out.reshape(*self.input_shape)
 */
-func (b *BatchNormalization) Forward(x *mat.Matrix) *mat.Matrix {
-	trainFlg := true
+func (b *BatchNormalization) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 	b.InputShape = x.Shape
 	// if self.running_mean is None:
 	//     N, D = x.shape

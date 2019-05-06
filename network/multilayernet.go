@@ -46,6 +46,7 @@ func NewTwoLayerNet(
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])
 	layers["BatchNorm1"] = layer.NewBatchNorimalization(1.0, 0.0)
 	layers["Relu1"] = layer.NewRelu()
+	layers["Dropout1"] = layer.NewDropout(0.5)
 	layers["Affine2"] = layer.NewAffine(params["W2"], params["b2"])
 	seq := []string{"Affine1", "Relu1", "Affine2"}
 	last := layer.NewSfotmaxWithLoss()
@@ -63,15 +64,15 @@ func NewTwoLayerNet(
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (net *MultiLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+func (net *MultiLayerNet) Predict(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 	for _, k := range net.Sequence {
-		x = net.Layers[k].Forward(x)
+		x = net.Layers[k].Forward(x, trainFlg)
 	}
 	return x
 }
 
-func (net *MultiLayerNet) Loss(x, t *mat.Matrix) float64 {
-	y := net.Predict(x)
+func (net *MultiLayerNet) Loss(x, t *mat.Matrix, trainFlg bool) float64 {
+	y := net.Predict(x, trainFlg)
 
 	weightDecey := 0.0
 	for i := 1; i < net.HiddenLayerNum+2; i++ {
@@ -84,7 +85,7 @@ func (net *MultiLayerNet) Loss(x, t *mat.Matrix) float64 {
 }
 
 func (net *MultiLayerNet) Accuracy(x, t *mat.Matrix) float64 {
-	y := net.Predict(x)
+	y := net.Predict(x, false)
 	yMax := mat.ArgMax(y, 1)
 	tMax := mat.ArgMax(t, 1)
 	sum := 0.0
@@ -100,7 +101,7 @@ func (net *MultiLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 
 func (net *MultiLayerNet) Gradient(x, t *mat.Matrix) map[string]*mat.Matrix {
 	// forward
-	net.Loss(x, t)
+	net.Loss(x, t, true)
 
 	// backward
 	dout := net.LastLayer.Backward(1.0)

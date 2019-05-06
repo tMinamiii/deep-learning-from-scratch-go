@@ -71,7 +71,7 @@ func train() {
 		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
 		grads := net.Gradient(xBatch, tBatch)
 		net.UpdateParams(grads)
-		loss := net.Loss(xBatch, tBatch)
+		loss := net.Loss(xBatch, tBatch, false)
 
 		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
 			trainAcc := net.Accuracy(xTrain, tTrain)

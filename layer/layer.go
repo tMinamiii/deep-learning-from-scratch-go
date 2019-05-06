@@ -6,7 +6,7 @@ import (
 )
 
 type Layer interface {
-	Forward(*mat.Matrix) *mat.Matrix
+	Forward(*mat.Matrix, bool) *mat.Matrix
 	Backward(*mat.Matrix) *mat.Matrix
 }
 
@@ -25,7 +25,7 @@ func NewAffine(w, b *mat.Matrix) *Affine {
 	}
 }
 
-func (af *Affine) Forward(x *mat.Matrix) *mat.Matrix {
+func (af *Affine) Forward(x *mat.Matrix, _ bool) *mat.Matrix {
 	af.X = x
 	out := mat.Add(mat.Dot(x, af.W), af.B)
 	return out
@@ -46,7 +46,7 @@ func NewSigmoid() *Sigmoid {
 	return &Sigmoid{}
 }
 
-func (si *Sigmoid) Forward(x *mat.Matrix) *mat.Matrix {
+func (si *Sigmoid) Forward(x *mat.Matrix, _ bool) *mat.Matrix {
 	minusX := mat.Mul(x, -1.0)
 	exp := mat.Exp(minusX)
 	plusX := mat.Add(exp, 1.0)
@@ -71,7 +71,7 @@ func NewRelu() *ReLU {
 	return &ReLU{}
 }
 
-func (r *ReLU) Forward(x *mat.Matrix) *mat.Matrix {
+func (r *ReLU) Forward(x *mat.Matrix, _ bool) *mat.Matrix {
 	v := x.Vector
 	r.mask = make([]bool, len(v))
 	out := vec.ZerosLike(v)
