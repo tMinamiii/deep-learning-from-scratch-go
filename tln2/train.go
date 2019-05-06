@@ -45,6 +45,7 @@ func train() {
 	// opt := optimizer.NewAdaGrad(LearningRate)
 	opt := optimizer.NewAdam(LearningRate)
 	weightDecayLambda := 0.1
+	// net := network.NewMultiLayer(opt, ImageLength, Hidden, MNIST, weightDecayLambda)
 	net := network.NewTwoLayerNet(opt, ImageLength, Hidden, MNIST, weightDecayLambda)
 
 	xTrain, tTrain := MnistMatrix(train)
