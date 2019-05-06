@@ -125,10 +125,15 @@ func Add(x1, x2 interface{}) Vector {
 			return vecVec(ADD, v, x2v)
 		case float64:
 			return vecFloat(ADD, v, x2v)
+		case int:
+			return vecFloat(ADD, v, float64(x2v))
 		}
 	} else if v, ok := x2.(Vector); ok {
-		if x1v, ok := x1.(float64); ok {
+		switch x1v := x1.(type) {
+		case float64:
 			return floatVec(ADD, x1v, v)
+		case int:
+			return floatVec(ADD, float64(x1v), v)
 		}
 	}
 	return nil
@@ -141,26 +146,15 @@ func Sub(x1, x2 interface{}) Vector {
 			return vecVec(SUB, v, x2v)
 		case float64:
 			return vecFloat(SUB, v, x2v)
+		case int:
+			return vecFloat(SUB, v, float64(x2v))
 		}
 	} else if v, ok := x2.(Vector); ok {
-		if x1v, ok := x1.(float64); ok {
-			return floatVec(SUB, x1v, v)
-		}
-	}
-	return nil
-}
-
-func Mul(x1, x2 interface{}) Vector {
-	if v, ok := x1.(Vector); ok {
-		switch x2v := x2.(type) {
-		case Vector:
-			return vecVec(MUL, v, x2v)
+		switch x1v := x1.(type) {
 		case float64:
-			return vecFloat(MUL, v, x2v)
-		}
-	} else if v, ok := x2.(Vector); ok {
-		if x1v, ok := x1.(float64); ok {
-			return floatVec(MUL, x1v, v)
+			return floatVec(SUB, x1v, v)
+		case int:
+			return floatVec(SUB, float64(x1v), v)
 		}
 	}
 	return nil
@@ -173,10 +167,36 @@ func Div(x1, x2 interface{}) Vector {
 			return vecVec(DIV, v, x2v)
 		case float64:
 			return vecFloat(DIV, v, x2v)
+		case int:
+			return vecFloat(DIV, v, float64(x2v))
 		}
 	} else if v, ok := x2.(Vector); ok {
-		if x1v, ok := x1.(float64); ok {
+		switch x1v := x1.(type) {
+		case float64:
 			return floatVec(DIV, x1v, v)
+		case int:
+			return floatVec(DIV, float64(x1v), v)
+		}
+	}
+	return nil
+}
+
+func Mul(x1, x2 interface{}) Vector {
+	if v, ok := x1.(Vector); ok {
+		switch x2v := x2.(type) {
+		case Vector:
+			return vecVec(MUL, v, x2v)
+		case float64:
+			return vecFloat(MUL, v, x2v)
+		case int:
+			return vecFloat(MUL, v, float64(x2v))
+		}
+	} else if v, ok := x2.(Vector); ok {
+		switch x1v := x1.(type) {
+		case float64:
+			return floatVec(MUL, x1v, v)
+		case int:
+			return floatVec(MUL, float64(x1v), v)
 		}
 	}
 	return nil
