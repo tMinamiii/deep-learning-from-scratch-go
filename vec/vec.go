@@ -66,45 +66,32 @@ func vecVec(a Arithmetic, v1, v2 Vector) Vector {
 		return nil
 	}
 	result := Zeros(len(v1))
-	switch a {
-	case ADD:
-		for i := 0; i < len(v1); i++ {
+	for i := 0; i < len(v1); i++ {
+		switch a {
+		case ADD:
 			result[i] = v1[i] + v2[i]
-		}
-	case SUB:
-		for i := 0; i < len(v1); i++ {
+		case SUB:
 			result[i] = v1[i] - v2[i]
-		}
-	case MUL:
-		for i := 0; i < len(v1); i++ {
+		case MUL:
 			result[i] = v1[i] * v2[i]
-		}
-	case DIV:
-		for i := 0; i < len(v1); i++ {
+		case DIV:
 			result[i] = v1[i] / v2[i]
 		}
-
 	}
 	return result
 }
 
 func vecFloat(a Arithmetic, v Vector, f float64) Vector {
 	result := Zeros(len(v))
-	switch a {
-	case ADD:
-		for i := 0; i < len(v); i++ {
+	for i := 0; i < len(v); i++ {
+		switch a {
+		case ADD:
 			result[i] = v[i] + f
-		}
-	case SUB:
-		for i := 0; i < len(v); i++ {
+		case SUB:
 			result[i] = v[i] - f
-		}
-	case MUL:
-		for i := 0; i < len(v); i++ {
+		case MUL:
 			result[i] = v[i] * f
-		}
-	case DIV:
-		for i := 0; i < len(v); i++ {
+		case DIV:
 			result[i] = v[i] / f
 		}
 	}
@@ -113,25 +100,17 @@ func vecFloat(a Arithmetic, v Vector, f float64) Vector {
 
 func floatVec(a Arithmetic, f float64, v Vector) Vector {
 	result := Zeros(len(v))
-	switch a {
-	case ADD:
-		for i := 0; i < len(v); i++ {
+	for i := 0; i < len(v); i++ {
+		switch a {
+		case ADD:
 			result[i] = f + v[i]
-		}
-	case SUB:
-
-		for i := 0; i < len(v); i++ {
+		case SUB:
 			result[i] = f - v[i]
-		}
-	case MUL:
-		for i := 0; i < len(v); i++ {
+		case MUL:
 			result[i] = f * v[i]
-		}
-	case DIV:
-		for i := 0; i < len(v); i++ {
+		case DIV:
 			result[i] = f / v[i]
 		}
-
 	}
 	return result
 }

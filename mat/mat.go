@@ -203,32 +203,17 @@ func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
 				return nil
 			}
 			vector := vec.Zeros(m1.Rows * m1.Columns)
-			switch a {
-			case ADD:
-				for r := 0; r < m1.Rows; r++ {
-					for c := 0; c < m2.Columns; c++ {
-						index := r*m1.Columns + c
+			for r := 0; r < m1.Rows; r++ {
+				for c := 0; c < m2.Columns; c++ {
+					index := r*m1.Columns + c
+					switch a {
+					case ADD:
 						vector[index] = m1.Element(r, c) + m2.Element(0, c)
-					}
-				}
-			case SUB:
-				for r := 0; r < m1.Rows; r++ {
-					for c := 0; c < m2.Columns; c++ {
-						index := r*m1.Columns + c
+					case SUB:
 						vector[index] = m1.Element(r, c) - m2.Element(0, c)
-					}
-				}
-			case MUL:
-				for r := 0; r < m1.Rows; r++ {
-					for c := 0; c < m2.Columns; c++ {
-						index := r*m1.Columns + c
+					case MUL:
 						vector[index] = m1.Element(r, c) * m2.Element(0, c)
-					}
-				}
-			case DIV:
-				for r := 0; r < m1.Rows; r++ {
-					for c := 0; c < m2.Columns; c++ {
-						index := r*m1.Columns + c
+					case DIV:
 						vector[index] = m1.Element(r, c) / m2.Element(0, c)
 					}
 				}
@@ -267,32 +252,17 @@ func matVec(a Arithmetic, m1 *Matrix, m2 vec.Vector) *Matrix {
 		return nil
 	}
 	vector := vec.Zeros(m1.Rows * m1.Columns)
-	switch a {
-	case ADD:
-		for r := 0; r < m1.Rows; r++ {
-			for c := 0; c < len(m2); c++ {
-				index := r*m1.Columns + c
+	for r := 0; r < m1.Rows; r++ {
+		for c := 0; c < len(m2); c++ {
+			index := r*m1.Columns + c
+			switch a {
+			case ADD:
 				vector[index] = m1.Element(r, c) + m2[c]
-			}
-		}
-	case SUB:
-		for r := 0; r < m1.Rows; r++ {
-			for c := 0; c < len(m2); c++ {
-				index := r*m1.Columns + c
+			case SUB:
 				vector[index] = m1.Element(r, c) - m2[c]
-			}
-		}
-	case MUL:
-		for r := 0; r < m1.Rows; r++ {
-			for c := 0; c < len(m2); c++ {
-				index := r*m1.Columns + c
+			case MUL:
 				vector[index] = m1.Element(r, c) * m2[c]
-			}
-		}
-	case DIV:
-		for r := 0; r < m1.Rows; r++ {
-			for c := 0; c < len(m2); c++ {
-				index := r*m1.Columns + c
+			case DIV:
 				vector[index] = m1.Element(r, c) / m2[c]
 			}
 		}
@@ -328,32 +298,17 @@ func vecMat(a Arithmetic, m1 vec.Vector, m2 *Matrix) *Matrix {
 		return nil
 	}
 	vector := vec.Zeros(m2.Rows * m2.Columns)
-	switch a {
-	case ADD:
-		for r := 0; r < m2.Rows; r++ {
-			for c := 0; c < len(m1); c++ {
-				index := r*m2.Columns + c
+	for r := 0; r < m2.Rows; r++ {
+		for c := 0; c < len(m1); c++ {
+			index := r*m2.Columns + c
+			switch a {
+			case ADD:
 				vector[index] = m1[c] + m2.Element(r, c)
-			}
-		}
-	case SUB:
-		for r := 0; r < m2.Rows; r++ {
-			for c := 0; c < len(m1); c++ {
-				index := r*m2.Columns + c
+			case SUB:
 				vector[index] = m1[c] - m2.Element(r, c)
-			}
-		}
-	case MUL:
-		for r := 0; r < m2.Rows; r++ {
-			for c := 0; c < len(m1); c++ {
-				index := r*m2.Columns + c
+			case MUL:
 				vector[index] = m1[c] * m2.Element(r, c)
-			}
-		}
-	case DIV:
-		for r := 0; r < m2.Rows; r++ {
-			for c := 0; c < len(m1); c++ {
-				index := r*m2.Columns + c
+			case DIV:
 				vector[index] = m1[c] / m2.Element(r, c)
 			}
 		}
