@@ -15,7 +15,23 @@ type Matrix struct {
 }
 
 func (m *Matrix) T() *Matrix {
+	return m.Transpose(1, 0)
+}
+
+func (m *Matrix) Transpose(a, b int) *Matrix {
 	trans := vec.Vector{}
+	if a == 0 && b == 1 {
+		for i := 0; i < m.Rows; i++ {
+			col := m.SliceRow(i)
+			trans = append(trans, col...)
+		}
+		return &Matrix{
+			Vector:  trans,
+			Rows:    m.Rows,
+			Columns: m.Columns,
+		}
+
+	}
 	for i := 0; i < m.Columns; i++ {
 		col := m.SliceColumn(i)
 		trans = append(trans, col...)
@@ -26,6 +42,59 @@ func (m *Matrix) T() *Matrix {
 		Columns: m.Rows,
 	}
 }
+
+func (m *Matrix) Window(x, y, h, w int) *Matrix {
+	mat := Zeros(h, w)
+	for i := x; i < x+h; i++ {
+		for j := y; j < y+w; j++ {
+			mat.Vector[(i-x)*w+(j-y)] = m.Element(i, j)
+		}
+	}
+	// fmt.Println(mat)
+	return mat
+}
+
+func (m *Matrix) Pad(pad int) *Matrix {
+	col := m.Columns
+	newVec := vec.Vector{}
+	rowPad := vec.Zeros(col + 2*pad)
+	for j := 0; j < pad; j++ {
+		newVec = append(newVec, rowPad...)
+	}
+	for j := 0; j < m.Rows; j++ {
+		srow := m.SliceRow(j)
+		for k := 0; k < pad; k++ {
+			newVec = append(newVec, 0)
+		}
+		newVec = append(newVec, srow...)
+		for k := 0; k < pad; k++ {
+			newVec = append(newVec, 0)
+		}
+	}
+	for j := 0; j < pad; j++ {
+		newVec = append(newVec, rowPad...)
+	}
+	return &Matrix{
+		Vector:  newVec,
+		Rows:    m.Rows + 2*pad,
+		Columns: m.Columns + 2*pad,
+	}
+
+}
+
+// func (m *Matrix) ToCol(fw, fh int) *Matrix {
+// 	v := vec.Vector{}
+// 	for i := 0; i < fw; i++ {
+// 		for j := 0; j < fh; j++ {
+// 			v = append(v, m.Element(i, j))
+// 		}
+// 	}
+// 	return &Matrix{
+// 		Vector:  v,
+// 		Rows:    1,
+// 		Columns: len(v),
+// 	}
+// }
 
 func (m *Matrix) Shape() (int, int) {
 	if m.Rows == 1 {
@@ -49,6 +118,30 @@ func (m *Matrix) Reshape(row, col int) *Matrix {
 		Rows:    row,
 		Columns: col,
 	}
+}
+
+func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
+	if d == -1 {
+		row, col := m.Shape()
+		size := row * col
+		d = int(size / a / b / c)
+	}
+	t4d := Tensor4D{}
+	for i := 0; i < a; i++ {
+		t3d := Tensor3D{}
+		for j := 0; j < b; j++ {
+			sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
+			ma := &Matrix{
+				Vector:  sv,
+				Rows:    c,
+				Columns: d,
+			}
+			t3d = append(t3d, ma)
+		}
+		t4d = append(t4d, t3d)
+	}
+
+	return t4d
 }
 
 func (m *Matrix) Element(r int, c int) float64 {
