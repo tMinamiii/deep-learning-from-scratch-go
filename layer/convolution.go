@@ -4,11 +4,51 @@ import (
 	"github.com/naronA/zero_deeplearning/mat"
 )
 
+/*
+class Convolution:
+    def __init__(self, W, b, stride=1, pad=0):
+        self.W = W
+        self.b = b
+        self.stride = stride
+        self.pad = pad
+
+        # 中間データ（backward時に使用）
+        self.x = None
+        self.col = None
+        self.col_W = None
+
+        # 重み・バイアスパラメータの勾配
+        self.dW = None
+        self.db = None
+
+    def backward(self, dout):
+        FN, C, FH, FW = self.W.shape
+        dout = dout.transpose(0, 2, 3, 1).reshape(-1, FN)
+
+        self.db = np.sum(dout, axis=0)
+        self.dW = np.dot(self.col.T, dout)
+        self.dW = self.dW.transpose(1, 0).reshape(FN, C, FH, FW)
+
+        dcol = np.dot(dout, self.col_W.T)
+        dx = col2im(dcol, self.x.shape, FH, FW, self.stride, self.pad)
+
+        return dx
+
+
+
+*/
 type Convolution struct {
 	W      mat.Tensor4D // 4次元
 	B      mat.Tensor4D // 3次元
 	Stride int
 	Pad    int
+	// 中間データ（backward時に使用）
+	X    mat.Tensor4D
+	Col  *mat.Matrix
+	ColW *mat.Matrix
+	// 重み・バイアスパラメータの勾配
+	DW mat.Tensor4D
+	DB *mat.Matrix
 }
 
 func NewConvolution(w, b mat.Tensor4D, stride, pad int) *Convolution {
@@ -20,16 +60,63 @@ func NewConvolution(w, b mat.Tensor4D, stride, pad int) *Convolution {
 	}
 }
 
+/*
+   def forward(self, x):
+       FN, C, FH, FW = self.W.shape
+       N, C, H, W = x.shape
+       out_h = 1 + int((H + 2*self.pad - FH) / self.stride)
+       out_w = 1 + int((W + 2*self.pad - FW) / self.stride)
+
+       col = im2col(x, FH, FW, self.stride, self.pad)
+       col_W = self.W.reshape(FN, -1).T
+
+       out = np.dot(col, col_W) + self.b
+       out = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
+
+       self.x = x
+       self.col = col
+       self.col_W = col_W
+
+       return out
+*/
 func (c *Convolution) Forward(x mat.Tensor4D) interface{} {
-	FN, C, FH, FW := c.W.Shape()
-	N, C, H, W := x.Shape()
-	outH := int(1 + (H+2*c.Pad-FH)/c.Stride)
-	outW := int(1 + (W+2*c.Pad-FW)/c.Stride)
+	FN, _, FH, FW := c.W.Shape()
+	N, _, H, W := x.Shape()
+	outH := 1 + (H+2*c.Pad-FH)/c.Stride
+	outW := 1 + (W+2*c.Pad-FW)/c.Stride
 
 	col := x.Im2Col(FH, FW, c.Stride, c.Pad)
 	colW := c.W.ReshapeToMat(FN, -1).T()
 	out := mat.Add(mat.Dot(col, colW), c.B)
-	out = out.ReshapeTo4D(N, outH, outW, -1).Transpose(0, 3, 1, 2)
-	// return out
-	return nil
+	trans := out.ReshapeTo4D(N, outH, outW, -1).Transpose(0, 3, 1, 2)
+	c.X = x
+	c.Col = col
+	c.ColW = colW
+	return trans
+}
+
+/*
+   def backward(self, dout):
+       FN, C, FH, FW = self.W.shape
+       dout = dout.transpose(0, 2, 3, 1).reshape(-1, FN)
+
+       self.db = np.sum(dout, axis=0)
+       self.dW = np.dot(self.col.T, dout)
+       self.dW = self.dW.transpose(1, 0).reshape(FN, C, FH, FW)
+
+       dcol = np.dot(dout, self.col_W.T)
+       dx = col2im(dcol, self.x.shape, FH, FW, self.stride, self.pad)
+
+       return dx
+*/
+
+func (c *Convolution) Backward(dout mat.Tensor4D) interface{} {
+	FN, C, FH, FW := c.W.Shape()
+	doutMat := dout.Transpose(0, 2, 3, 1).ReshapeToMat(-1, FN)
+	c.DB = mat.Sum(doutMat, 0)
+	dot := mat.Dot(c.Col.T(), doutMat)
+	c.DW = dot.T().ReshapeTo4D(FN, C, FH, FW)
+	dcol := mat.Dot(doutMat, c.ColW.T())
+	dx := nil
+	return dx
 }

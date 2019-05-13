@@ -34,7 +34,10 @@ func main() {
 	// fmt.Println(t3d1[0].ToCol())
 	m := t4d.Im2Col(2, 2, 2, 1)
 	// fmt.Println(m)
-	fmt.Println(m.ReshapeTo4D(2, 2, 2, -1)[0][1])
+	// fmt.Println(m.ReshapeTo4D(2, 2, 2, -1)[0][0].RowVecs())
+	res4d := m.ReshapeTo4D(2, 2, 2, -1)
+	fmt.Println(res4d.Transpose(3, 0, 2, 1))
+	// fmt.Println(m.ReshapeTo4D(2, 2, 2, -1)[0][0].RowVecs())
 	// fmt.Println(m.ReshapeTo4D(2, 2, 2, -1).ReshapeToMat(1, -1).ReshapeTo4D(2, 8, 2, 2))
 	// fmt.Println(win)
 }

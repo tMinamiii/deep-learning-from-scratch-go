@@ -18,6 +18,14 @@ func (t Tensor3D) Channels() int {
 	return len(t)
 }
 
+func (t Tensor3D) Element(c, h, w int) float64 {
+	return t[c].Element(h, w)
+}
+
+func (t Tensor3D) Assign(value float64, c, h, w int) {
+	t[c].Assign(value, h, w)
+}
+
 func (t Tensor3D) Shape() (int, int, int) {
 	C := t.Channels()
 	H, W := t[0].Shape()
@@ -60,10 +68,9 @@ func (t Tensor3D) Pad(size int) Tensor3D {
 }
 
 func ZerosT3D(c, h, w int) Tensor3D {
-	mat := Zeros(h, w)
 	t3d := make(Tensor3D, c)
 	for i := range t3d {
-		t3d[i] = mat
+		t3d[i] = Zeros(h, w)
 	}
 	return t3d
 }

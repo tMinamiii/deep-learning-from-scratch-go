@@ -19,3 +19,11 @@ func ZerosT5D(a, b, c, h, w int) Tensor5D {
 	}
 	return t5d
 }
+
+func (t Tensor5D) Element(b, n, c, h, w int) float64 {
+	return t[b].Element(n, c, h, w)
+}
+
+func (t Tensor5D) Assign(value float64, b, n, c, h, w int) {
+	t[b].Assign(value, n, c, h, w)
+}

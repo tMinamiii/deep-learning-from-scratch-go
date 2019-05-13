@@ -40,7 +40,7 @@ func TestIm2Col_2_2_2_1(t *testing.T) {
 
 func TestReshape(t *testing.T) {
 	t4d := SmapleT4D()
-	expected := t4d.Reshape(2, -1)
+	expected := t4d.ReshapeToMat(2, -1)
 	actual := &Matrix{Vector: vec.Vector{
 		4, 9, 3, 6, 7, 9, 0, 9,
 		4, 7, 3, 9, 4, 4, 1, 9,

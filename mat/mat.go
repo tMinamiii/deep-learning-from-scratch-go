@@ -14,6 +14,24 @@ type Matrix struct {
 	Columns int
 }
 
+func (m *Matrix) RowVecs() []vec.Vector {
+	v := []vec.Vector{}
+	for i := 0; i < m.Rows; i++ {
+		col := m.SliceRow(i)
+		v = append(v, col)
+	}
+	return v
+}
+
+func (m *Matrix) ColumnVecs() []vec.Vector {
+	v := []vec.Vector{}
+	for i := 0; i < m.Columns; i++ {
+		col := m.SliceColumn(i)
+		v = append(v, col)
+	}
+	return v
+}
+
 func (m *Matrix) T() *Matrix {
 	return m.Transpose(1, 0)
 }
@@ -120,6 +138,73 @@ func (m *Matrix) Reshape(row, col int) *Matrix {
 	}
 }
 
+/**
+def col2im(col, input_shape, filter_h, filter_w, stride=1, pad=0):
+    N, C, H, W = input_shape
+    out_h = (H + 2*pad - filter_h)//stride + 1
+    out_w = (W + 2*pad - filter_w)//stride + 1
+    col = col.reshape(N, out_h, out_w, C, filter_h, filter_w).transpose(0, 3, 4, 5, 1, 2)
+
+    img = np.zeros((N, C, H + 2*pad + stride - 1, W + 2*pad + stride - 1))
+    for y in range(filter_h):
+        y_max = y + stride*out_h
+        for x in range(filter_w):
+            x_max = x + stride*out_w
+            img[:, :, y:y_max:stride, x:x_max:stride] += col[:, :, y, x, :, :]
+
+    return img[:, :, pad:H + pad, pad:W + pad]
+*/
+func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
+	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
+	outH := (H+2*pad-fh)/stride + 1
+	outW := (W+2*pad-fw)/stride + 1
+	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
+	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
+
+	nV := vec.Vector{}
+	count := 0
+	for x := 0; x <= t[0].Columns-fw+2*pad; x += stride {
+		for y := 0; y <= t[0].Rows-fh+2*pad; y += stride {
+			count++
+			for _, e := range t {
+				padE := e.Pad(pad)
+				nV = append(nV, padE.Window(x, y, fw, fh).Vector...)
+			}
+		}
+	}
+	return &Matrix{
+		Vector:  nV,
+		Rows:    count,
+		Columns: fh * fw * len(t),
+	}
+
+	for y := 0; y < fh; y++ {
+		for x := 0; x < fw; x++ {
+			img
+		}
+	}
+	return nil
+}
+
+/*
+   N, C, H, W = input_data.shape
+    out_h = (H + 2*pad - filter_h)//stride + 1
+    out_w = (W + 2*pad - filter_w)//stride + 1
+
+    img = np.pad(input_data, [(0, 0), (0, 0), (pad, pad), (pad, pad)], 'constant')
+    col = np.zeros((N, C, filter_h, filter_w, out_h, out_w))
+
+    for y in range(filter_h):
+        y_max = y + stride*out_h
+        for x in range(filter_w):
+            x_max = x + stride*out_w
+            col[:, :, y, x, :, :] = img[:, :, y:y_max:stride, x:x_max:stride]
+
+    col = col.transpose(0, 4, 5, 1, 2, 3).reshape(N*out_h*out_w, -1)
+    return col
+
+
+*/
 func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 	if d == -1 {
 		row, col := m.Shape()
@@ -144,8 +229,38 @@ func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 	return t4d
 }
 
+func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
+	t6d := Tensor6D{}
+	for i := 0; i < a; i++ {
+		t5d := Tensor5D{}
+		for j := 0; j < b; j++ {
+			t4d := Tensor4D{}
+			for k := 0; k < c; k++ {
+				t3d := Tensor3D{}
+				for l := 0; l < d; l++ {
+					sv := m.Vector[(i*b+j*c+k*d+l)*e*f : (i*b+j*c+k*d+l+1)*e*f]
+					ma := &Matrix{
+						Vector:  sv,
+						Rows:    e,
+						Columns: f,
+					}
+					t3d = append(t3d, ma)
+				}
+				t4d = append(t4d, t3d)
+			}
+			t5d = append(t5d, t4d)
+		}
+		t6d = append(t6d, t5d)
+	}
+	return t6d
+}
+
 func (m *Matrix) Element(r int, c int) float64 {
 	return m.Vector[r*m.Columns+c]
+}
+
+func (m *Matrix) Assign(value float64, r, c int) {
+	m.Vector[r*m.Columns+c] = value
 }
 
 func (m *Matrix) SliceRow(r int) vec.Vector {
