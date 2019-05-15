@@ -72,6 +72,15 @@ func (m *Matrix) Window(x, y, h, w int) *Matrix {
 	return mat
 }
 
+func (m *Matrix) AssignWindow(window *Matrix, x, y, h, w int) {
+	for i := 0; i < h; i++ {
+		for j := 0; j < w; j++ {
+			val := window.Element(i, j)
+			m.Assign(val, i+x, j+y)
+		}
+	}
+}
+
 func (m *Matrix) Pad(pad int) *Matrix {
 	col := m.Columns
 	newVec := vec.Vector{}
@@ -138,54 +147,6 @@ func (m *Matrix) Reshape(row, col int) *Matrix {
 	}
 }
 
-/**
-def col2im(col, input_shape, filter_h, filter_w, stride=1, pad=0):
-    N, C, H, W = input_shape
-    out_h = (H + 2*pad - filter_h)//stride + 1
-    out_w = (W + 2*pad - filter_w)//stride + 1
-    col = col.reshape(N, out_h, out_w, C, filter_h, filter_w).transpose(0, 3, 4, 5, 1, 2)
-
-    img = np.zeros((N, C, H + 2*pad + stride - 1, W + 2*pad + stride - 1))
-    for y in range(filter_h):
-        y_max = y + stride*out_h
-        for x in range(filter_w):
-            x_max = x + stride*out_w
-            img[:, :, y:y_max:stride, x:x_max:stride] += col[:, :, y, x, :, :]
-
-    return img[:, :, pad:H + pad, pad:W + pad]
-*/
-func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
-	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
-	outH := (H+2*pad-fh)/stride + 1
-	outW := (W+2*pad-fw)/stride + 1
-	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
-	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
-
-	nV := vec.Vector{}
-	count := 0
-	for x := 0; x <= t[0].Columns-fw+2*pad; x += stride {
-		for y := 0; y <= t[0].Rows-fh+2*pad; y += stride {
-			count++
-			for _, e := range t {
-				padE := e.Pad(pad)
-				nV = append(nV, padE.Window(x, y, fw, fh).Vector...)
-			}
-		}
-	}
-	return &Matrix{
-		Vector:  nV,
-		Rows:    count,
-		Columns: fh * fw * len(t),
-	}
-
-	for y := 0; y < fh; y++ {
-		for x := 0; x < fw; x++ {
-			img
-		}
-	}
-	return nil
-}
-
 /*
    N, C, H, W = input_data.shape
     out_h = (H + 2*pad - filter_h)//stride + 1
@@ -202,8 +163,6 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 
     col = col.transpose(0, 4, 5, 1, 2, 3).reshape(N*out_h*out_w, -1)
     return col
-
-
 */
 func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 	if d == -1 {

@@ -40,25 +40,6 @@ func (t Tensor3D) Window(x, y, h, w int) Tensor3D {
 	return newT3D
 }
 
-func (t Tensor3D) Im2Col(fw, fh, stride, pad int) *Matrix {
-	nV := vec.Vector{}
-	count := 0
-	for x := 0; x <= t[0].Columns-fw+2*pad; x += stride {
-		for y := 0; y <= t[0].Rows-fh+2*pad; y += stride {
-			count++
-			for _, e := range t {
-				padE := e.Pad(pad)
-				nV = append(nV, padE.Window(x, y, fw, fh).Vector...)
-			}
-		}
-	}
-	return &Matrix{
-		Vector:  nV,
-		Rows:    count,
-		Columns: fh * fw * len(t),
-	}
-}
-
 func (t Tensor3D) Pad(size int) Tensor3D {
 	newT3d := Tensor3D{}
 	for _, m := range t {

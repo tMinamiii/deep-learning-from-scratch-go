@@ -8,19 +8,6 @@ import (
 
 type Tensor4D []Tensor3D
 
-func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
-	nv := vec.Vector{}
-	for _, e := range t {
-		nv = append(nv, e.Im2Col(fw, fh, stride, pad).Vector...)
-	}
-	N, C, H, _ := t.Shape()
-	return &Matrix{
-		Vector:  nv,
-		Rows:    N * C * H,
-		Columns: fw * fh * C,
-	}
-}
-
 func (t Tensor4D) Size() int {
 	n, c, h, w := t.Shape()
 	return n * c * h * w
@@ -115,4 +102,3 @@ func ZerosT4D(n, c, h, w int) Tensor4D {
 	}
 	return t4d
 }
-

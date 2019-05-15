@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/naronA/zero_deeplearning/vec"
@@ -36,6 +37,15 @@ func TestIm2Col_2_2_2_1(t *testing.T) {
 	if NotEqual(expected, actual) {
 		t.Fail()
 	}
+}
+
+func TestCol2Img(t *testing.T) {
+	t4d := SmapleT4D()
+	actual := t4d.Im2Col(2, 2, 2, 1)
+	img := actual.Col2Img([]int{2, 2, 2, 2}, 2, 2, 2, 1)
+	fmt.Println(img)
+	t.Fail()
+
 }
 
 func TestReshape(t *testing.T) {
