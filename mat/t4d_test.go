@@ -43,6 +43,7 @@ func TestCol2Img(t *testing.T) {
 	t4d := SmapleT4D()
 	actual := t4d.Im2Col(2, 2, 2, 1)
 	img := actual.Col2Img([]int{2, 2, 2, 2}, 2, 2, 2, 1)
+	fmt.Println("THIS IS COL2IMG")
 	fmt.Println(img)
 	t.Fail()
 

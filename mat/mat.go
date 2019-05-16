@@ -197,7 +197,7 @@ func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
 			for k := 0; k < c; k++ {
 				t3d := Tensor3D{}
 				for l := 0; l < d; l++ {
-					sv := m.Vector[(i*b+j*c+k*d+l)*e*f : (i*b+j*c+k*d+l+1)*e*f]
+					sv := m.Vector[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
 					ma := &Matrix{
 						Vector:  sv,
 						Rows:    e,

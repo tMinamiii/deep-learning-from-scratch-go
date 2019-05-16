@@ -70,16 +70,25 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	outW := (W+2*pad-fw)/stride + 1
 	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
 	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
-	for _, ncolT5d := range ncol {
-		for _, ncolT4d := range ncolT5d {
-			for _, imgT3D := range img {
-				for x := 0; x <= imgT3D[0].Columns-fw+2*pad; x += stride {
-					for y := 0; y <= imgT3D[0].Rows-fh+2*pad; y += stride {
-						for _, imgMat := range imgT3D {
-							// padE := imgMat.Pad(pad)
-							fmt.Println(x, y)
-							ncolMat := ncolT4d[y][x]
-							imgMat.AssignWindow(ncolMat, x, y, fw, fh)
+	for y := 0; y < fh; y++ {
+		yMax := y + stride*outH
+		for x := 0; x < fw; x++ {
+			xMax := x + stride*outW
+			for _, ncolT5d := range ncol {
+				ncolT3D := ncolT5d[y][x]
+				for yStride := 0; yStride <= yMax; yStride += stride {
+					for xStride := 0; xStride <= xMax; xStride += stride {
+						for _, imgT3D := range img {
+							for _, imgMat := range imgT3D {
+								for _, ncolMat := range ncolT3D {
+									fmt.Println(ncolT3D)
+									for _, e := range ncolMat.Vector {
+										add := imgMat.Element(yStride, xStride) + e
+										imgMat.Assign(add, yStride, xStride)
+									}
+									fmt.Println()
+								}
+							}
 						}
 					}
 				}

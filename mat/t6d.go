@@ -1,7 +1,5 @@
 package mat
 
-import "fmt"
-
 type Tensor6D []Tensor5D
 
 func (t Tensor6D) Shape() (int, int, int, int, int, int) {
@@ -31,10 +29,9 @@ func (t Tensor6D) Pad(size int) Tensor6D {
 }
 
 func ZerosT6D(n, c, fh, fw, oh, ow int) Tensor6D {
-	t5d := ZerosT5D(c, fh, fw, oh, ow)
 	t6d := make(Tensor6D, n)
 	for i := range t6d {
-		t6d[i] = t5d
+		t6d[i] = ZerosT5D(c, fh, fw, oh, ow)
 	}
 	return t6d
 }
@@ -43,7 +40,6 @@ func (t Tensor6D) Transpose(a, b, c, d, e, f int) Tensor6D {
 	u, v, w, x, y, z := t.Shape()
 	shape := []int{u, v, w, x, y, z}
 	t6d := ZerosT6D(shape[a], shape[b], shape[c], shape[d], shape[e], shape[f])
-	fmt.Println(t)
 	for i, et5d := range t {
 		for j, et4d := range et5d {
 			for k, et3d := range et4d {

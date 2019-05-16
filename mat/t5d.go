@@ -12,10 +12,9 @@ func (t Tensor5D) Pad(size int) Tensor5D {
 }
 
 func ZerosT5D(a, b, c, h, w int) Tensor5D {
-	t4d := ZerosT4D(b, c, h, w)
 	t5d := make(Tensor5D, a)
 	for i := range t5d {
-		t5d[i] = t4d
+		t5d[i] = ZerosT4D(b, c, h, w)
 	}
 	return t5d
 }
