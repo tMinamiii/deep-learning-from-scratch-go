@@ -48,6 +48,90 @@ func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
 	}
 }
 
+func (t Tensor4D) StrideAssing(m1 *Matrix, x, y, xMax, yMax, stride int) {
+	for _, imgT3D := range t {
+		for _, imgMat := range imgT3D {
+
+			v := vec.Vector{}
+			for i := x; i < xMax; i += stride {
+				for j := y; j < yMax; j += stride {
+					v = append(v, imgMat.Element(i, j))
+					// for k := 0; k < m1.Rows; k++ {
+					// 	for l := 0; l < m1.Columns; l++ {
+					// 		add := imgMat.Element(i, j) + m1.Element(k, l)
+					// 		imgMat.Assign(add, i, j)
+					// 		// t[ti][t3di] = imgMat
+					// 	}
+					// }
+				}
+			}
+			addVec := vec.Add(v, m1.Vector)
+			idx := 0
+			for i := x; i < xMax; i += stride {
+				for j := y; j < xMax; j += stride {
+					imgMat.Assign(addVec[idx], i, j)
+					idx++
+				}
+			}
+			fmt.Println(v)
+		}
+	}
+}
+
+type Tensor4DIndex struct {
+	N int
+	C int
+	H int
+	W int
+}
+
+type Tensor4DSlice struct {
+	Actual   Tensor4D
+	Indices  []*Tensor4DIndex
+	NewShape []int
+}
+
+func (t4s *Tensor4DSlice) ToTensor4D() Tensor4D {
+	newT4D := ZerosT4D(t4s.NewShape[0], t4s.NewShape[1], t4s.NewShape[2], t4s.NewShape[3])
+	for _, idx := range t4s.Indices {
+		for i := 0; i < t4s.NewShape[2]; i++ {
+			for j := 0; j < t4s.NewShape[3]; j++ {
+				newT4D[idx.N][idx.C].Assign(t4s.Actual[idx.N][idx.C].Element(idx.H, idx.W), i, j)
+			}
+		}
+	}
+	return newT4D
+}
+
+func (t Tensor4D) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
+	n, c, _, _ := t.Shape()
+	indices := []*Tensor4DIndex{}
+	totalRows := 0
+	for i := y; i < yMax; i += stride {
+		totalRows++
+	}
+	totalColumns := 0
+	for j := x; j < xMax; j += stride {
+		totalColumns++
+	}
+	for n, imgT3D := range t {
+		for c := range imgT3D {
+			for i := y; i < yMax; i += stride {
+				for j := x; j < xMax; j += stride {
+					index := &Tensor4DIndex{n, c, i, j}
+					indices = append(indices, index)
+					// v =  imgMat.Element(j, i))
+				}
+			}
+		}
+	}
+	return &Tensor4DSlice{
+		Actual:   t,
+		Indices:  indices,
+		NewShape: []int{n, c, totalRows, totalColumns},
+	}
+}
+
 /**
 def col2im(col, input_shape, filter_h, filter_w, stride=1, pad=0):
     N, C, H, W = input_shape
@@ -68,31 +152,45 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
 	outH := (H+2*pad-fh)/stride + 1
 	outW := (W+2*pad-fw)/stride + 1
-	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
+	// ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
 	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
+	// fmt.Println(img)
+	imgMats := Tensor3D{}
+	for _, imgT3D := range img {
+		imgMats = append(imgMats, imgT3D...)
+	}
 	for y := 0; y < fh; y++ {
 		yMax := y + stride*outH
 		for x := 0; x < fw; x++ {
 			xMax := x + stride*outW
-			for _, ncolT5d := range ncol {
-				ncolT3D := ncolT5d[y][x]
-				for yStride := 0; yStride <= yMax; yStride += stride {
-					for xStride := 0; xStride <= xMax; xStride += stride {
-						for _, imgT3D := range img {
-							for _, imgMat := range imgT3D {
-								for _, ncolMat := range ncolT3D {
-									fmt.Println(ncolT3D)
-									for _, e := range ncolMat.Vector {
-										add := imgMat.Element(yStride, xStride) + e
-										imgMat.Assign(add, yStride, xStride)
-									}
-									fmt.Println()
-								}
-							}
-						}
-					}
-				}
-			}
+			slice := img.StrideSlice(y, yMax, x, xMax, stride)
+			fmt.Println(slice.ToTensor4D())
+			// for _, ncolT5d := range ncol {
+			// 	ncolT3D := ncolT5d[y][x]
+			// 	for _, ncolMat := range ncolT3D {
+
+			// 		imgIdx := 0
+			// 		v := vec.Vector{}
+			// 		for i := x; i < xMax; i += stride {
+			// 			for j := y; j < yMax; j += stride {
+			// 				// fmt.Println(imgMats[imgIdx])
+			// 				v = append(v, imgMats[imgIdx].Element(j, i))
+			// 				imgIdx++
+			// 			}
+			// 		}
+			// 		fmt.Println(v)
+			// 		imgIdx = 0
+			// 		addVec := vec.Add(v, ncolMat.Vector)
+			// 		idx := 0
+			// 		for i := x; i < xMax; i += stride {
+			// 			for j := y; j < yMax; j += stride {
+			// 				imgMats[imgIdx].Assign(addVec[idx], j, i)
+			// 				idx++
+			// 			}
+			// 		}
+			// 		imgIdx++
+			// 	}
+			// }
 		}
 	}
 
