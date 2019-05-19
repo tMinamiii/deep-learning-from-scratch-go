@@ -103,6 +103,37 @@ func (t4s *Tensor4DSlice) ToTensor4D() Tensor4D {
 	return newT4D
 }
 
+func AddAssign(t1 *Tensor4DSlice, t2 Tensor4D) {
+	t2flat := t2.Flatten()
+	for i, idx := range t1.Indices {
+		add := t1.Actual[idx.N][idx.C].Element(idx.H, idx.W) + t2flat[i]
+		t1.Actual[idx.N][idx.C].Assign(add, idx.H, idx.W)
+	}
+}
+
+func (t4s *Tensor4DSlice) Assign(m *Matrix) {
+	for _, idx := range t4s.Indices {
+		for i := 0; i < m.Rows; i++ {
+			for j := 0; j < m.Columns; j++ {
+				t4s.Actual[idx.N][idx.C].Assign(m.Element(i, j), idx.H, idx.W)
+			}
+		}
+	}
+}
+
+func (t Tensor6D) slice(x, y int) Tensor4D {
+	t4d := Tensor4D{}
+	for _, ncolT5d := range t {
+		t3d := Tensor3D{}
+		for _, ncolT4d := range ncolT5d {
+			ncolMat := ncolT4d[x][y]
+			t3d = append(t3d, ncolMat)
+		}
+		t4d = append(t4d, t3d)
+	}
+	return t4d
+}
+
 func (t Tensor4D) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
 	n, c, _, _ := t.Shape()
 	indices := []*Tensor4DIndex{}
@@ -152,9 +183,8 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
 	outH := (H+2*pad-fh)/stride + 1
 	outW := (W+2*pad-fw)/stride + 1
-	// ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
+	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
 	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
-	// fmt.Println(img)
 	imgMats := Tensor3D{}
 	for _, imgT3D := range img {
 		imgMats = append(imgMats, imgT3D...)
@@ -164,11 +194,18 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 		for x := 0; x < fw; x++ {
 			xMax := x + stride*outW
 			slice := img.StrideSlice(y, yMax, x, xMax, stride)
-			fmt.Println(slice.ToTensor4D())
+			ncolSlice := ncol.slice(y, x)
+			// slice.Assign(&Matrix{Vector: []float64{1, 1, 1, 1}, Rows: 2, Columns: 2})
 			// for _, ncolT5d := range ncol {
 			// 	ncolT3D := ncolT5d[y][x]
 			// 	for _, ncolMat := range ncolT3D {
 
+			AddAssign(slice, ncolSlice)
+
+			// slice.AddAssign(ncolSlice)
+			// fmt.Println(slice.ToTensor4D())
+			// 	}
+			// }
 			// 		imgIdx := 0
 			// 		v := vec.Vector{}
 			// 		for i := x; i < xMax; i += stride {

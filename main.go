@@ -33,7 +33,7 @@ func main() {
 	// win := pad.Window(0, 0, 2, 2)
 	// fmt.Println(t3d1[0].ToCol())
 	m := t4d.Im2Col(2, 2, 2, 1)
-	fmt.Println(m)
+	// fmt.Println(m)
 	img := m.Col2Img([]int{2, 2, 2, 2}, 2, 2, 2, 1)
 
 	fmt.Println(img)
