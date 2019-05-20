@@ -163,3 +163,12 @@ func MulT3D(x1 interface{}, x2 interface{}) Tensor3D {
 func DivT3D(x1 interface{}, x2 interface{}) Tensor3D {
 	return calcArithmetic(DIVT3D, x1, x2)
 }
+
+func EqualT3D(t1, t2 Tensor3D) bool {
+	for i := range t1 {
+		if NotEqual(t1[i], t2[i]) {
+			return false
+		}
+	}
+	return true
+}

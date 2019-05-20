@@ -244,6 +244,28 @@ func (m *Matrix) String() string {
 	return str
 }
 
+func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
+	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
+	outH := (H+2*pad-fh)/stride + 1
+	outW := (W+2*pad-fw)/stride + 1
+	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
+	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
+	imgMats := Tensor3D{}
+	for _, imgT3D := range img {
+		imgMats = append(imgMats, imgT3D...)
+	}
+	for y := 0; y < fh; y++ {
+		yMax := y + stride*outH
+		for x := 0; x < fw; x++ {
+			xMax := x + stride*outW
+			slice := img.StrideSlice(y, yMax, x, xMax, stride)
+			ncolSlice := ncol.Slice(y, x)
+			AddAssign(slice, ncolSlice)
+		}
+	}
+	return img.Slice(pad, H+pad, pad, W+pad)
+}
+
 func Zeros(rows int, cols int) *Matrix {
 	zeros := vec.Zeros(rows * cols)
 	return &Matrix{

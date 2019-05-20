@@ -95,10 +95,101 @@ func (t Tensor4D) Shape() (int, int, int, int) {
 	return N, C, H, W
 }
 
+type Tensor4DIndex struct {
+	N int
+	C int
+	H int
+	W int
+}
+
+type Tensor4DSlice struct {
+	Actual   Tensor4D
+	Indices  []*Tensor4DIndex
+	NewShape []int
+}
+
+func (t4s *Tensor4DSlice) ToTensor4D() Tensor4D {
+	newT4D := ZerosT4D(t4s.NewShape[0], t4s.NewShape[1], t4s.NewShape[2], t4s.NewShape[3])
+	for i, idx := range t4s.Indices {
+		val := t4s.Actual[idx.N][idx.C].Element(idx.H, idx.W)
+		matrixLength := t4s.NewShape[2] * t4s.NewShape[3]
+		newMatIdx := i - idx.C*matrixLength - idx.N*(matrixLength*t4s.NewShape[1])
+		newT4D[idx.N][idx.C].Vector[newMatIdx] = val
+	}
+	return newT4D
+}
+
+func AddAssign(t1 *Tensor4DSlice, t2 Tensor4D) {
+	t2flat := t2.Flatten()
+	for i, idx := range t1.Indices {
+		add := t1.Actual[idx.N][idx.C].Element(idx.H, idx.W) + t2flat[i]
+		t1.Actual[idx.N][idx.C].Assign(add, idx.H, idx.W)
+	}
+}
+func (t Tensor4D) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
+	n, c, _, _ := t.Shape()
+	indices := []*Tensor4DIndex{}
+	// for i := y; i < yMax; i += stride {
+	// 	totalRows++
+	// }
+	totalRows := (yMax - y) / stride
+	totalColumns := (xMax - x) / stride
+	for n, imgT3D := range t {
+		for c := range imgT3D {
+			for i := y; i < yMax; i += stride {
+				for j := x; j < xMax; j += stride {
+					index := &Tensor4DIndex{n, c, i, j}
+					indices = append(indices, index)
+				}
+			}
+		}
+	}
+	return &Tensor4DSlice{
+		Actual:   t,
+		Indices:  indices,
+		NewShape: []int{n, c, totalRows, totalColumns},
+	}
+}
+
+func (t Tensor4D) Slice(y, yMax, x, xMax int) Tensor4D {
+	return t.StrideSlice(y, yMax, x, xMax, 1).ToTensor4D()
+}
 func ZerosT4D(n, c, h, w int) Tensor4D {
 	t4d := make(Tensor4D, n)
 	for i := range t4d {
 		t4d[i] = ZerosT3D(c, h, w)
 	}
 	return t4d
+}
+
+func EqualT4D(t1, t2 Tensor4D) bool {
+	for i := range t1 {
+		if !EqualT3D(t1[i], t2[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
+	colVec := vec.Vector{}
+	for _, t3d := range t {
+		nV := vec.Vector{}
+		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
+			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+				for _, ma := range t3d {
+					padE := ma.Pad(pad)
+					nV = append(nV, padE.Window(x, y, fw, fh).Vector...)
+				}
+			}
+		}
+		colVec = append(colVec, nV...)
+	}
+
+	N, C, H, _ := t.Shape()
+	return &Matrix{
+		Vector:  colVec,
+		Rows:    N * C * H,
+		Columns: fw * fh * C,
+	}
 }

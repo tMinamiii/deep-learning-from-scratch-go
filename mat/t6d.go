@@ -66,3 +66,16 @@ func (t Tensor6D) Transpose(a, b, c, d, e, f int) Tensor6D {
 	}
 	return t6d
 }
+
+func (t Tensor6D) Slice(x, y int) Tensor4D {
+	t4d := Tensor4D{}
+	for _, ncolT5d := range t {
+		t3d := Tensor3D{}
+		for _, ncolT4d := range ncolT5d {
+			ncolMat := ncolT4d[x][y]
+			t3d = append(t3d, ncolMat)
+		}
+		t4d = append(t4d, t3d)
+	}
+	return t4d
+}
