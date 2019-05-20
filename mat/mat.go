@@ -68,7 +68,6 @@ func (m *Matrix) Window(x, y, h, w int) *Matrix {
 			mat.Vector[(i-x)*w+(j-y)] = m.Element(i, j)
 		}
 	}
-	// fmt.Println(mat)
 	return mat
 }
 
@@ -109,20 +108,6 @@ func (m *Matrix) Pad(pad int) *Matrix {
 
 }
 
-// func (m *Matrix) ToCol(fw, fh int) *Matrix {
-// 	v := vec.Vector{}
-// 	for i := 0; i < fw; i++ {
-// 		for j := 0; j < fh; j++ {
-// 			v = append(v, m.Element(i, j))
-// 		}
-// 	}
-// 	return &Matrix{
-// 		Vector:  v,
-// 		Rows:    1,
-// 		Columns: len(v),
-// 	}
-// }
-
 func (m *Matrix) Shape() (int, int) {
 	if m.Rows == 1 {
 		return m.Columns, -1
@@ -147,32 +132,14 @@ func (m *Matrix) Reshape(row, col int) *Matrix {
 	}
 }
 
-/*
-   N, C, H, W = input_data.shape
-    out_h = (H + 2*pad - filter_h)//stride + 1
-    out_w = (W + 2*pad - filter_w)//stride + 1
-
-    img = np.pad(input_data, [(0, 0), (0, 0), (pad, pad), (pad, pad)], 'constant')
-    col = np.zeros((N, C, filter_h, filter_w, out_h, out_w))
-
-    for y in range(filter_h):
-        y_max = y + stride*out_h
-        for x in range(filter_w):
-            x_max = x + stride*out_w
-            col[:, :, y, x, :, :] = img[:, :, y:y_max:stride, x:x_max:stride]
-
-    col = col.transpose(0, 4, 5, 1, 2, 3).reshape(N*out_h*out_w, -1)
-    return col
-*/
 func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 	if d == -1 {
 		row, col := m.Shape()
 		size := row * col
 		d = int(size / a / b / c)
 	}
-	t4d := Tensor4D{}
+	t4d := ZerosT4D(a, b, c, d)
 	for i := 0; i < a; i++ {
-		t3d := Tensor3D{}
 		for j := 0; j < b; j++ {
 			sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
 			ma := &Matrix{
@@ -180,22 +147,17 @@ func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 				Rows:    c,
 				Columns: d,
 			}
-			t3d = append(t3d, ma)
+			t4d[i][j] = ma
 		}
-		t4d = append(t4d, t3d)
 	}
-
 	return t4d
 }
 
 func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
-	t6d := Tensor6D{}
+	t6d := ZerosT6D(a, b, c, d, e, f)
 	for i := 0; i < a; i++ {
-		t5d := Tensor5D{}
 		for j := 0; j < b; j++ {
-			t4d := Tensor4D{}
 			for k := 0; k < c; k++ {
-				t3d := Tensor3D{}
 				for l := 0; l < d; l++ {
 					sv := m.Vector[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
 					ma := &Matrix{
@@ -203,13 +165,10 @@ func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
 						Rows:    e,
 						Columns: f,
 					}
-					t3d = append(t3d, ma)
+					t6d[i][j][k][l] = ma
 				}
-				t4d = append(t4d, t3d)
 			}
-			t5d = append(t5d, t4d)
 		}
-		t6d = append(t6d, t5d)
 	}
 	return t6d
 }
@@ -798,12 +757,6 @@ func Exp(x *Matrix) *Matrix {
 	}
 }
 
-/*
-x = x.T
-x = x - np.max(x, axis=0)
-y = np.exp(x) / np.sum(np.exp(x), axis=0)
-return y.T
-*/
 func Softmax(x *Matrix) *Matrix {
 	xt := x.T()
 	sub := Sub(xt, Max(xt, 0))
@@ -813,20 +766,6 @@ func Softmax(x *Matrix) *Matrix {
 	return softmax.T()
 }
 
-/*
-def cross_entropy_error(y, t):
-    if y.ndim == 1:
-        t = t.reshape(1, t.size)
-        y = y.reshape(1, y.size)
-
-    # 教師データがone-hot-vectorの場合、正解ラベルのインデックスに変換
-    if t.size == y.size:
-        t = t.argmax(axis=1)
-
-    batch_size = y.shape[0]
-    return -np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size
-
-*/
 func CrossEntropyError(y, t *Matrix) float64 {
 	r := vec.Zeros(y.Rows)
 	for i := 0; i < y.Rows; i++ {
