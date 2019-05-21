@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/mnist"
 	"github.com/naronA/zero_deeplearning/network"
 	"github.com/naronA/zero_deeplearning/optimizer"
@@ -22,7 +22,7 @@ const (
 	MNIST        = 10
 )
 
-func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
 	size := len(set.Labels)
 	image := vec.Vector{}
 	label := vec.Vector{}
@@ -30,8 +30,8 @@ func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
 	}
-	x, _ := mat.NewMatrix(size, ImageLength, image)
-	t, _ := mat.NewMatrix(size, 10, label)
+	x, _ := num.NewMatrix(size, ImageLength, image)
+	t, _ := num.NewMatrix(size, 10, label)
 	return x, t
 }
 
@@ -70,8 +70,8 @@ func train() {
 			label = append(label, train.Labels[v]...)
 		}
 
-		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
-		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
+		xBatch, _ := num.NewMatrix(BatchSize, ImageLength, image)
+		tBatch, _ := num.NewMatrix(BatchSize, 10, label)
 		grads := net.Gradient(xBatch, tBatch)
 		net.UpdateParams(grads)
 		loss := net.Loss(xBatch, tBatch, false)

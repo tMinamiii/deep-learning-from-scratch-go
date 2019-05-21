@@ -1,4 +1,4 @@
-package mat
+package num
 
 import (
 	"github.com/naronA/zero_deeplearning/vec"

@@ -1,22 +1,22 @@
 package layer
 
 import (
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 )
 
 type BatchNormalization struct {
 	Gamma       float64 // パラメタ
 	Beta        float64 // パラメタ
-	Dgamma      *mat.Matrix
-	Dbeta       *mat.Matrix
+	Dgamma      *num.Matrix
+	Dbeta       *num.Matrix
 	Momentum    float64 // パラメタ
 	BatchSize   int
 	InputShape  func() (int, int)
-	RunningMean *mat.Matrix
-	RunningVar  *mat.Matrix
-	Xc          *mat.Matrix
-	Xn          *mat.Matrix
-	Std         *mat.Matrix
+	RunningMean *num.Matrix
+	RunningVar  *num.Matrix
+	Xc          *num.Matrix
+	Xn          *num.Matrix
+	Std         *num.Matrix
 }
 
 /*
@@ -61,7 +61,7 @@ func NewBatchNorimalization(gamma, beta float64) *BatchNormalization {
 
        return out.reshape(*self.input_shape)
 */
-func (b *BatchNormalization) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
+func (b *BatchNormalization) Forward(x *num.Matrix, trainFlg bool) *num.Matrix {
 	b.InputShape = x.Shape
 	// if self.running_mean is None:
 	//     N, D = x.shape
@@ -71,8 +71,8 @@ func (b *BatchNormalization) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 	// 初期化
 	if b.RunningMean == nil {
 		_, D := x.Shape()
-		b.RunningMean = mat.Zeros(1, D)
-		b.RunningVar = mat.Zeros(1, D)
+		b.RunningMean = num.Zeros(1, D)
+		b.RunningVar = num.Zeros(1, D)
 	}
 	// if train_flg:
 	//     mu = x.mean(axis=0)
@@ -89,20 +89,20 @@ func (b *BatchNormalization) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 	//     self.running_var = self.momentum * self.running_var + (1-self.momentum) * var
 
 	if trainFlg {
-		mu := mat.Mean(x, 0)
-		xc := mat.Sub(x, mu)
-		vari := mat.Mean(mat.Pow(xc, 2), 0)
-		std := mat.Sqrt(mat.Add(vari, 10e-7))
-		xn := mat.Div(xc, std)
+		mu := num.Mean(x, 0)
+		xc := num.Sub(x, mu)
+		vari := num.Mean(num.Pow(xc, 2), 0)
+		std := num.Sqrt(num.Add(vari, 10e-7))
+		xn := num.Div(xc, std)
 
 		// 誤差逆伝搬のために状態を保存
 		b.BatchSize, _ = x.Shape()
 		b.Xc = xc
 		b.Xn = xn
 		b.Std = std
-		b.RunningMean = mat.Add(mat.Mul(b.RunningMean, b.Momentum), mat.Mul((1.0-b.Momentum), mu))
-		b.RunningVar = mat.Add(mat.Mul(b.RunningVar, b.Momentum), mat.Mul((1.0-b.Momentum), vari))
-		out := mat.Add(mat.Mul(b.Gamma, xn), b.Beta)
+		b.RunningMean = num.Add(num.Mul(b.RunningMean, b.Momentum), num.Mul((1.0-b.Momentum), mu))
+		b.RunningVar = num.Add(num.Mul(b.RunningVar, b.Momentum), num.Mul((1.0-b.Momentum), vari))
+		out := num.Add(num.Mul(b.Gamma, xn), b.Beta)
 		return out
 	}
 	//  else:
@@ -111,9 +111,9 @@ func (b *BatchNormalization) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 	//  out = self.gamma * xn + self.beta
 	//  return out
 
-	xc := mat.Sub(x, b.RunningMean)
-	xn := mat.Div(xc, mat.Add(mat.Sqrt(b.RunningVar), 10e-7))
-	out := mat.Add(mat.Mul(b.Gamma, xn), b.Beta)
+	xc := num.Sub(x, b.RunningMean)
+	xn := num.Div(xc, num.Add(num.Sqrt(b.RunningVar), 10e-7))
+	out := num.Add(num.Mul(b.Gamma, xn), b.Beta)
 	return out.Reshape(b.InputShape())
 }
 
@@ -145,18 +145,18 @@ func (b *BatchNormalization) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
        return dx
 */
 
-func (b *BatchNormalization) Backward(dout *mat.Matrix) *mat.Matrix {
-	dBeta := mat.Sum(dout, 0)
-	dGamma := mat.Sum(mat.Mul(b.Xn, dout), 0)
-	dxn := mat.Mul(b.Gamma, dout)
-	dxc := mat.Div(dxn, b.Std)
-	dstd := mat.Mul(-1.0, mat.Sum(mat.Div(mat.Mul(dxn, b.Xc), mat.Mul(b.Std, b.Std)), 0))
-	dvar := mat.Div(mat.Mul(0.5, dstd), b.Std)
+func (b *BatchNormalization) Backward(dout *num.Matrix) *num.Matrix {
+	dBeta := num.Sum(dout, 0)
+	dGamma := num.Sum(num.Mul(b.Xn, dout), 0)
+	dxn := num.Mul(b.Gamma, dout)
+	dxc := num.Div(dxn, b.Std)
+	dstd := num.Mul(-1.0, num.Sum(num.Div(num.Mul(dxn, b.Xc), num.Mul(b.Std, b.Std)), 0))
+	dvar := num.Div(num.Mul(0.5, dstd), b.Std)
 
-	dxc = mat.Add(dxc, mat.Mul(mat.Mul(2.0/float64(b.BatchSize), b.Xc), dvar))
+	dxc = num.Add(dxc, num.Mul(num.Mul(2.0/float64(b.BatchSize), b.Xc), dvar))
 	// fmt.Println(dxc.Shape())
-	dmu := mat.Sum(dxc, 0)
-	dx := mat.Sub(dxc, mat.Div(dmu, b.BatchSize))
+	dmu := num.Sum(dxc, 0)
+	dx := num.Sub(dxc, num.Div(dmu, b.BatchSize))
 	b.Dgamma = dGamma
 	b.Dbeta = dBeta
 	return dx.Reshape(b.InputShape())

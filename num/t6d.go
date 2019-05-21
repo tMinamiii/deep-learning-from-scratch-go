@@ -1,4 +1,4 @@
-package mat
+package num
 
 type Tensor6D []Tensor5D
 

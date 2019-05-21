@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/mnist"
 	"github.com/naronA/zero_deeplearning/network"
 	"github.com/naronA/zero_deeplearning/vec"
@@ -20,7 +20,7 @@ const (
 	LearningRate = 0.1
 )
 
-func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
 	size := len(set.Labels)
 	image := vec.Vector{}
 	label := vec.Vector{}
@@ -28,8 +28,8 @@ func MnistMatrix(set *mnist.DataSet) (*mat.Matrix, *mat.Matrix) {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
 	}
-	x, _ := mat.NewMatrix(size, ImageLength, image)
-	t, _ := mat.NewMatrix(size, 10, label)
+	x, _ := num.NewMatrix(size, ImageLength, image)
+	t, _ := num.NewMatrix(size, 10, label)
 	return x, t
 }
 
@@ -64,15 +64,15 @@ func train() {
 			label = append(label, train.Labels[v]...)
 		}
 
-		xBatch, _ := mat.NewMatrix(BatchSize, ImageLength, image)
-		tBatch, _ := mat.NewMatrix(BatchSize, 10, label)
+		xBatch, _ := num.NewMatrix(BatchSize, ImageLength, image)
+		tBatch, _ := num.NewMatrix(BatchSize, 10, label)
 		grads := net.NumericalGradient(xBatch, tBatch)
 
-		newParams := map[string]*mat.Matrix{}
+		newParams := map[string]*num.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
-			mullr := mat.Mul(grads[k], LearningRate)
-			newParams[k] = mat.Sub(net.Params[k], mullr)
+			mullr := num.Mul(grads[k], LearningRate)
+			newParams[k] = num.Sub(net.Params[k], mullr)
 			net.Params[k] = newParams[k]
 		}
 		loss := net.Loss(xBatch, tBatch)

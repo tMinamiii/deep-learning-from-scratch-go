@@ -1,9 +1,7 @@
 package optimizer
 
 import (
-	"math"
-
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 )
 
 /*
@@ -48,8 +46,8 @@ type Adam struct {
 	Beta1 float64
 	Beta2 float64
 	Iter  int
-	M     map[string]*mat.Matrix
-	V     map[string]*mat.Matrix
+	M     map[string]*num.Matrix
+	V     map[string]*num.Matrix
 }
 
 func NewAdam(lr float64) *Adam {
@@ -63,30 +61,30 @@ func NewAdam(lr float64) *Adam {
 	}
 }
 
-func (a *Adam) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
+func (a *Adam) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
 	if a.M == nil {
-		a.M = map[string]*mat.Matrix{}
-		a.V = map[string]*mat.Matrix{}
+		a.M = map[string]*num.Matrix{}
+		a.V = map[string]*num.Matrix{}
 		for k, v := range params {
-			a.M[k] = mat.ZerosLike(v)
-			a.V[k] = mat.ZerosLike(v)
+			a.M[k] = num.ZerosLike(v)
+			a.V[k] = num.ZerosLike(v)
 		}
 	}
 	a.Iter++
 	fIter := float64(a.Iter)
 	// lr_t = self.lr * np.sqrt(1.0 - self.beta2**self.iter) / (1.0 - self.beta1**self.iter)
-	lrT := a.LR * math.Sqrt(1.0-math.Pow(a.Beta2, fIter)) / (1.0 - math.Pow(a.Beta1, fIter))
+	lrT := a.LR * numh.Sqrt(1.0-numh.Pow(a.Beta2, fIter)) / (1.0 - numh.Pow(a.Beta1, fIter))
 
-	newParams := map[string]*mat.Matrix{}
+	newParams := map[string]*num.Matrix{}
 	for k, g := range grads {
 		// self.m[key] += (1 - self.beta1) * (grads[key] - self.m[key])
 		// self.v[key] += (1 - self.beta2) * (grads[key]**2 - self.v[key])
-		a.M[k] = mat.Add(a.M[k], mat.Mul(1.0-a.Beta1, mat.Sub(g, a.M[k])))
-		a.V[k] = mat.Add(a.V[k], mat.Mul(1.0-a.Beta2, mat.Sub(mat.Pow(g, 2), a.V[k])))
+		a.M[k] = num.Add(a.M[k], num.Mul(1.0-a.Beta1, num.Sub(g, a.M[k])))
+		a.V[k] = num.Add(a.V[k], num.Mul(1.0-a.Beta2, num.Sub(num.Pow(g, 2), a.V[k])))
 
 		// params[key] -= lr_t * self.m[key] / (np.sqrt(self.v[key]) + 1e-7)
-		delta := mat.Div(mat.Mul(lrT, a.M[k]), mat.Add(mat.Sqrt(a.V[k]), 1e-7))
-		newParams[k] = mat.Sub(params[k], delta)
+		delta := num.Div(num.Mul(lrT, a.M[k]), num.Add(num.Sqrt(a.V[k]), 1e-7))
+		newParams[k] = num.Sub(params[k], delta)
 	}
 	return newParams
 }

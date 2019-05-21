@@ -1,4 +1,4 @@
-package mat
+package num
 
 import (
 	"errors"
@@ -138,6 +138,7 @@ func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 		size := row * col
 		d = int(size / a / b / c)
 	}
+
 	t4d := ZerosT4D(a, b, c, d)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
@@ -254,7 +255,7 @@ func NewMatrix(row int, column int, vec vec.Vector) (*Matrix, error) {
 	}, nil
 }
 
-func NewRandnMatrix(row int, column int) (*Matrix, error) {
+func NewRandnMatrix(row, column int) (*Matrix, error) {
 	if row == 0 || column == 0 {
 		return nil, errors.New("row/columns is zero")
 	}
@@ -266,11 +267,11 @@ func NewRandnMatrix(row int, column int) (*Matrix, error) {
 	}, nil
 }
 
-func NotEqual(m1 *Matrix, m2 *Matrix) bool {
+func NotEqual(m1, m2 *Matrix) bool {
 	return !Equal(m1, m2)
 }
 
-func Equal(m1 *Matrix, m2 *Matrix) bool {
+func Equal(m1, m2 *Matrix) bool {
 	if m1.Rows == m2.Rows &&
 		m1.Columns == m2.Columns &&
 		vec.Equal(m1.Vector, m2.Vector) {
@@ -308,7 +309,7 @@ func (m *Matrix) DotGo(m2 *Matrix) *Matrix {
 	}
 }
 
-func Dot(m1 *Matrix, m2 *Matrix) *Matrix {
+func Dot(m1, m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
@@ -327,7 +328,7 @@ func Dot(m1 *Matrix, m2 *Matrix) *Matrix {
 	}
 }
 
-func isTheSameShape(m1 *Matrix, m2 *Matrix) bool {
+func isTheSameShape(m1, m2 *Matrix) bool {
 	if m1.Columns == m2.Columns && m1.Rows == m2.Rows {
 		return true
 	}
@@ -487,7 +488,7 @@ func floatMat(a Arithmetic, m1 float64, m2 *Matrix) *Matrix {
 	}
 }
 
-func Add(x1 interface{}, x2 interface{}) *Matrix {
+func Add(x1, x2 interface{}) *Matrix {
 	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
@@ -511,7 +512,7 @@ func Add(x1 interface{}, x2 interface{}) *Matrix {
 	}
 	return nil
 }
-func Sub(x1 interface{}, x2 interface{}) *Matrix {
+func Sub(x1, x2 interface{}) *Matrix {
 	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
@@ -537,7 +538,7 @@ func Sub(x1 interface{}, x2 interface{}) *Matrix {
 	return nil
 }
 
-func Mul(x1 interface{}, x2 interface{}) *Matrix {
+func Mul(x1, x2 interface{}) *Matrix {
 	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:
@@ -563,7 +564,7 @@ func Mul(x1 interface{}, x2 interface{}) *Matrix {
 	return nil
 }
 
-func Div(x1 interface{}, x2 interface{}) *Matrix {
+func Div(x1, x2 interface{}) *Matrix {
 	if x1v, ok := x1.(*Matrix); ok {
 		switch x2v := x2.(type) {
 		case *Matrix:

@@ -1,56 +1,56 @@
 package network
 
 import (
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
 type SlowTwoLayerNet struct {
-	Params map[string]*mat.Matrix
+	Params map[string]*num.Matrix
 }
 
 func NewSlowTwoLayerNet(inputSize, hiddenSize, outputSize int, weightInitStd float64) *SlowTwoLayerNet {
-	params := map[string]*mat.Matrix{}
-	W1, err := mat.NewRandnMatrix(inputSize, hiddenSize)
+	params := map[string]*num.Matrix{}
+	W1, err := num.NewRandnMatrix(inputSize, hiddenSize)
 	if err != nil {
 		panic(err)
 	}
-	W2, err := mat.NewRandnMatrix(hiddenSize, outputSize)
+	W2, err := num.NewRandnMatrix(hiddenSize, outputSize)
 	if err != nil {
 		panic(err)
 	}
-	params["W1"] = mat.Mul(W1, weightInitStd)
-	params["b1"] = mat.Zeros(1, hiddenSize)
-	params["W2"] = mat.Mul(W2, weightInitStd)
-	params["b2"] = mat.Zeros(1, outputSize)
+	params["W1"] = num.Mul(W1, weightInitStd)
+	params["b1"] = num.Zeros(1, hiddenSize)
+	params["W2"] = num.Mul(W2, weightInitStd)
+	params["b2"] = num.Zeros(1, outputSize)
 	return &SlowTwoLayerNet{Params: params}
 }
 
-func (net *SlowTwoLayerNet) Predict(x *mat.Matrix) *mat.Matrix {
+func (net *SlowTwoLayerNet) Predict(x *num.Matrix) *num.Matrix {
 	W1 := net.Params["W1"]
 	b1 := net.Params["b1"]
 	W2 := net.Params["W2"]
 	b2 := net.Params["b2"]
 
-	dota1 := mat.Dot(x, W1)
-	a1 := mat.Add(dota1, b1.Vector)
-	z1 := mat.Relu(a1)
-	a2 := mat.Add(mat.Dot(z1, W2), b2.Vector)
-	y := mat.Softmax(a2)
+	dota1 := num.Dot(x, W1)
+	a1 := num.Add(dota1, b1.Vector)
+	z1 := num.Relu(a1)
+	a2 := num.Add(num.Dot(z1, W2), b2.Vector)
+	y := num.Softmax(a2)
 
 	return y
 }
 
-func (net *SlowTwoLayerNet) Loss(x, t *mat.Matrix) float64 {
+func (net *SlowTwoLayerNet) Loss(x, t *num.Matrix) float64 {
 	y := net.Predict(x)
-	cee := mat.CrossEntropyError(y, t)
+	cee := num.CrossEntropyError(y, t)
 	return cee
 }
 
-func (net *SlowTwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
+func (net *SlowTwoLayerNet) Accuracy(x, t *num.Matrix) float64 {
 	y := net.Predict(x)
-	yMax := mat.ArgMax(y, 1)
-	tMax := mat.ArgMax(t, 1)
+	yMax := num.ArgMax(y, 1)
+	tMax := num.ArgMax(t, 1)
 	sum := 0.0
 	r, _ := x.Shape()
 	for i, v := range yMax {
@@ -62,14 +62,14 @@ func (net *SlowTwoLayerNet) Accuracy(x, t *mat.Matrix) float64 {
 	return accuracy
 }
 
-func (net *SlowTwoLayerNet) NumericalGradient(x, t *mat.Matrix) map[string]*mat.Matrix {
+func (net *SlowTwoLayerNet) NumericalGradient(x, t *num.Matrix) map[string]*num.Matrix {
 	lossW := func(wvec vec.Vector) float64 {
 		return net.Loss(x, t)
 	}
-	grads := map[string]*mat.Matrix{}
-	grads["W1"] = mat.NumericalGradient(lossW, net.Params["W1"])
-	grads["b1"] = mat.NumericalGradient(lossW, net.Params["b1"])
-	grads["W2"] = mat.NumericalGradient(lossW, net.Params["W2"])
-	grads["b2"] = mat.NumericalGradient(lossW, net.Params["b2"])
+	grads := map[string]*num.Matrix{}
+	grads["W1"] = num.NumericalGradient(lossW, net.Params["W1"])
+	grads["b1"] = num.NumericalGradient(lossW, net.Params["b1"])
+	grads["W2"] = num.NumericalGradient(lossW, net.Params["W2"])
+	grads["b2"] = num.NumericalGradient(lossW, net.Params["b2"])
 	return grads
 }

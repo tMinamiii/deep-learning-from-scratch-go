@@ -1,9 +1,9 @@
 package optimizer
 
-import "github.com/naronA/zero_deeplearning/mat"
+import "github.com/naronA/zero_deeplearning/num"
 
 type Optimizer interface {
-	Update(map[string]*mat.Matrix, map[string]*mat.Matrix) map[string]*mat.Matrix
+	Update(map[string]*num.Matrix, map[string]*num.Matrix) map[string]*num.Matrix
 }
 
 type SGD struct {
@@ -16,10 +16,10 @@ func NewSGD(lr float64) *SGD {
 	}
 }
 
-func (sgd *SGD) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
-	newParams := map[string]*mat.Matrix{}
+func (sgd *SGD) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
+	newParams := map[string]*num.Matrix{}
 	for k, g := range grads {
-		newParams[k] = mat.Sub(params[k], mat.Mul(g, sgd.LR))
+		newParams[k] = num.Sub(params[k], num.Mul(g, sgd.LR))
 	}
 	return newParams
 }
@@ -27,7 +27,7 @@ func (sgd *SGD) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Mat
 type Momentum struct {
 	LR       float64
 	Momentum float64
-	V        map[string]*mat.Matrix
+	V        map[string]*num.Matrix
 }
 
 func NewMomentum(lr float64) *Momentum {
@@ -38,25 +38,25 @@ func NewMomentum(lr float64) *Momentum {
 	}
 }
 
-func (mo *Momentum) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
+func (mo *Momentum) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
 	if mo.V == nil {
-		mo.V = map[string]*mat.Matrix{}
+		mo.V = map[string]*num.Matrix{}
 		for k, v := range params {
-			mo.V[k] = mat.ZerosLike(v)
+			mo.V[k] = num.ZerosLike(v)
 		}
 	}
 
-	newParams := map[string]*mat.Matrix{}
+	newParams := map[string]*num.Matrix{}
 	for k, g := range grads {
-		mo.V[k] = mat.Sub(mat.Mul(mo.Momentum, mo.V[k]), mat.Mul(mo.LR, g))
-		newParams[k] = mat.Add(params[k], mo.V[k])
+		mo.V[k] = num.Sub(num.Mul(mo.Momentum, mo.V[k]), num.Mul(mo.LR, g))
+		newParams[k] = num.Add(params[k], mo.V[k])
 	}
 	return newParams
 }
 
 type AdaGrad struct {
 	LR float64
-	H  map[string]*mat.Matrix
+	H  map[string]*num.Matrix
 }
 
 func NewAdaGrad(lr float64) *AdaGrad {
@@ -66,18 +66,18 @@ func NewAdaGrad(lr float64) *AdaGrad {
 	}
 }
 
-func (ad *AdaGrad) Update(params, grads map[string]*mat.Matrix) map[string]*mat.Matrix {
+func (ad *AdaGrad) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
 	if ad.H == nil {
-		ad.H = map[string]*mat.Matrix{}
+		ad.H = map[string]*num.Matrix{}
 		for k, v := range params {
-			ad.H[k] = mat.ZerosLike(v)
+			ad.H[k] = num.ZerosLike(v)
 		}
 	}
-	newParams := map[string]*mat.Matrix{}
+	newParams := map[string]*num.Matrix{}
 	for k, g := range grads {
-		ad.H[k] = mat.Add(ad.H[k], mat.Pow(g, 2))
-		delta := mat.Div(mat.Mul(ad.LR, g), mat.Add(mat.Sqrt(ad.H[k]), 1e-7))
-		newParams[k] = mat.Sub(params[k], delta)
+		ad.H[k] = num.Add(ad.H[k], num.Pow(g, 2))
+		delta := num.Div(num.Mul(ad.LR, g), num.Add(num.Sqrt(ad.H[k]), 1e-7))
+		newParams[k] = num.Sub(params[k], delta)
 	}
 	return newParams
 }

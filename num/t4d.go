@@ -1,4 +1,4 @@
-package mat
+package num
 
 import (
 	"fmt"

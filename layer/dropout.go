@@ -1,7 +1,7 @@
 package layer
 
 import (
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -30,10 +30,10 @@ func NewDropout(ratio float64) *Dropout {
 //
 // def backward(self, dout):
 //     return dout * self.mask
-func (d *Dropout) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
+func (d *Dropout) Forward(x *num.Matrix, trainFlg bool) *num.Matrix {
 	if trainFlg {
-		out := mat.ZerosLike(x)
-		rand, _ := mat.NewRandnMatrix(x.Shape())
+		out := num.ZerosLike(x)
+		rand, _ := num.NewRandnMatrix(x.Shape())
 		d.Mask = make([]bool, len(rand.Vector))
 		for i, v := range rand.Vector {
 			if v > d.Ratio {
@@ -43,10 +43,10 @@ func (d *Dropout) Forward(x *mat.Matrix, trainFlg bool) *mat.Matrix {
 		}
 		return out
 	}
-	return mat.Mul(x, 1.0-d.Ratio)
+	return num.Mul(x, 1.0-d.Ratio)
 }
 
-func (d *Dropout) Backward(dout *mat.Matrix) *mat.Matrix {
+func (d *Dropout) Backward(dout *num.Matrix) *num.Matrix {
 	doutv := dout.Vector
 	dv := vec.ZerosLike(doutv)
 	for i, e := range doutv {
@@ -56,7 +56,7 @@ func (d *Dropout) Backward(dout *mat.Matrix) *mat.Matrix {
 			dv[i] = 0
 		}
 	}
-	dx := &mat.Matrix{
+	dx := &num.Matrix{
 		Vector:  dv,
 		Rows:    dout.Rows,
 		Columns: dout.Columns,

@@ -223,7 +223,7 @@ func Sigmoid(x Vector) Vector {
 	return result
 }
 
-func StepFunction(x []float64) []int {
+func StepFunction(x Vector) []int {
 	result := make([]int, len(x))
 	for i, v := range x {
 		result[i] = scalar.StepFunction(v)

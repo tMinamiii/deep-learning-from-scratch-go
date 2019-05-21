@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
 // TestBasicNetwork はp64-p65のニューラルネットワークの動作確認をします
 func TestBasicNetwork(t *testing.T) {
 	network := NewBasicNetwork()
-	x, _ := mat.NewMatrix(1, 2, vec.Vector{
+	x, _ := num.NewMatrix(1, 2, vec.Vector{
 		1.0, 0.5,
 	})
 	actual := network.Forward(x)

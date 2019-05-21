@@ -1,7 +1,7 @@
 package layer
 
 import (
-	"github.com/naronA/zero_deeplearning/mat"
+	"github.com/naronA/zero_deeplearning/num"
 )
 
 /*
@@ -38,20 +38,20 @@ class Convolution:
 
 */
 type Convolution struct {
-	W      mat.Tensor4D // 4次元
-	B      mat.Tensor4D // 3次元
+	W      num.Tensor4D // 4次元
+	B      num.Tensor4D // 3次元
 	Stride int
 	Pad    int
 	// 中間データ（backward時に使用）
-	X    mat.Tensor4D
-	Col  *mat.Matrix
-	ColW *mat.Matrix
+	X    num.Tensor4D
+	Col  *num.Matrix
+	ColW *num.Matrix
 	// 重み・バイアスパラメータの勾配
-	DW mat.Tensor4D
-	DB *mat.Matrix
+	DW num.Tensor4D
+	DB *num.Matrix
 }
 
-func NewConvolution(w, b mat.Tensor4D, stride, pad int) *Convolution {
+func NewConvolution(w, b num.Tensor4D, stride, pad int) *Convolution {
 	return &Convolution{
 		W:      w,
 		B:      b,
@@ -79,7 +79,7 @@ func NewConvolution(w, b mat.Tensor4D, stride, pad int) *Convolution {
 
        return out
 */
-func (c *Convolution) Forward(x mat.Tensor4D) interface{} {
+func (c *Convolution) Forward(x num.Tensor4D) interface{} {
 	FN, _, FH, FW := c.W.Shape()
 	N, _, H, W := x.Shape()
 	outH := 1 + (H+2*c.Pad-FH)/c.Stride
@@ -87,7 +87,7 @@ func (c *Convolution) Forward(x mat.Tensor4D) interface{} {
 
 	col := x.Im2Col(FH, FW, c.Stride, c.Pad)
 	colW := c.W.ReshapeToMat(FN, -1).T()
-	out := mat.Add(mat.Dot(col, colW), c.B)
+	out := num.Add(num.Dot(col, colW), c.B)
 	trans := out.ReshapeTo4D(N, outH, outW, -1).Transpose(0, 3, 1, 2)
 	c.X = x
 	c.Col = col
@@ -110,13 +110,15 @@ func (c *Convolution) Forward(x mat.Tensor4D) interface{} {
        return dx
 */
 
-func (c *Convolution) Backward(dout mat.Tensor4D) interface{} {
+func (c *Convolution) Backward(dout num.Tensor4D) interface{} {
 	FN, C, FH, FW := c.W.Shape()
 	doutMat := dout.Transpose(0, 2, 3, 1).ReshapeToMat(-1, FN)
-	c.DB = mat.Sum(doutMat, 0)
-	dot := mat.Dot(c.Col.T(), doutMat)
+	c.DB = num.Sum(doutMat, 0)
+	dot := num.Dot(c.Col.T(), doutMat)
 	c.DW = dot.T().ReshapeTo4D(FN, C, FH, FW)
-	dcol := mat.Dot(doutMat, c.ColW.T())
-	dx := nil
+	dcol := num.Dot(doutMat, c.ColW.T())
+	i, j, k, l := c.X.Shape()
+	shape := []int{i, j, k, l}
+	dx := dcol.Col2Img(shape, FH, FW, c.Stride, c.Pad)
 	return dx
 }
