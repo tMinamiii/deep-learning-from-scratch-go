@@ -1,6 +1,7 @@
 package num
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/naronA/zero_deeplearning/vec"
@@ -17,6 +18,24 @@ func SmapleT4D() Tensor4D {
 	t4d[0] = t3d1
 	t4d[1] = t3d2
 	return t4d
+}
+
+func TestTranspose(t *testing.T) {
+	sample := SmapleT4D()
+	actual := sample.Transpose(3, 0, 1, 2)
+	expected := make(Tensor4D, 2)
+	t3d1 := make(Tensor3D, 2)
+	t3d1[0] = &Matrix{Vector: vec.Vector{4, 3, 7, 0}, Rows: 2, Columns: 2}
+	t3d1[1] = &Matrix{Vector: vec.Vector{4, 3, 4, 1}, Rows: 2, Columns: 2}
+	t3d2 := make(Tensor3D, 2)
+	t3d2[0] = &Matrix{Vector: vec.Vector{9, 6, 9, 9}, Rows: 2, Columns: 2}
+	t3d2[1] = &Matrix{Vector: vec.Vector{7, 9, 4, 9}, Rows: 2, Columns: 2}
+	expected[0] = t3d1
+	expected[1] = t3d2
+	if !EqualT4D(actual, expected) {
+		fmt.Println(actual)
+		t.Fail()
+	}
 }
 
 func TestIm2Col_2_2_2_1(t *testing.T) {

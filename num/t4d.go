@@ -1,8 +1,6 @@
 package num
 
 import (
-	"fmt"
-
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -33,8 +31,6 @@ func (t Tensor4D) Transpose(a, b, c, d int) Tensor4D {
 	w, x, y, z := t.Shape()
 	shape := []int{w, x, y, z}
 	t4d := ZerosT4D(shape[a], shape[b], shape[c], shape[d])
-	fmt.Println(t4d)
-	fmt.Println(t)
 	for i, e1t3d := range t {
 		for j, e2mat := range e1t3d {
 			for k := 0; k < e2mat.Rows; k++ {
@@ -45,8 +41,6 @@ func (t Tensor4D) Transpose(a, b, c, d int) Tensor4D {
 					idx[1] = oldIdx[b]
 					idx[2] = oldIdx[c]
 					idx[3] = oldIdx[d]
-					// fmt.Println(i, j, k, l)
-					// fmt.Println(" ", idx[0], idx[1], idx[2], idx[3])
 					v := t.Element(i, j, k, l)
 					t4d.Assign(v, idx[0], idx[1], idx[2], idx[3])
 				}
