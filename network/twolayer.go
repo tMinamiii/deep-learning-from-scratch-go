@@ -2,7 +2,7 @@ package network
 
 import (
 	"fmt"
-	"numh"
+	"math"
 
 	"github.com/naronA/zero_deeplearning/layer"
 	"github.com/naronA/zero_deeplearning/num"
@@ -38,9 +38,9 @@ func NewTwoLayerNet(
 		panic(err)
 	}
 
-	params["W1"] = num.Div(W1, numh.Sqrt(2.0*float64(inputSize))) // weightInitStd
+	params["W1"] = num.Div(W1, math.Sqrt(2.0*float64(inputSize))) // weightInitStd
 	params["b1"] = num.Zeros(1, hiddenSize)
-	params["W2"] = num.Div(W2, numh.Sqrt(2.0*float64(hiddenSize)))
+	params["W2"] = num.Div(W2, math.Sqrt(2.0*float64(hiddenSize)))
 	params["b2"] = num.Zeros(1, outputSize)
 
 	layers["Affine1"] = layer.NewAffine(params["W1"], params["b1"])

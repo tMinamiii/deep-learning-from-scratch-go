@@ -14,7 +14,7 @@ func TestRelu(t *testing.T) {
 		1, -1, 2,
 	})
 	relu := NewRelu()
-	actual := relu.Forward(m)
+	actual := relu.Forward(m, true)
 	expected, _ := num.NewMatrix(2, 3, vec.Vector{
 		0, 1, 0,
 		1, 0, 2,
@@ -45,7 +45,7 @@ func TestAffine(t *testing.T) {
 		1, 2,
 		3, 4,
 	})
-	actual := affine.Forward(m)
+	actual := affine.Forward(m, true)
 	expected, _ := num.NewMatrix(2, 2, vec.Vector{
 		2, 3,
 		4, 5,

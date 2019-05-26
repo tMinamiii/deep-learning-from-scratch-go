@@ -1,6 +1,9 @@
 package num
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -156,6 +159,14 @@ func ZerosT4D(n, c, h, w int) Tensor4D {
 	return t4d
 }
 
+func ZerosLikeT4D(x Tensor4D) Tensor4D {
+	t4d := Tensor4D{}
+	for _, v := range x {
+		t4d = append(t4d, ZerosLikeT3D(v))
+	}
+	return t4d
+}
+
 func EqualT4D(t1, t2 Tensor4D) bool {
 	for i := range t1 {
 		if !EqualT3D(t1[i], t2[i]) {
@@ -181,9 +192,117 @@ func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
 	}
 
 	N, C, H, _ := t.Shape()
+	fmt.Println(colVec)
+	fmt.Println(len(colVec), N*C*H, fw*fh*C)
+	col := len(colVec) / N / C / H
+	fmt.Println(col)
 	return &Matrix{
 		Vector:  colVec,
 		Rows:    N * C * H,
-		Columns: fw * fh * C,
+		Columns: col,
+		// Columns: fw * fh * C,
 	}
+}
+
+func NewRandnT4D(n, c, h, w int) (Tensor4D, error) {
+	if n == 0 || c == 0 || h == 0 || w == 0 {
+		return nil, errors.New("row/columns is zero")
+	}
+	t4d := Tensor4D{}
+	for i := 0; i < c; i++ {
+		t3d, _ := NewRandnT3D(c, h, w)
+		t4d = append(t4d, t3d)
+	}
+	return t4d, nil
+}
+
+func calcT4d(a ArithmeticT4D, x1 interface{}, x2 interface{}) Tensor3D {
+	switch a {
+	case ADDT4D:
+		return AddT3D(x1, x2)
+	case SUBT4D:
+		return SubT3D(x1, x2)
+	case MULT4D:
+		return MulT3D(x1, x2)
+	case DIVT4D:
+		return DivT3D(x1, x2)
+	}
+	return nil
+}
+
+func t4dT4d(a ArithmeticT4D, x1 Tensor4D, x2 Tensor4D) Tensor4D {
+	mats := make(Tensor4D, len(x1))
+	x1mat := x1
+	x2mat := x2
+	for i := range x1 {
+		mats[i] = calcT4d(a, x1mat[i], x2mat[i])
+	}
+	return mats
+}
+
+func t4dAny(a ArithmeticT4D, x1 Tensor4D, x2 interface{}) Tensor4D {
+	mats := make(Tensor4D, len(x1))
+	for i, x1mat := range x1 {
+		mats[i] = calcT4d(a, x1mat, x2)
+	}
+	return mats
+}
+
+func anyT4d(a ArithmeticT4D, x1 interface{}, x2 Tensor4D) Tensor4D {
+	tensor := ZerosLikeT4D(x2)
+	mats := tensor
+	for i, x2mat := range x2 {
+		mats[i] = calcT4d(a, x1, x2mat)
+	}
+	return tensor
+}
+
+type ArithmeticT4D int
+
+const (
+	ADDT4D ArithmeticT4D = iota
+	SUBT4D
+	MULT4D
+	DIVT4D
+)
+
+func calcArithmeticT4D(a ArithmeticT4D, x1 interface{}, x2 interface{}) Tensor4D {
+	if x1v, ok := x1.(Tensor4D); ok {
+		switch x2v := x2.(type) {
+		case Tensor4D:
+			return t4dT4d(a, x1v, x2v)
+		case *Matrix:
+		case vec.Vector:
+		case float64:
+			return t4dAny(a, x1v, x2v)
+		case int:
+			return t4dAny(a, x1v, float64(x2v))
+		}
+	} else if x2v, ok := x2.(Tensor4D); ok {
+		switch x1v := x1.(type) {
+		case *Matrix:
+		case vec.Vector:
+		case float64:
+			return anyT4d(a, x1v, x2v)
+		case int:
+			return anyT4d(a, float64(x1v), x2v)
+		}
+	}
+	return nil
+}
+
+func AddT4D(x1 interface{}, x2 interface{}) Tensor4D {
+	return calcArithmeticT4D(ADDT4D, x1, x2)
+}
+
+func SubT4D(x1 interface{}, x2 interface{}) Tensor4D {
+	return calcArithmeticT4D(SUBT4D, x1, x2)
+}
+
+func MulT4D(x1 interface{}, x2 interface{}) Tensor4D {
+	return calcArithmeticT4D(MULT4D, x1, x2)
+}
+
+func DivT4D(x1 interface{}, x2 interface{}) Tensor4D {
+	return calcArithmeticT4D(DIVT4D, x1, x2)
 }

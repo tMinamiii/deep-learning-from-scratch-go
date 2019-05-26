@@ -81,6 +81,13 @@ func (m *Matrix) AssignWindow(window *Matrix, x, y, h, w int) {
 }
 
 func (m *Matrix) Pad(pad int) *Matrix {
+	if pad == 0 {
+		return &Matrix{
+			Vector:  m.Vector,
+			Rows:    m.Rows,
+			Columns: m.Columns,
+		}
+	}
 	col := m.Columns
 	newVec := vec.Vector{}
 	rowPad := vec.Zeros(col + 2*pad)
@@ -121,6 +128,13 @@ func (m *Matrix) Ndim() int {
 }
 
 func (m *Matrix) Reshape(row, col int) *Matrix {
+	r, c := m.Shape()
+	size := r * c
+	if row == -1 {
+		row = size / col
+	} else if col == -1 {
+		col = size / row
+	}
 	if m.Rows*m.Columns != row*col {
 		return nil
 	}
@@ -133,9 +147,16 @@ func (m *Matrix) Reshape(row, col int) *Matrix {
 }
 
 func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
-	if d == -1 {
-		row, col := m.Shape()
-		size := row * col
+	row, col := m.Shape()
+	size := row * col
+
+	if a == -1 {
+		a = int(size / b / c / d)
+	} else if b == -1 {
+		b = int(size / a / c / d)
+	} else if c == -1 {
+		c = int(size / a / b / d)
+	} else if d == -1 {
 		d = int(size / a / b / c)
 	}
 
@@ -152,6 +173,39 @@ func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 		}
 	}
 	return t4d
+}
+
+func (m *Matrix) ReshapeTo5D(a, b, c, d, e int) Tensor5D {
+	row, col := m.Shape()
+	size := row * col
+
+	if a == -1 {
+		a = int(size / b / c / d / e)
+	} else if b == -1 {
+		b = int(size / a / c / d / e)
+	} else if c == -1 {
+		c = int(size / a / b / d / e)
+	} else if d == -1 {
+		d = int(size / a / b / c / e)
+	} else if e == -1 {
+		e = int(size / a / b / c / d)
+	}
+
+	t5d := ZerosT5D(a, b, c, d, e)
+	for i := 0; i < a; i++ {
+		for j := 0; j < b; j++ {
+			for k := 0; k < c; k++ {
+				sv := m.Vector[((i*b+j)*c+k)*d*e : ((i*b+j)*c+k+1)*d*e]
+				ma := &Matrix{
+					Vector:  sv,
+					Rows:    c,
+					Columns: d,
+				}
+				t5d[i][j][k] = ma
+			}
+		}
+	}
+	return t5d
 }
 
 func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {

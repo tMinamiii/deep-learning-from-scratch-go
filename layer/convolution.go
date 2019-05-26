@@ -4,6 +4,11 @@ import (
 	"github.com/naronA/zero_deeplearning/num"
 )
 
+type T4DLayer interface {
+	Forward(num.Tensor4D) num.Tensor4D
+	Backward(num.Tensor4D) num.Tensor4D
+}
+
 /*
 class Convolution:
     def __init__(self, W, b, stride=1, pad=0):
@@ -39,7 +44,7 @@ class Convolution:
 */
 type Convolution struct {
 	W      num.Tensor4D // 4次元
-	B      num.Tensor4D // 3次元
+	B      *num.Matrix  // 3次元
 	Stride int
 	Pad    int
 	// 中間データ（backward時に使用）
@@ -51,7 +56,7 @@ type Convolution struct {
 	DB *num.Matrix
 }
 
-func NewConvolution(w, b num.Tensor4D, stride, pad int) *Convolution {
+func NewConvolution(w num.Tensor4D, b *num.Matrix, stride, pad int) *Convolution {
 	return &Convolution{
 		W:      w,
 		B:      b,
@@ -79,7 +84,7 @@ func NewConvolution(w, b num.Tensor4D, stride, pad int) *Convolution {
 
        return out
 */
-func (c *Convolution) Forward(x num.Tensor4D) interface{} {
+func (c *Convolution) Forward(x num.Tensor4D) num.Tensor4D {
 	FN, _, FH, FW := c.W.Shape()
 	N, _, H, W := x.Shape()
 	outH := 1 + (H+2*c.Pad-FH)/c.Stride
@@ -110,7 +115,7 @@ func (c *Convolution) Forward(x num.Tensor4D) interface{} {
        return dx
 */
 
-func (c *Convolution) Backward(dout num.Tensor4D) interface{} {
+func (c *Convolution) Backward(dout num.Tensor4D) num.Tensor4D {
 	FN, C, FH, FW := c.W.Shape()
 	doutMat := dout.Transpose(0, 2, 3, 1).ReshapeToMat(-1, FN)
 	c.DB = num.Sum(doutMat, 0)

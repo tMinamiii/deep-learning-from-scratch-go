@@ -1,6 +1,8 @@
 package num
 
 import (
+	"errors"
+
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -48,6 +50,18 @@ func (t Tensor3D) Pad(size int) Tensor3D {
 	return newT3d
 }
 
+func NewRandnT3D(c, h, w int) (Tensor3D, error) {
+	if c == 0 || h == 0 || w == 0 {
+		return nil, errors.New("row/columns is zero")
+	}
+	t3d := Tensor3D{}
+	for i := 0; i < c; i++ {
+		mat, _ := NewRandnMatrix(h, w)
+		t3d = append(t3d, mat)
+	}
+	return t3d, nil
+}
+
 func ZerosT3D(c, h, w int) Tensor3D {
 	t3d := make(Tensor3D, c)
 	for i := range t3d {
@@ -73,7 +87,7 @@ func ZerosLikeT3D(x Tensor3D) Tensor3D {
 //
 // }
 
-func calcMats(a ArithmeticT3D, x1 interface{}, x2 interface{}) *Matrix {
+func calcT3d(a ArithmeticT3D, x1 interface{}, x2 interface{}) *Matrix {
 	switch a {
 	case ADDT3D:
 		return Add(x1, x2)
@@ -92,7 +106,7 @@ func t3dT3d(a ArithmeticT3D, x1 Tensor3D, x2 Tensor3D) Tensor3D {
 	x1mat := x1
 	x2mat := x2
 	for i := range x1 {
-		mats[i] = calcMats(a, x1mat[i], x2mat[i])
+		mats[i] = calcT3d(a, x1mat[i], x2mat[i])
 	}
 	return mats
 }
@@ -100,7 +114,7 @@ func t3dT3d(a ArithmeticT3D, x1 Tensor3D, x2 Tensor3D) Tensor3D {
 func t3dAny(a ArithmeticT3D, x1 Tensor3D, x2 interface{}) Tensor3D {
 	mats := make(Tensor3D, len(x1))
 	for i, x1mat := range x1 {
-		mats[i] = calcMats(a, x1mat, x2)
+		mats[i] = calcT3d(a, x1mat, x2)
 	}
 	return mats
 }
@@ -109,7 +123,7 @@ func anyT3d(a ArithmeticT3D, x1 interface{}, x2 Tensor3D) Tensor3D {
 	tensor := ZerosLikeT3D(x2)
 	mats := tensor
 	for i, x2mat := range x2 {
-		mats[i] = calcMats(a, x1, x2mat)
+		mats[i] = calcT3d(a, x1, x2mat)
 	}
 	return tensor
 }

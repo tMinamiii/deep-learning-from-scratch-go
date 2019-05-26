@@ -41,8 +41,8 @@ func TestTranspose(t *testing.T) {
 func TestIm2Col_2_2_2_1(t *testing.T) {
 	t4d := SmapleT4D()
 
-	expected := t4d.Im2Col(2, 2, 2, 1)
-	actual := &Matrix{Vector: vec.Vector{
+	actual := t4d.Im2Col(2, 2, 2, 1)
+	expected := &Matrix{Vector: vec.Vector{
 		0, 0, 0, 4, 0, 0, 0, 7,
 		0, 0, 9, 0, 0, 0, 9, 0,
 		0, 3, 0, 0, 0, 0, 0, 0,
@@ -53,6 +53,7 @@ func TestIm2Col_2_2_2_1(t *testing.T) {
 		9, 0, 0, 0, 9, 0, 0, 0,
 	}, Rows: 8, Columns: 8}
 	if NotEqual(expected, actual) {
+		fmt.Println(expected, actual)
 		t.Fail()
 	}
 }
