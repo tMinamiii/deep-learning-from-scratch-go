@@ -2,7 +2,6 @@ package num
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/naronA/zero_deeplearning/vec"
 )
@@ -191,7 +190,6 @@ func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
 		colVec = append(colVec, nV...)
 	}
 
-	fmt.Println(t.Shape())
 	// N, C, H, _ := t.Shape()
 	// fmt.Println(len(colVec), N*C*H, fw*fh*C)
 	col := fw * fh

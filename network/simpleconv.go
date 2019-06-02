@@ -50,6 +50,7 @@ func NewSimpleConvNet(
 	inputSize := inputDim.Height
 	convOutputSize := (inputSize-filterSize+2*filterPad)/filterStride + 1
 	poolOutputSize := filterNum * (convOutputSize / 2) * (convOutputSize / 2)
+	fmt.Println(convOutputSize, poolOutputSize, hiddenSize)
 
 	W1Rnd, err := num.NewRandnT4D(filterNum, inputDim.Channel, filterSize, filterSize)
 	if err != nil {
@@ -113,8 +114,11 @@ func NewSimpleConvNet(
 
 func (net *SimpleConvNet) Predict(x num.Tensor4D) num.Tensor4D {
 	for _, k := range net.Sequence {
+		fmt.Println(k)
 		if strings.HasPrefix(k, "Conv") {
+			fmt.Println(x.Shape())
 			x = net.T4DLayers[k].Forward(x)
+			continue
 		}
 
 		x = net.T4DLayers[k].Forward(x)
@@ -156,8 +160,8 @@ func (net *SimpleConvNet) UpdateParams(grads map[string]interface{}) {
 	net.Params = net.Optimizer.Update(net.Params, grads)
 
 	conv1 := net.T4DLayers["Conv1"].(*layer.Convolution)
-	conv1.W = net.Params["W2"].(num.Tensor4D)
-	conv1.B = net.Params["b2"].(*num.Matrix)
+	conv1.W = net.Params["W1"].(num.Tensor4D)
+	conv1.B = net.Params["b1"].(*num.Matrix)
 
 	affine1 := net.T4DLayers["Affine1"].(*layer.AffineT4D)
 	affine2 := net.T4DLayers["Affine2"].(*layer.AffineT4D)

@@ -46,9 +46,9 @@ func (c *Convolution) Forward(x num.Tensor4D) num.Tensor4D {
 
 	fmt.Println(col.Shape())
 	fmt.Println(colW.Shape())
-	fmt.Println(num.Dot(col, colW))
 	out := num.Add(num.Dot(col, colW), c.B)
-	trans := out.ReshapeTo4D(N, outH, outW, -1).Transpose(0, 3, 1, 2)
+	reshape := out.ReshapeTo4D(N, outH, outW, -1)
+	trans := reshape.Transpose(0, 3, 1, 2)
 	c.X = x
 	c.Col = col
 	c.ColW = colW
@@ -83,15 +83,11 @@ func NewAffineT4D(w, b *num.Matrix) *AffineT4D {
 	}
 }
 
-func (af *AffineT4D) Forward(x num.Tensor4D) num.Tensor4D {
+func (af *AffineT4D) Forward(x num.Tensor4D) *num.Matrix {
 	af.X = x
-
-	out := num.ZerosLikeT4D(x)
-	for i, t3d := range x {
-		for j, mat := range t3d {
-			out[i][j] = num.Add(num.Dot(mat, af.W), af.B)
-		}
-	}
+	N, _, _, _ := x.Shape()
+	matX := x.ReshapeToMat(N, -1)
+	out := num.Add(num.Dot(matX, af.W), af.B)
 	return out
 }
 

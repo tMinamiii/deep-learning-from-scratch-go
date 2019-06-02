@@ -1,8 +1,6 @@
 package layer
 
 import (
-	"fmt"
-
 	"github.com/naronA/zero_deeplearning/num"
 )
 
@@ -57,9 +55,7 @@ func (p *Pooling) Forward(x num.Tensor4D) num.Tensor4D {
 	N, C, H, W := x.Shape()
 	outH := 1 + (H-p.PoolH)/p.Stride
 	outW := 1 + (W-p.PoolW)/p.Stride
-	fmt.Println(outH, outW)
 	col := x.Im2Col(p.PoolH, p.PoolW, p.Stride, p.Pad)
-	fmt.Println(col)
 	col = col.Reshape(-1, p.PoolH*p.PoolW)
 
 	outVec := num.Max(col, 1)

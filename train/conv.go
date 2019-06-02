@@ -93,14 +93,13 @@ func train() {
 	}
 
 	net := network.NewSimpleConvNet(opt, inputDim, convParams, 100, 10, 0.01)
-	// net := network.NewThreeLayerNet(opt, ImageLength, Hidden, MNIST, weightDecayLambda)
 
 	xTrain, tTrain := MnistTensor4D(train)
 	xTest, tTest := MnistTensor4D(test)
 	iterPerEpoch := func() int {
-		if TrainSize/BatchSize > 1.0 {
-			return TrainSize / BatchSize
-		}
+		// if TrainSize/BatchSize > 1.0 {
+		// 	return TrainSize / BatchSize
+		// }
 		return 1
 	}()
 
