@@ -162,6 +162,22 @@ func calcArithmetic(a ArithmeticT3D, x1 interface{}, x2 interface{}) Tensor3D {
 	return nil
 }
 
+func PowT3D(x Tensor3D, p float64) Tensor3D {
+	result := ZerosLikeT3D(x)
+	for i, v := range x {
+		result[i] = Pow(v, p)
+	}
+	return result
+}
+
+func SqrtT3D(x Tensor3D) Tensor3D {
+	result := ZerosLikeT3D(x)
+	for i, v := range x {
+		result[i] = Sqrt(v)
+	}
+	return result
+}
+
 func AddT3D(x1 interface{}, x2 interface{}) Tensor3D {
 	return calcArithmetic(ADDT3D, x1, x2)
 }
@@ -185,4 +201,78 @@ func EqualT3D(t1, t2 Tensor3D) bool {
 		}
 	}
 	return true
+}
+
+func SoftmaxT3D(x Tensor3D) Tensor3D {
+	t3d := ZerosLikeT3D(x)
+	for i, v := range x {
+		t3d[i] = Softmax(v)
+	}
+	return t3d
+}
+
+func DotT3D(x Tensor3D, y *Matrix) Tensor3D {
+	result := ZerosLikeT3D(x)
+	for i, v := range x {
+		result[i] = Dot(v, y)
+	}
+	return result
+}
+
+func CrossEntropyErrorT3D(y, t Tensor3D) float64 {
+	r := vec.Zeros(len(y))
+	for i := range y {
+		r[i] = CrossEntropyError(y[i], t[i])
+	}
+	return vec.Sum(r) / float64(len(y))
+}
+
+func NumericalGradientT3D(f func(vec.Vector) float64, x Tensor3D) Tensor3D {
+	result := ZerosLikeT3D(x)
+	for i, v := range x {
+		result[i] = NumericalGradient(f, v)
+	}
+	return result
+}
+
+func (t Tensor3D) ToMatrix(axis int) *Matrix {
+	c, h, w := t.Shape()
+	if axis == 0 {
+		var zeroVec vec.Vector
+		// zeroVec := vec.Zeros(len(t) * len(t[0].Vector))
+		for _, mat := range t {
+			zeroVec = append(zeroVec, mat.Vector...)
+		}
+		return &Matrix{
+			Vector:  zeroVec,
+			Rows:    c,
+			Columns: h * w,
+		}
+	} else if axis == 1 {
+		var zeroVec vec.Vector
+		for _, mat := range t {
+			for i := 0; i < h; i++ {
+				zeroVec = append(zeroVec, mat.SliceRow(i)...)
+			}
+		}
+		return &Matrix{
+			Vector:  zeroVec,
+			Rows:    h,
+			Columns: c * w,
+		}
+	} else if axis == 2 {
+		var zeroVec vec.Vector
+		for _, mat := range t {
+			for i := 0; i < w; i++ {
+				zeroVec = append(zeroVec, mat.SliceColumn(i)...)
+			}
+		}
+		return &Matrix{
+			Vector:  zeroVec,
+			Rows:    w,
+			Columns: c * h,
+		}
+
+	}
+	return nil
 }

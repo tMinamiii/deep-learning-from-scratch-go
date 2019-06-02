@@ -191,14 +191,16 @@ func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
 		colVec = append(colVec, nV...)
 	}
 
-	N, C, H, _ := t.Shape()
-	fmt.Println(colVec)
-	fmt.Println(len(colVec), N*C*H, fw*fh*C)
-	col := len(colVec) / N / C / H
-	fmt.Println(col)
+	fmt.Println(t.Shape())
+	// N, C, H, _ := t.Shape()
+	// fmt.Println(len(colVec), N*C*H, fw*fh*C)
+	col := fw * fh
+	row := len(colVec) / col
+	// col := len(colVec) / N / C / H
+	// fmt.Println(col)
 	return &Matrix{
 		Vector:  colVec,
-		Rows:    N * C * H,
+		Rows:    row,
 		Columns: col,
 		// Columns: fw * fh * C,
 	}
@@ -209,7 +211,7 @@ func NewRandnT4D(n, c, h, w int) (Tensor4D, error) {
 		return nil, errors.New("row/columns is zero")
 	}
 	t4d := Tensor4D{}
-	for i := 0; i < c; i++ {
+	for i := 0; i < n; i++ {
 		t3d, _ := NewRandnT3D(c, h, w)
 		t4d = append(t4d, t3d)
 	}
@@ -305,4 +307,50 @@ func MulT4D(x1 interface{}, x2 interface{}) Tensor4D {
 
 func DivT4D(x1 interface{}, x2 interface{}) Tensor4D {
 	return calcArithmeticT4D(DIVT4D, x1, x2)
+}
+
+func SoftmaxT4D(x Tensor4D) Tensor4D {
+	t4d := ZerosLikeT4D(x)
+	for i, v := range x {
+		t4d[i] = SoftmaxT3D(v)
+	}
+	return t4d
+}
+func CrossEntropyErrorT4D(y, t Tensor4D) float64 {
+	r := vec.Zeros(len(y))
+	for i := range y {
+		r[i] = CrossEntropyErrorT3D(y[i], t[i])
+	}
+	return vec.Sum(r) / float64(len(y))
+}
+
+func NumericalGradientT4D(f func(vec.Vector) float64, x Tensor4D) Tensor4D {
+	result := ZerosLikeT4D(x)
+	for i, v := range x {
+		result[i] = NumericalGradientT3D(f, v)
+	}
+	return result
+}
+func PowT4D(x Tensor4D, p float64) Tensor4D {
+	result := ZerosLikeT4D(x)
+	for i, v := range x {
+		result[i] = PowT3D(v, p)
+	}
+	return result
+}
+
+func SqrtT4D(x Tensor4D) Tensor4D {
+	result := ZerosLikeT4D(x)
+	for i, v := range x {
+		result[i] = SqrtT3D(v)
+	}
+	return result
+}
+
+func DotT4D(x Tensor4D, y *Matrix) Tensor4D {
+	result := ZerosLikeT4D(x)
+	for i, v := range x {
+		result[i] = DotT3D(v, y)
+	}
+	return result
 }

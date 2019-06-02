@@ -1,21 +1,22 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/naronA/zero_deeplearning/layer"
 	"github.com/naronA/zero_deeplearning/num"
+	"github.com/naronA/zero_deeplearning/optimizer"
 )
 
 type SimpleConvNet struct {
-	Params    map[string]*num.Matrix
-	T4DParams map[string]num.Tensor4D
-	Layers    map[string]layer.Layer
-	T4DLayers map[string]layer.T4DLayer
-	Sequence  []string
-	LastLayer *layer.SoftmaxWithLoss
-	// Optimizer         optimizer.Optimizer
-	// HiddenLayerNum    int
+	Params map[string]interface{}
+	// T4DParams      map[string]num.Tensor4D
+	T4DLayers      map[string]layer.T4DLayer
+	Sequence       []string
+	LastLayer      *layer.SoftmaxWithLossT4D
+	Optimizer      optimizer.AnyOptimizer
+	HiddenLayerNum int
 	// WeightDecayLambda float64
 }
 
@@ -34,7 +35,13 @@ type ConvParams struct {
 
 // NewTwoLayerNet は、TwoLayerNetのコンストラクタ
 func NewSimpleConvNet(
-	inputDim InputDim, convParams ConvParams, hiddenSize int, outputSize int, weightInitStd float64) *SimpleConvNet {
+	opt optimizer.AnyOptimizer,
+	inputDim *InputDim,
+	convParams *ConvParams,
+	hiddenSize int,
+	outputSize int,
+	weightInitStd float64,
+) *SimpleConvNet {
 	filterNum := convParams.FilterNum
 	filterSize := convParams.FilterSize
 	filterPad := convParams.Pad
@@ -56,8 +63,8 @@ func NewSimpleConvNet(
 	if err != nil {
 		panic(err)
 	}
-	params := map[string]*num.Matrix{}
-	t4dparams := map[string]num.Tensor4D{}
+	params := map[string]interface{}{}
+	// t4dparams := map[string]num.Tensor4D{}
 
 	W1 := num.MulT4D(W1Rnd, weightInitStd)
 	b1 := num.Zeros(1, filterNum)
@@ -66,21 +73,20 @@ func NewSimpleConvNet(
 	W3 := num.Mul(W3Rnd, weightInitStd)
 	b3 := num.Zeros(1, outputSize)
 
-	t4dparams["W1"] = num.MulT4D(W1, weightInitStd)
-	params["b1"] = num.Zeros(1, filterNum)
-	params["W2"] = num.Mul(W2, weightInitStd)
-	params["b2"] = num.Zeros(1, hiddenSize)
-	params["W3"] = num.Mul(W3, weightInitStd)
-	params["b3"] = num.Zeros(1, outputSize)
+	params["W1"] = W1
+	params["b1"] = b1
+	params["W2"] = W2
+	params["b2"] = b2
+	params["W3"] = W3
+	params["b3"] = b3
 
-	layers := map[string]layer.Layer{}
-	layersT4d := map[string]layer.T4DLayer{}
-	layersT4d["Conv1"] = layer.NewConvolution(W1, b1, convParams.Stride, convParams.Pad)
-	layers["Relu1"] = layer.NewRelu()
-	layersT4d["Pool1"] = layer.NewPooling(2, 2, 2, 0)
-	layers["Affine1"] = layer.NewAffine(W2, b2)
-	layers["Relu2"] = layer.NewRelu()
-	layers["Affine2"] = layer.NewAffine(W3, b3)
+	layers := map[string]layer.T4DLayer{}
+	layers["Conv1"] = layer.NewConvolution(W1, b1, convParams.Stride, convParams.Pad)
+	layers["Relu1"] = layer.NewReluT4D()
+	layers["Pool1"] = layer.NewPooling(2, 2, 2, 0)
+	layers["Affine1"] = layer.NewAffineT4D(W2, b2)
+	layers["Relu2"] = layer.NewReluT4D()
+	layers["Affine2"] = layer.NewAffineT4D(W3, b3)
 
 	seq := []string{
 		"Conv1",
@@ -91,35 +97,94 @@ func NewSimpleConvNet(
 		"Affile2",
 	}
 
-	last := layer.NewSfotmaxWithLoss()
+	last := layer.NewSfotmaxWithLossT4D()
 
 	return &SimpleConvNet{
-		Params:    params,
-		T4DParams: t4dparams,
-		Layers:    layers,
-		T4DLayers: layersT4d,
-		LastLayer: last,
-		Sequence:  seq,
-		// Optimizer:         opt,
-		// HiddenLayerNum:    1,
+		Params: params,
+		// T4DParams:      t4dparams,
+		T4DLayers:      layers,
+		LastLayer:      last,
+		Sequence:       seq,
+		Optimizer:      opt,
+		HiddenLayerNum: 1,
 		// WeightDecayLambda: weightDeceyLambda,
 	}
 }
 
-func (net *SimpleConvNet) Predict(x num.Tensor4D, trainFlg bool) num.Tensor4D {
+func (net *SimpleConvNet) Predict(x num.Tensor4D) num.Tensor4D {
 	for _, k := range net.Sequence {
 		if strings.HasPrefix(k, "Conv") {
 			x = net.T4DLayers[k].Forward(x)
-			return x
 		}
 
-		t4d := num.ZerosLikeT4D(x)
-		for i, t3d := range x {
-			for j, mat := range t3d {
-				t4d[i][j] = net.Layers[k].Forward(mat, trainFlg)
-			}
-		}
-		x = t4d
+		x = net.T4DLayers[k].Forward(x)
 	}
 	return x
+}
+
+func (net *SimpleConvNet) Loss(x, t num.Tensor4D) float64 {
+	if x == nil || t == nil {
+		fmt.Println(x, t)
+	}
+	y := net.Predict(x)
+	return net.LastLayer.Forward(y, t)
+}
+
+func (net *SimpleConvNet) Gradient(x, t num.Tensor4D) map[string]interface{} {
+	// forward
+
+	net.Loss(x, t)
+	dout := net.LastLayer.Backward()
+
+	for i := len(net.Sequence) - 1; i >= 0; i-- {
+		key := net.Sequence[i]
+		dout = net.T4DLayers[key].Backward(dout)
+	}
+
+	grads := map[string]interface{}{}
+	grads["W1"] = net.T4DLayers["Conv1"].(*layer.Convolution).DW
+	grads["b1"] = net.T4DLayers["Conv1"].(*layer.Convolution).DB
+	grads["W2"] = net.T4DLayers["Affine1"].(*layer.AffineT4D).DW
+	grads["b2"] = net.T4DLayers["Affine1"].(*layer.AffineT4D).DB
+	grads["W3"] = net.T4DLayers["Affine2"].(*layer.AffineT4D).DW
+	grads["b3"] = net.T4DLayers["Affine2"].(*layer.AffineT4D).DB
+	return grads
+
+}
+
+func (net *SimpleConvNet) UpdateParams(grads map[string]interface{}) {
+	net.Params = net.Optimizer.Update(net.Params, grads)
+
+	conv1 := net.T4DLayers["Conv1"].(*layer.Convolution)
+	conv1.W = net.Params["W2"].(num.Tensor4D)
+	conv1.B = net.Params["b2"].(*num.Matrix)
+
+	affine1 := net.T4DLayers["Affine1"].(*layer.AffineT4D)
+	affine2 := net.T4DLayers["Affine2"].(*layer.AffineT4D)
+	affine1.W = net.Params["W2"].(*num.Matrix)
+	affine1.B = net.Params["b2"].(*num.Matrix)
+	affine2.W = net.Params["W3"].(*num.Matrix)
+	affine2.B = net.Params["b3"].(*num.Matrix)
+}
+
+func (net *SimpleConvNet) Accuracy(x, t num.Tensor4D) float64 {
+	y := net.Predict(x)
+	accuracy := 0.0
+	for i, t3d := range y {
+		for j := range t3d {
+			yMax := num.ArgMax(y[i][j], 1)
+			tMax := num.ArgMax(t[i][j], 1)
+			sum := 0.0
+			r, _ := y[i][j].Shape()
+			for i, v := range yMax {
+				if v == tMax[i] {
+					sum += 1.0
+				}
+			}
+			accuracy = sum / float64(r)
+		}
+		accuracy /= float64(len(t3d))
+	}
+	accuracy /= float64(len(y))
+	return accuracy
 }
