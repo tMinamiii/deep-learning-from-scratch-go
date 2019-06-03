@@ -111,7 +111,6 @@ func NewSimpleConvNet(
 
 func (net *SimpleConvNet) Predict(x interface{}) interface{} {
 	for _, k := range net.Sequence {
-		fmt.Println(k)
 		if strings.HasPrefix(k, "Conv") {
 			x = net.T4DLayers[k].Forward(x)
 			continue

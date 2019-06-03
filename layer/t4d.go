@@ -1,8 +1,6 @@
 package layer
 
 import (
-	"fmt"
-
 	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/vec"
 )
@@ -45,8 +43,6 @@ func (c *Convolution) Forward(ix interface{}) interface{} {
 	col := x.Im2Col(FH, FW, c.Stride, c.Pad)
 	colW := c.W.ReshapeToMat(FN, -1).T()
 
-	fmt.Println(col.Shape())
-	fmt.Println(colW.Shape())
 	out := num.Add(num.Dot(col, colW), c.B)
 	reshape := out.ReshapeTo4D(N, outH, outW, -1)
 	trans := reshape.Transpose(0, 3, 1, 2)
@@ -193,7 +189,6 @@ func (r *ReLUT4D) Forward(x interface{}) interface{} {
 				v := mat.Vector
 				for k, e := range v {
 					if e <= 0 {
-						// fmt.Println((i*n+j)*c + k)
 						// r.mask[(i*n+j)*c+k] = true
 						r.mask[(i*c+j)*h*w+k] = true
 						// r.mask = append(r.mask, true)
