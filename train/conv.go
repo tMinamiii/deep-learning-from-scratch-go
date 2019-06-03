@@ -22,15 +22,12 @@ const (
 	MNIST        = 10
 )
 
-func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, num.Tensor4D) {
+func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, *num.Matrix) {
 	size := len(set.Labels)
 	image := num.Tensor4D{}
-	label := num.Tensor4D{}
-	// label := vec.Vector{}
+	label := vec.Vector{}
 
 	for i := 0; i < size; i++ {
-		// image = append(image, set.Images[i]...)
-		// label = append(label, set.Labels[i]...)
 		mat := &num.Matrix{
 			Vector:  set.Images[i],
 			Rows:    28,
@@ -39,18 +36,11 @@ func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, num.Tensor4D) {
 		t3d := num.Tensor3D{}
 		t3d = append(t3d, mat)
 		image = append(image, t3d)
-
-		labelMat := &num.Matrix{
-			Vector:  set.Labels[i],
-			Rows:    1,
-			Columns: 10,
-		}
-		labelT3d := num.Tensor3D{}
-		labelT3d = append(labelT3d, labelMat)
-		label = append(label, labelT3d)
+		label = append(label, set.Labels[i]...)
 	}
 
-	return image, label
+	t, _ := num.NewMatrix(size, 10, label)
+	return image, t
 }
 
 func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
@@ -94,13 +84,13 @@ func train() {
 
 	net := network.NewSimpleConvNet(opt, inputDim, convParams, 100, 10, 0.01)
 
-	xTrain, tTrain := MnistTensor4D(train)
+	// xTrain, tTrain := MnistTensor4D(train)
 	xTest, tTest := MnistTensor4D(test)
 	iterPerEpoch := func() int {
 		// if TrainSize/BatchSize > 1.0 {
 		// 	return TrainSize / BatchSize
 		// }
-		return 1
+		return 10
 	}()
 
 	rand.Seed(time.Now().UnixNano())
@@ -108,8 +98,8 @@ func train() {
 	for i := 0; i < ItersNum; i++ {
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
+		label := vec.Vector{}
 		xBatch := num.Tensor4D{}
-		tBatch := num.Tensor4D{}
 		for _, v := range batchIndices {
 			mat := &num.Matrix{
 				Vector:  train.Images[v],
@@ -119,26 +109,23 @@ func train() {
 			t3d := num.Tensor3D{}
 			t3d = append(t3d, mat)
 			xBatch = append(xBatch, t3d)
-			labelMat := &num.Matrix{
-				Vector:  train.Labels[v],
-				Rows:    1,
-				Columns: 10,
-			}
-			labelT3d := num.Tensor3D{}
-			labelT3d = append(labelT3d, labelMat)
-			tBatch = append(tBatch, labelT3d)
+
+			label = append(label, train.Labels[v]...)
 		}
+		tBatch, _ := num.NewMatrix(BatchSize, 10, label)
 
 		grads := net.Gradient(xBatch, tBatch)
 		net.UpdateParams(grads)
 		loss := net.Loss(xBatch, tBatch)
 
 		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
-			trainAcc := net.Accuracy(xTrain, tTrain)
+			fmt.Println("calc accuracy")
+			// trainAcc := net.Accuracy(xTrain, tTrain)
 			testAcc := net.Accuracy(xTest, tTest)
 			end := time.Now()
 			fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
-			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
+			fmt.Printf("test acc = %v \n", testAcc)
+			// fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
 		}
 	}
 }

@@ -12,11 +12,10 @@ import (
 type SimpleConvNet struct {
 	Params map[string]interface{}
 	// T4DParams      map[string]num.Tensor4D
-	T4DLayers      map[string]layer.T4DLayer
-	Sequence       []string
-	LastLayer      *layer.SoftmaxWithLossT4D
-	Optimizer      optimizer.AnyOptimizer
-	HiddenLayerNum int
+	T4DLayers map[string]layer.T4DLayer
+	Sequence  []string
+	LastLayer *layer.SoftmaxWithLoss
+	Optimizer optimizer.AnyOptimizer
 	// WeightDecayLambda float64
 }
 
@@ -50,7 +49,6 @@ func NewSimpleConvNet(
 	inputSize := inputDim.Height
 	convOutputSize := (inputSize-filterSize+2*filterPad)/filterStride + 1
 	poolOutputSize := filterNum * (convOutputSize / 2) * (convOutputSize / 2)
-	fmt.Println(convOutputSize, poolOutputSize, hiddenSize)
 
 	W1Rnd, err := num.NewRandnT4D(filterNum, inputDim.Channel, filterSize, filterSize)
 	if err != nil {
@@ -95,28 +93,26 @@ func NewSimpleConvNet(
 		"Pool1",
 		"Affine1",
 		"Relu2",
-		"Affile2",
+		"Affine2",
 	}
 
-	last := layer.NewSfotmaxWithLossT4D()
+	last := layer.NewSfotmaxWithLoss()
 
 	return &SimpleConvNet{
 		Params: params,
 		// T4DParams:      t4dparams,
-		T4DLayers:      layers,
-		LastLayer:      last,
-		Sequence:       seq,
-		Optimizer:      opt,
-		HiddenLayerNum: 1,
+		T4DLayers: layers,
+		LastLayer: last,
+		Sequence:  seq,
+		Optimizer: opt,
 		// WeightDecayLambda: weightDeceyLambda,
 	}
 }
 
-func (net *SimpleConvNet) Predict(x num.Tensor4D) num.Tensor4D {
+func (net *SimpleConvNet) Predict(x interface{}) interface{} {
 	for _, k := range net.Sequence {
 		fmt.Println(k)
 		if strings.HasPrefix(k, "Conv") {
-			fmt.Println(x.Shape())
 			x = net.T4DLayers[k].Forward(x)
 			continue
 		}
@@ -126,19 +122,18 @@ func (net *SimpleConvNet) Predict(x num.Tensor4D) num.Tensor4D {
 	return x
 }
 
-func (net *SimpleConvNet) Loss(x, t num.Tensor4D) float64 {
+func (net *SimpleConvNet) Loss(x num.Tensor4D, t *num.Matrix) float64 {
 	if x == nil || t == nil {
 		fmt.Println(x, t)
 	}
-	y := net.Predict(x)
+	y := net.Predict(x).(*num.Matrix)
 	return net.LastLayer.Forward(y, t)
 }
 
-func (net *SimpleConvNet) Gradient(x, t num.Tensor4D) map[string]interface{} {
+func (net *SimpleConvNet) Gradient(x num.Tensor4D, t *num.Matrix) map[string]interface{} {
 	// forward
-
 	net.Loss(x, t)
-	dout := net.LastLayer.Backward()
+	var dout interface{} = net.LastLayer.Backward(0)
 
 	for i := len(net.Sequence) - 1; i >= 0; i-- {
 		key := net.Sequence[i]
@@ -171,24 +166,17 @@ func (net *SimpleConvNet) UpdateParams(grads map[string]interface{}) {
 	affine2.B = net.Params["b3"].(*num.Matrix)
 }
 
-func (net *SimpleConvNet) Accuracy(x, t num.Tensor4D) float64 {
-	y := net.Predict(x)
-	accuracy := 0.0
-	for i, t3d := range y {
-		for j := range t3d {
-			yMax := num.ArgMax(y[i][j], 1)
-			tMax := num.ArgMax(t[i][j], 1)
-			sum := 0.0
-			r, _ := y[i][j].Shape()
-			for i, v := range yMax {
-				if v == tMax[i] {
-					sum += 1.0
-				}
-			}
-			accuracy = sum / float64(r)
+func (net *SimpleConvNet) Accuracy(x num.Tensor4D, t *num.Matrix) float64 {
+	y := net.Predict(x).(*num.Matrix)
+	yMax := num.ArgMax(y, 1)
+	tMax := num.ArgMax(t, 1)
+	sum := 0.0
+	r, _ := y.Shape()
+	for i, v := range yMax {
+		if v == tMax[i] {
+			sum += 1.0
 		}
-		accuracy /= float64(len(t3d))
 	}
-	accuracy /= float64(len(y))
+	accuracy := sum / float64(r)
 	return accuracy
 }

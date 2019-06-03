@@ -8,8 +8,8 @@ import (
 )
 
 type T4DLayer interface {
-	Forward(num.Tensor4D) num.Tensor4D
-	Backward(num.Tensor4D) num.Tensor4D
+	Forward(interface{}) interface{}
+	Backward(interface{}) interface{}
 }
 
 type Convolution struct {
@@ -35,7 +35,8 @@ func NewConvolution(w num.Tensor4D, b *num.Matrix, stride, pad int) *Convolution
 	}
 }
 
-func (c *Convolution) Forward(x num.Tensor4D) num.Tensor4D {
+func (c *Convolution) Forward(ix interface{}) interface{} {
+	x := ix.(num.Tensor4D)
 	FN, _, FH, FW := c.W.Shape()
 	N, _, H, W := x.Shape()
 	outH := 1 + (H+2*c.Pad-FH)/c.Stride
@@ -55,7 +56,8 @@ func (c *Convolution) Forward(x num.Tensor4D) num.Tensor4D {
 	return trans
 }
 
-func (c *Convolution) Backward(dout num.Tensor4D) num.Tensor4D {
+func (c *Convolution) Backward(idout interface{}) interface{} {
+	dout := idout.(num.Tensor4D)
 	FN, C, FH, FW := c.W.Shape()
 	doutMat := dout.Transpose(0, 2, 3, 1).ReshapeToMat(-1, FN)
 	c.DB = num.Sum(doutMat, 0)
@@ -68,46 +70,111 @@ func (c *Convolution) Backward(dout num.Tensor4D) num.Tensor4D {
 	return dx
 }
 
+/*
+class Affine:
+    def __init__(self, W, b):
+        self.W = W
+        self.b = b
+
+        self.x = None
+        self.original_x_shape = None
+        # 重み・バイアスパラメータの微分
+        self.dW = None
+        self.db = None
+
+    def forward(self, x):
+        # テンソル対応
+        self.original_x_shape = x.shape
+        x = x.reshape(x.shape[0], -1)
+        self.x = x
+        out = np.dot(self.x, self.W) + self.b
+        print(out.shape)
+
+        return out
+
+    def backward(self, dout):
+        dx = np.dot(dout, self.W.T)
+        self.dW = np.dot(self.x.T, dout)
+        self.db = np.sum(dout, axis=0)
+
+        dx = dx.reshape(*self.original_x_shape)  # 入力データの形状に戻す（テンソル対応）
+        return dx
+*/
 type AffineT4D struct {
-	W  *num.Matrix
-	B  *num.Matrix
-	X  num.Tensor4D
-	DW num.Tensor4D
-	DB *num.Matrix
+	W           *num.Matrix
+	B           *num.Matrix
+	X           *num.Matrix
+	DW          *num.Matrix
+	DB          *num.Matrix
+	OrigXShapeN int
+	OrigXShapeC int
+	OrigXShapeH int
+	OrigXShapeW int
 }
 
 func NewAffineT4D(w, b *num.Matrix) *AffineT4D {
 	return &AffineT4D{
-		W: w,
-		B: b,
+		W:           w,
+		B:           b,
+		OrigXShapeN: 0,
+		OrigXShapeC: 0,
+		OrigXShapeH: 0,
+		OrigXShapeW: 0,
 	}
 }
 
-func (af *AffineT4D) Forward(x num.Tensor4D) *num.Matrix {
-	af.X = x
-	N, _, _, _ := x.Shape()
-	matX := x.ReshapeToMat(N, -1)
-	out := num.Add(num.Dot(matX, af.W), af.B)
-	return out
+func (af *AffineT4D) Forward(x interface{}) interface{} {
+	if t4d, ok := x.(num.Tensor4D); ok {
+		n, c, h, w := t4d.Shape()
+		af.OrigXShapeN = n
+		af.OrigXShapeC = c
+		af.OrigXShapeH = h
+		af.OrigXShapeW = w
+		reshapeX := t4d.ReshapeToMat(n, -1)
+		af.X = reshapeX
+		out := num.Add(num.Dot(reshapeX, af.W), af.B)
+		return out
+	} else if mat, ok := x.(*num.Matrix); ok {
+		af.X = mat
+		out := num.Add(num.Dot(mat, af.W), af.B)
+		return out
+	}
+	return nil
 }
 
-func (af *AffineT4D) Backward(dout num.Tensor4D) num.Tensor4D {
-	dx := num.ZerosLikeT4D(dout)
-	dw := num.ZerosLikeT4D(af.DW)
-	for i, t3d := range dout {
-		for j, mat := range t3d {
-			dx[i][j] = num.Dot(mat, af.W.T())
-			dw[i][j] = num.Dot(af.X[i][j].T(), dout[i][j])
-		}
+func (af *AffineT4D) Backward(dout interface{}) interface{} {
+	mat := dout.(*num.Matrix)
+	if af.OrigXShapeN != 0 {
+		dx := num.Dot(mat, af.W.T())
+		af.DW = num.Dot(af.X.T(), mat)
+		af.DB = num.Sum(mat, 0)
+		reshapeX := dx.ReshapeTo4D(af.OrigXShapeN, af.OrigXShapeC, af.OrigXShapeH, af.OrigXShapeW)
+		return reshapeX
 	}
-	FN, _, _, _ := dout.Shape()
-	doutMat := dout.ReshapeToMat(-1, FN)
-	// doutMat := dout.Transpose(0, 2, 3, 1).ReshapeToMat(-1, FN)
-	af.DB = num.Sum(doutMat, 0)
-	af.DW = dw
+	dx := num.Dot(mat, af.W.T())
+	af.DW = num.Dot(af.X.T(), mat)
+	af.DB = num.Sum(mat, 0)
 	return dx
 }
 
+/*
+class Relu:
+    def __init__(self):
+        self.mask = None
+
+    def forward(self, x):
+        self.mask = (x <= 0)
+        out = x.copy()
+        out[self.mask] = 0
+
+        return out
+
+    def backward(self, dout):
+        dout[self.mask] = 0
+        dx = dout
+
+        return dx
+*/
 type ReLUT4D struct {
 	mask []bool
 }
@@ -116,54 +183,88 @@ func NewReluT4D() *ReLUT4D {
 	return &ReLUT4D{}
 }
 
-func (r *ReLUT4D) Forward(x num.Tensor4D) num.Tensor4D {
-	outt4d := num.ZerosLikeT4D(x)
-	for i, t3d := range x {
-		for j, mat := range t3d {
-			v := mat.Vector
-			r.mask = make([]bool, len(v))
-			zeroVec := vec.ZerosLike(v)
-			for k, e := range zeroVec {
-				if e <= 0 {
-					r.mask[k] = true
-					zeroVec[k] = 0
-				} else {
-					zeroVec[k] = e
+func (r *ReLUT4D) Forward(x interface{}) interface{} {
+	if t4d, ok := x.(num.Tensor4D); ok {
+		n, c, h, w := t4d.Shape()
+		outt4d := num.ZerosLikeT4D(t4d)
+		r.mask = make([]bool, n*c*h*w)
+		for i, t3d := range t4d {
+			for j, mat := range t3d {
+				v := mat.Vector
+				for k, e := range v {
+					if e <= 0 {
+						// fmt.Println((i*n+j)*c + k)
+						// r.mask[(i*n+j)*c+k] = true
+						r.mask[(i*c+j)*h*w+k] = true
+						// r.mask = append(r.mask, true)
+						outt4d[i][j].Vector[k] = 0
+					} else {
+						// r.mask = append(r.mask, false)
+						outt4d[i][j].Vector[k] = e
+					}
 				}
 			}
-			out := &num.Matrix{
-				Vector:  zeroVec,
-				Rows:    mat.Rows,
-				Columns: mat.Columns,
+		}
+		return outt4d
+	} else if mat, ok := x.(*num.Matrix); ok {
+		v := mat.Vector
+		r.mask = make([]bool, len(v))
+		out := vec.ZerosLike(v)
+		for i, e := range v {
+			if e <= 0 {
+				r.mask[i] = true
+				out[i] = 0
+			} else {
+				out[i] = e
 			}
-			outt4d[i][j] = out
+		}
+
+		return &num.Matrix{
+			Vector:  out,
+			Rows:    mat.Rows,
+			Columns: mat.Columns,
 		}
 	}
-	return outt4d
+	return nil
 }
 
-func (r *ReLUT4D) Backward(dout num.Tensor4D) num.Tensor4D {
-	outt4d := num.ZerosLikeT4D(dout)
-	for i, t3d := range dout {
-		for j, mat := range t3d {
-			v := mat.Vector
-			dv := vec.ZerosLike(v)
-			for i, e := range v {
-				if r.mask[i] {
-					dv[i] = 0
-				} else {
-					dv[i] = e
+func (r *ReLUT4D) Backward(dout interface{}) interface{} {
+	if t4d, ok := dout.(num.Tensor4D); ok {
+		_, c, h, w := t4d.Shape()
+		outt4d := num.ZerosLikeT4D(t4d)
+		for i, t3d := range t4d {
+			for j, mat := range t3d {
+				for k, e := range mat.Vector {
+					if r.mask[(i*c+j)*h*w+k] {
+						outt4d[i][j].Vector[k] = 0
+					} else {
+						outt4d[i][j].Vector[k] = e
+					}
 				}
 			}
-			dx := &num.Matrix{
-				Vector:  dv,
-				Rows:    mat.Rows,
-				Columns: mat.Columns,
-			}
-			outt4d[i][j] = dx
 		}
+		return outt4d
+
+	} else if mat, ok := dout.(*num.Matrix); ok {
+		v := mat.Vector
+		dv := vec.ZerosLike(v)
+		for i, e := range v {
+			if r.mask[i] {
+				dv[i] = 0
+
+			} else {
+				dv[i] = e
+			}
+		}
+		dx := &num.Matrix{
+			Vector:  dv,
+			Rows:    mat.Rows,
+			Columns: mat.Columns,
+		}
+		return dx
+
 	}
-	return outt4d
+	return nil
 }
 
 type SoftmaxWithLossT4D struct {
@@ -183,7 +284,7 @@ func (so *SoftmaxWithLossT4D) Forward(x, t num.Tensor4D) float64 {
 	return so.loss
 }
 
-func (so *SoftmaxWithLossT4D) Backward() num.Tensor4D {
+func (so *SoftmaxWithLossT4D) Backward() interface{} {
 	batchSize, _, _, _ := so.t.Shape()
 	sub := num.SubT4D(so.y, so.t)
 	dx := num.DivT4D(sub, batchSize)
