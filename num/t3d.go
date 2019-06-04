@@ -35,17 +35,17 @@ func (t Tensor3D) Shape() (int, int, int) {
 }
 
 func (t Tensor3D) Window(x, y, h, w int) Tensor3D {
-	newT3D := Tensor3D{}
-	for _, mat := range t {
-		newT3D = append(newT3D, mat.Window(x, y, h, w))
+	newT3D := make(Tensor3D, len(t))
+	for i, mat := range t {
+		newT3D[i] = mat.Window(x, y, h, w)
 	}
 	return newT3D
 }
 
 func (t Tensor3D) Pad(size int) Tensor3D {
-	newT3d := Tensor3D{}
-	for _, m := range t {
-		newT3d = append(newT3d, m.Pad(size))
+	newT3d := make(Tensor3D, len(t))
+	for i, m := range t {
+		newT3d[i] = m.Pad(size)
 	}
 	return newT3d
 }
@@ -54,10 +54,10 @@ func NewRandnT3D(c, h, w int) (Tensor3D, error) {
 	if c == 0 || h == 0 || w == 0 {
 		return nil, errors.New("row/columns is zero")
 	}
-	t3d := Tensor3D{}
+	t3d := make(Tensor3D, c)
 	for i := 0; i < c; i++ {
 		mat, _ := NewRandnMatrix(h, w)
-		t3d = append(t3d, mat)
+		t3d[i] = mat
 	}
 	return t3d, nil
 }
@@ -71,9 +71,9 @@ func ZerosT3D(c, h, w int) Tensor3D {
 }
 
 func ZerosLikeT3D(x Tensor3D) Tensor3D {
-	matrixes := Tensor3D{}
-	for _, v := range x {
-		matrixes = append(matrixes, ZerosLike(v))
+	matrixes := make(Tensor3D, len(x))
+	for i, v := range x {
+		matrixes[i] = ZerosLike(v)
 	}
 	return matrixes
 }

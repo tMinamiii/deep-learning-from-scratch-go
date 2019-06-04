@@ -37,11 +37,13 @@ func (m *Matrix) T() *Matrix {
 }
 
 func (m *Matrix) Transpose(a, b int) *Matrix {
-	trans := vec.Vector{}
+	trans := make(vec.Vector, m.Rows*m.Columns)
 	if a == 0 && b == 1 {
 		for i := 0; i < m.Rows; i++ {
 			col := m.SliceRow(i)
-			trans = append(trans, col...)
+			for j := 0; j < len(col); j++ {
+				trans[i*len(col)+j] = col[j]
+			}
 		}
 		return &Matrix{
 			Vector:  trans,
@@ -52,7 +54,10 @@ func (m *Matrix) Transpose(a, b int) *Matrix {
 	}
 	for i := 0; i < m.Columns; i++ {
 		col := m.SliceColumn(i)
-		trans = append(trans, col...)
+		// trans = append(trans, col...)
+		for j := 0; j < len(col); j++ {
+			trans[i*len(col)+j] = col[j]
+		}
 	}
 	return &Matrix{
 		Vector:  trans,
@@ -264,10 +269,10 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	outW := (W+2*pad-fw)/stride + 1
 	ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
 	img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
-	imgMats := Tensor3D{}
-	for _, imgT3D := range img {
-		imgMats = append(imgMats, imgT3D...)
-	}
+	// imgMats := make(Tensor3D{})
+	// for _, imgT3D := range img {
+	// 	imgMats = append(imgMats, imgT3D...)
+	// }
 	for y := 0; y < fh; y++ {
 		yMax := y + stride*outH
 		for x := 0; x < fw; x++ {

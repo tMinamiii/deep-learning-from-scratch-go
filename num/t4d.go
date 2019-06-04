@@ -68,18 +68,18 @@ func (t Tensor4D) ReshapeToMat(row, col int) *Matrix {
 }
 
 func (t Tensor4D) Window(x, y, h, w int) Tensor4D {
-	newT4D := Tensor4D{}
-	for _, mat := range t {
-		newT4D = append(newT4D, mat.Window(x, y, h, w))
+	newT4D := make(Tensor4D, len(t))
+	for i, mat := range t {
+		newT4D[i] = mat.Window(x, y, h, w)
 	}
 	return newT4D
 }
 
 func (t Tensor4D) Pad(size int) Tensor4D {
-	newT4D := Tensor4D{}
-	for _, t3d := range t {
+	newT4D := make(Tensor4D, len(t))
+	for i, t3d := range t {
 		padded := t3d.Pad(size)
-		newT4D = append(newT4D, padded)
+		newT4D[i] = padded
 	}
 	return newT4D
 }
@@ -159,9 +159,9 @@ func ZerosT4D(n, c, h, w int) Tensor4D {
 }
 
 func ZerosLikeT4D(x Tensor4D) Tensor4D {
-	t4d := Tensor4D{}
-	for _, v := range x {
-		t4d = append(t4d, ZerosLikeT3D(v))
+	t4d := make(Tensor4D, len(x))
+	for i, v := range x {
+		t4d[i] = ZerosLikeT3D(v)
 	}
 	return t4d
 }
@@ -176,8 +176,24 @@ func EqualT4D(t1, t2 Tensor4D) bool {
 }
 
 func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
+	// colVecLen := 0
+	// for i := 0; i < len(t); i++ {
+	// 	colVecLen++
+	// }
+	// nVLen := 0
+	// for _, t3d := range t {
+	// 	for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
+	// 		for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+	// 			for i := 0; i < len(t3d); i++ {
+	// 				nVLen++
+	// 			}
+	// 		}
+	// 	}
+	// 	break
+	// }
 	colVec := vec.Vector{}
 	for _, t3d := range t {
+		// nV := make(vec.Vector, nVLen)
 		nV := vec.Vector{}
 		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
 			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
@@ -208,10 +224,10 @@ func NewRandnT4D(n, c, h, w int) (Tensor4D, error) {
 	if n == 0 || c == 0 || h == 0 || w == 0 {
 		return nil, errors.New("row/columns is zero")
 	}
-	t4d := Tensor4D{}
+	t4d := make(Tensor4D, n)
 	for i := 0; i < n; i++ {
 		t3d, _ := NewRandnT3D(c, h, w)
-		t4d = append(t4d, t3d)
+		t4d[i] = t3d
 	}
 	return t4d, nil
 }

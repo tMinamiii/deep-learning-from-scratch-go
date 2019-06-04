@@ -24,18 +24,17 @@ const (
 
 func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, *num.Matrix) {
 	size := len(set.Labels)
-	image := num.Tensor4D{}
+	image := make(num.Tensor4D, size)
 	label := vec.Vector{}
-
+	// label := make(vec.Vector, size*len(set.Labels[0]))
 	for i := 0; i < size; i++ {
 		mat := &num.Matrix{
 			Vector:  set.Images[i],
 			Rows:    28,
 			Columns: 28,
 		}
-		t3d := num.Tensor3D{}
-		t3d = append(t3d, mat)
-		image = append(image, t3d)
+		t3d := num.Tensor3D{mat}
+		image[i] = t3d
 		label = append(label, set.Labels[i]...)
 	}
 
@@ -99,17 +98,15 @@ func train() {
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		label := vec.Vector{}
-		xBatch := num.Tensor4D{}
-		for _, v := range batchIndices {
+		xBatch := make(num.Tensor4D, BatchSize)
+		for j, v := range batchIndices {
 			mat := &num.Matrix{
 				Vector:  train.Images[v],
 				Rows:    28,
 				Columns: 28,
 			}
-			t3d := num.Tensor3D{}
-			t3d = append(t3d, mat)
-			xBatch = append(xBatch, t3d)
-
+			t3d := num.Tensor3D{mat}
+			xBatch[j] = t3d
 			label = append(label, train.Labels[v]...)
 		}
 		tBatch, _ := num.NewMatrix(BatchSize, 10, label)
