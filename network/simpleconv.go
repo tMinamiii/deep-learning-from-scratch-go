@@ -2,11 +2,11 @@ package network
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/naronA/zero_deeplearning/layer"
 	"github.com/naronA/zero_deeplearning/num"
 	"github.com/naronA/zero_deeplearning/optimizer"
+	"github.com/naronA/zero_deeplearning/vec"
 )
 
 type SimpleConvNet struct {
@@ -111,11 +111,6 @@ func NewSimpleConvNet(
 
 func (net *SimpleConvNet) Predict(x interface{}) interface{} {
 	for _, k := range net.Sequence {
-		if strings.HasPrefix(k, "Conv") {
-			x = net.T4DLayers[k].Forward(x)
-			continue
-		}
-
 		x = net.T4DLayers[k].Forward(x)
 	}
 	return x
@@ -166,16 +161,40 @@ func (net *SimpleConvNet) UpdateParams(grads map[string]interface{}) {
 }
 
 func (net *SimpleConvNet) Accuracy(x num.Tensor4D, t *num.Matrix) float64 {
-	y := net.Predict(x).(*num.Matrix)
-	yMax := num.ArgMax(y, 1)
-	tMax := num.ArgMax(t, 1)
-	sum := 0.0
-	r, _ := y.Shape()
-	for i, v := range yMax {
-		if v == tMax[i] {
-			sum += 1.0
+	accuracy := 0.0
+	miniBatchSize := 5000
+	count := 0
+	fmt.Println(len(x))
+	for i := 0; i < len(x); i += miniBatchSize {
+		count++
+		y := net.Predict(x[i : i+miniBatchSize]).(*num.Matrix)
+		yMax := num.ArgMax(y, 1)
+
+		v := vec.Vector{}
+		for j := i; j < i+miniBatchSize; j++ {
+			if j >= t.Rows {
+				break
+			}
+			v = append(v, t.SliceRow(j)...)
 		}
+		test := &num.Matrix{
+			Vector:  v,
+			Rows:    miniBatchSize,
+			Columns: t.Columns,
+		}
+
+		tMax := num.ArgMax(test, 1)
+		sum := 0.0
+		r, _ := y.Shape()
+		for i, v := range yMax {
+			if v == tMax[i] {
+				sum += 1.0
+			}
+		}
+		accuracy += sum / float64(r)
+		fmt.Printf("temp %f\n", accuracy)
 	}
-	accuracy := sum / float64(r)
-	return accuracy
+	fmt.Printf("accuracy %f\n", accuracy)
+
+	return accuracy / float64(count)
 }

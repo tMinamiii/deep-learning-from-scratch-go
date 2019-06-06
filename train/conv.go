@@ -83,13 +83,14 @@ func train() {
 
 	net := network.NewSimpleConvNet(opt, inputDim, convParams, 100, 10, 0.01)
 
-	// xTrain, tTrain := MnistTensor4D(train)
+	xTrain, tTrain := MnistTensor4D(train)
 	xTest, tTest := MnistTensor4D(test)
 	iterPerEpoch := func() int {
+		return 50
 		// if TrainSize/BatchSize > 1.0 {
 		// 	return TrainSize / BatchSize
 		// }
-		return 50
+		// return 1
 	}()
 
 	rand.Seed(time.Now().UnixNano())
@@ -117,12 +118,12 @@ func train() {
 
 		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
 			fmt.Println("calc accuracy")
-			// trainAcc := net.Accuracy(xTrain, tTrain)
 			testAcc := net.Accuracy(xTest, tTest)
+			trainAcc := net.Accuracy(xTrain, tTrain)
 			end := time.Now()
 			fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
 			fmt.Printf("test acc = %v \n", testAcc)
-			// fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
+			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
 		}
 	}
 }

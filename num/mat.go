@@ -372,11 +372,13 @@ func Dot(m1, m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
+	// fmt.Println(m1.Rows * m2.Columns)
 	mat := vec.Zeros(m1.Rows * m2.Columns)
 	for i := 0; i < m1.Columns; i++ {
 		for c := 0; c < m2.Columns; c++ {
 			for r := 0; r < m1.Rows; r++ {
-				mat[r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
+				// mat[r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
+				mat[r*m2.Columns+c] += m1.Vector[r*m1.Columns+i] * m2.Vector[i*m2.Columns+c]
 			}
 		}
 	}

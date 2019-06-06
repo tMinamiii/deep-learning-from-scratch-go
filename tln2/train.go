@@ -78,7 +78,7 @@ func train() {
 
 		if i%iterPerEpoch == 0 && i >= iterPerEpoch {
 			trainAcc := net.Accuracy(xTrain, tTrain)
-			testAcc := net.Accuracy(xTest, tTest)
+			testAcc := net.Accuracy(xTest, tTest
 			end := time.Now()
 			fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
 			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
