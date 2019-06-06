@@ -89,7 +89,7 @@ func train() {
 		// if TrainSize/BatchSize > 1.0 {
 		// 	return TrainSize / BatchSize
 		// }
-		return 10
+		return 50
 	}()
 
 	rand.Seed(time.Now().UnixNano())
