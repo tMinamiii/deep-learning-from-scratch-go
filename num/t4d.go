@@ -22,7 +22,7 @@ func (t Tensor4D) Assign(value float64, n, c, h, w int) {
 }
 
 func (t Tensor4D) Flatten() vec.Vector {
-	v := vec.Vector{}
+	v := make(vec.Vector, 0, len(t)*len(t[0].Flatten()))
 	for _, e := range t {
 		v = append(v, e.Flatten()...)
 	}
@@ -122,9 +122,20 @@ func AddAssign(t1 *Tensor4DSlice, t2 Tensor4D) {
 		t1.Actual[idx.N][idx.C].Assign(add, idx.H, idx.W)
 	}
 }
+
 func (t Tensor4D) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
-	n, c, _, _ := t.Shape()
-	indices := []*Tensor4DIndex{}
+	indLen := 0
+	for _, imgT3D := range t {
+		for k := 0; k < len(imgT3D); k++ {
+			for i := y; i < yMax; i += stride {
+				for j := x; j < xMax; j += stride {
+					indLen++
+				}
+			}
+		}
+	}
+
+	indices := make([]*Tensor4DIndex, 0, indLen)
 	// for i := y; i < yMax; i += stride {
 	// 	totalRows++
 	// }
@@ -140,6 +151,7 @@ func (t Tensor4D) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
 			}
 		}
 	}
+	n, c, _, _ := t.Shape()
 	return &Tensor4DSlice{
 		Actual:   t,
 		Indices:  indices,
@@ -150,6 +162,7 @@ func (t Tensor4D) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
 func (t Tensor4D) Slice(y, yMax, x, xMax int) Tensor4D {
 	return t.StrideSlice(y, yMax, x, xMax, 1).ToTensor4D()
 }
+
 func ZerosT4D(n, c, h, w int) Tensor4D {
 	t4d := make(Tensor4D, n)
 	for i := range t4d {
@@ -176,25 +189,21 @@ func EqualT4D(t1, t2 Tensor4D) bool {
 }
 
 func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
-	// colVecLen := 0
-	// for i := 0; i < len(t); i++ {
-	// 	colVecLen++
-	// }
-	// nVLen := 0
-	// for _, t3d := range t {
-	// 	for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
-	// 		for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
-	// 			for i := 0; i < len(t3d); i++ {
-	// 				nVLen++
-	// 			}
-	// 		}
-	// 	}
-	// 	break
-	// }
-	colVec := vec.Vector{}
+	nVLen := 0
 	for _, t3d := range t {
-		// nV := make(vec.Vector, nVLen)
-		nV := vec.Vector{}
+		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
+			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+				for i := 0; i < len(t3d); i++ {
+					nVLen++
+				}
+			}
+		}
+	}
+	// 	break
+	colVec := make(vec.Vector, 0, len(t))
+	for _, t3d := range t {
+		nV := make(vec.Vector, 0, nVLen)
+		// nV := vec.Vector{}
 		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
 			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
 				for _, ma := range t3d {

@@ -48,7 +48,6 @@ func (a *AdamAny) Update(params, grads map[string]interface{}) map[string]interf
 	}
 	a.Iter++
 	fIter := float64(a.Iter)
-	// lr_t = self.lr * np.sqrt(1.0 - self.beta2**self.iter) / (1.0 - self.beta1**self.iter)
 	lrT := a.LR * math.Sqrt(1.0-math.Pow(a.Beta2, fIter)) / (1.0 - math.Pow(a.Beta1, fIter))
 
 	newParams := map[string]interface{}{}

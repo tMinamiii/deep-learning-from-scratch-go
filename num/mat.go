@@ -3,7 +3,6 @@ package num
 import (
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/naronA/zero_deeplearning/vec"
 )
@@ -15,7 +14,7 @@ type Matrix struct {
 }
 
 func (m *Matrix) RowVecs() []vec.Vector {
-	v := []vec.Vector{}
+	v := make([]vec.Vector, 0, m.Rows)
 	for i := 0; i < m.Rows; i++ {
 		col := m.SliceRow(i)
 		v = append(v, col)
@@ -24,7 +23,7 @@ func (m *Matrix) RowVecs() []vec.Vector {
 }
 
 func (m *Matrix) ColumnVecs() []vec.Vector {
-	v := []vec.Vector{}
+	v := make([]vec.Vector, 0, m.Columns)
 	for i := 0; i < m.Columns; i++ {
 		col := m.SliceColumn(i)
 		v = append(v, col)
@@ -339,36 +338,42 @@ func Equal(m1, m2 *Matrix) bool {
 	return false
 }
 
-func (m *Matrix) DotGo(m2 *Matrix) *Matrix {
-	if m.Columns != m2.Rows {
-		return nil
+func dotPart(i int, a, b, c *Matrix, ch chan int) {
+	ac := a.Columns
+	bc := b.Columns
+	for j := 0; j < bc; j++ {
+		part := 0.0
+		for k := 0; k < ac; k++ {
+			part += a.Element(i, k) * b.Element(k, j)
+		}
+		c.Assign(part, i, j)
 	}
-	sum := vec.Zeros(m.Rows * m2.Columns)
-	wg := &sync.WaitGroup{}
-	ch := make(chan int)
-	for i := 0; i < m.Columns; i++ {
-		wg.Add(1)
-		go func(ch chan int) {
-			defer wg.Done()
-			i := <-ch
-			for c := 0; c < m2.Columns; c++ {
-				for r := 0; r < m.Rows; r++ {
-					sum[r*m2.Columns+c] += m.Element(r, i) * m2.Element(i, c)
-				}
-			}
-		}(ch)
-		ch <- i
-	}
-	wg.Wait()
-	close(ch)
-	return &Matrix{
-		Vector:  sum,
-		Rows:    m.Rows,
-		Columns: m2.Columns,
-	}
+	ch <- i
 }
 
 func Dot(m1, m2 *Matrix) *Matrix {
+	if m1.Columns != m2.Rows {
+		return nil
+	}
+	// fmt.Println(m1.Rows * m2.Columns)
+	v3 := vec.Zeros(m1.Rows * m2.Columns)
+	m3 := &Matrix{
+		Vector:  v3,
+		Rows:    m1.Rows,
+		Columns: m2.Columns,
+	}
+
+	ch := make(chan int)
+	for i := 0; i < m1.Rows; i++ {
+		go dotPart(i, m1, m2, m3, ch)
+	}
+	for i := 0; i < m1.Rows; i++ {
+		<-ch
+	}
+	return m3
+}
+
+func Dot2(m1, m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}

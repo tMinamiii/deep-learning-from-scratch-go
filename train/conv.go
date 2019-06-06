@@ -25,8 +25,8 @@ const (
 func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, *num.Matrix) {
 	size := len(set.Labels)
 	image := make(num.Tensor4D, size)
-	label := vec.Vector{}
-	// label := make(vec.Vector, size*len(set.Labels[0]))
+	// label := vec.Vector{}
+	label := make(vec.Vector, 0, size*len(set.Labels[0]))
 	for i := 0; i < size; i++ {
 		mat := &num.Matrix{
 			Vector:  set.Images[i],
@@ -44,8 +44,8 @@ func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, *num.Matrix) {
 
 func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
 	size := len(set.Labels)
-	image := vec.Vector{}
-	label := vec.Vector{}
+	image := make(vec.Vector, 0, size*len(set.Images[0]))
+	label := make(vec.Vector, 0, size*len(set.Labels[0]))
 	for i := 0; i < size; i++ {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
@@ -60,13 +60,8 @@ func train() {
 	train, test := mnist.LoadMnist()
 
 	TrainSize := len(train.Labels)
-	// opt := optimizer.NewSGD(LearningRate)
-	// opt := optimizer.NewMomentum(LearningRate)
-	// opt := optimizer.NewAdaGrad(LearningRate)
 	opt := optimizer.NewAdamAny(LearningRate)
 	// weightDecayLambda := 0.1
-	// net := network.NewMultiLayer(opt, ImageLength, Hidden, MNIST, weightDecayLambda)
-	// net := network.NewTwoLayerNet(opt, ImageLength, Hidden, MNIST, weightDecayLambda)
 
 	inputDim := &network.InputDim{
 		Channel: 1,
@@ -98,7 +93,7 @@ func train() {
 	for i := 0; i < ItersNum; i++ {
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
-		label := vec.Vector{}
+		label := make(vec.Vector, 0, len(train.Labels[0])*BatchSize)
 		xBatch := make(num.Tensor4D, BatchSize)
 		for j, v := range batchIndices {
 			mat := &num.Matrix{
@@ -122,7 +117,7 @@ func train() {
 			trainAcc := net.Accuracy(xTrain, tTrain)
 			end := time.Now()
 			fmt.Printf("elapstime = %v loss = %v\n", end.Sub(start), loss)
-			fmt.Printf("test acc = %v \n", testAcc)
+			// fmt.Printf("test acc = %v \n", testAcc)
 			fmt.Printf("train acc / test acc = %v / %v\n", trainAcc, testAcc)
 		}
 	}
