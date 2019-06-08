@@ -51,7 +51,7 @@ func TestIm2Col_2_2_2_1(t *testing.T) {
 		0, 0, 7, 0, 0, 0, 4, 0,
 		0, 3, 0, 0, 0, 1, 0, 0,
 		9, 0, 0, 0, 9, 0, 0, 0,
-	}, Rows: 8, Columns: 8}
+	}, Rows: 16, Columns: 4}
 	if NotEqual(expected, actual) {
 		fmt.Println(expected, actual)
 		t.Fail()

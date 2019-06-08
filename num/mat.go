@@ -13,24 +13,6 @@ type Matrix struct {
 	Columns int
 }
 
-func (m *Matrix) RowVecs() []vec.Vector {
-	v := make([]vec.Vector, 0, m.Rows)
-	for i := 0; i < m.Rows; i++ {
-		col := m.SliceRow(i)
-		v = append(v, col)
-	}
-	return v
-}
-
-func (m *Matrix) ColumnVecs() []vec.Vector {
-	v := make([]vec.Vector, 0, m.Columns)
-	for i := 0; i < m.Columns; i++ {
-		col := m.SliceColumn(i)
-		v = append(v, col)
-	}
-	return v
-}
-
 func (m *Matrix) T() *Matrix {
 	return m.Transpose(1, 0)
 }
