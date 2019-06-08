@@ -7,16 +7,16 @@ import (
 type BatchNormalization struct {
 	Gamma       float64 // パラメタ
 	Beta        float64 // パラメタ
-	Dgamma      *num.Matrix
-	Dbeta       *num.Matrix
+	Dgamma      num.Matrix
+	Dbeta       num.Matrix
 	Momentum    float64 // パラメタ
 	BatchSize   int
 	InputShape  func() (int, int)
-	RunningMean *num.Matrix
-	RunningVar  *num.Matrix
-	Xc          *num.Matrix
-	Xn          *num.Matrix
-	Std         *num.Matrix
+	RunningMean num.Matrix
+	RunningVar  num.Matrix
+	Xc          num.Matrix
+	Xn          num.Matrix
+	Std         num.Matrix
 }
 
 /*
@@ -61,7 +61,7 @@ func NewBatchNorimalization(gamma, beta float64) *BatchNormalization {
 
        return out.reshape(*self.input_shape)
 */
-func (b *BatchNormalization) Forward(x *num.Matrix, trainFlg bool) *num.Matrix {
+func (b *BatchNormalization) Forward(x num.Matrix, trainFlg bool) num.Matrix {
 	b.InputShape = x.Shape
 	// if self.running_mean is None:
 	//     N, D = x.shape
@@ -145,7 +145,7 @@ func (b *BatchNormalization) Forward(x *num.Matrix, trainFlg bool) *num.Matrix {
        return dx
 */
 
-func (b *BatchNormalization) Backward(dout *num.Matrix) *num.Matrix {
+func (b *BatchNormalization) Backward(dout num.Matrix) num.Matrix {
 	dBeta := num.Sum(dout, 0)
 	dGamma := num.Sum(num.Mul(b.Xn, dout), 0)
 	dxn := num.Mul(b.Gamma, dout)

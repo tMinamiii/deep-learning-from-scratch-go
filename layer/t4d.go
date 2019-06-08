@@ -12,19 +12,19 @@ type T4DLayer interface {
 
 type Convolution struct {
 	W      num.Tensor4D // 4次元
-	B      *num.Matrix  // 3次元
+	B      num.Matrix   // 3次元
 	Stride int
 	Pad    int
 	// 中間データ（backward時に使用）
 	X    num.Tensor4D
-	Col  *num.Matrix
-	ColW *num.Matrix
+	Col  num.Matrix
+	ColW num.Matrix
 	// 重み・バイアスパラメータの勾配
 	DW num.Tensor4D
-	DB *num.Matrix
+	DB num.Matrix
 }
 
-func NewConvolution(w num.Tensor4D, b *num.Matrix, stride, pad int) *Convolution {
+func NewConvolution(w num.Tensor4D, b num.Matrix, stride, pad int) *Convolution {
 	return &Convolution{
 		W:      w,
 		B:      b,
@@ -67,18 +67,18 @@ func (c *Convolution) Backward(idout interface{}) interface{} {
 }
 
 type AffineT4D struct {
-	W           *num.Matrix
-	B           *num.Matrix
-	X           *num.Matrix
-	DW          *num.Matrix
-	DB          *num.Matrix
+	W           num.Matrix
+	B           num.Matrix
+	X           num.Matrix
+	DW          num.Matrix
+	DB          num.Matrix
 	OrigXShapeN int
 	OrigXShapeC int
 	OrigXShapeH int
 	OrigXShapeW int
 }
 
-func NewAffineT4D(w, b *num.Matrix) *AffineT4D {
+func NewAffineT4D(w, b num.Matrix) *AffineT4D {
 	return &AffineT4D{
 		W:           w,
 		B:           b,
@@ -100,7 +100,7 @@ func (af *AffineT4D) Forward(x interface{}) interface{} {
 		af.X = reshapeX
 		out := num.Add(num.Dot(reshapeX, af.W), af.B)
 		return out
-	} else if mat, ok := x.(*num.Matrix); ok {
+	} else if mat, ok := x.(num.Matrix); ok {
 		af.X = mat
 		out := num.Add(num.Dot(mat, af.W), af.B)
 		return out
@@ -109,7 +109,7 @@ func (af *AffineT4D) Forward(x interface{}) interface{} {
 }
 
 func (af *AffineT4D) Backward(dout interface{}) interface{} {
-	mat := dout.(*num.Matrix)
+	mat := dout.(num.Matrix)
 	if af.OrigXShapeN != 0 {
 		dx := num.Dot(mat, af.W.T())
 		af.DW = num.Dot(af.X.T(), mat)
@@ -138,23 +138,23 @@ func (r *ReLUT4D) Forward(x interface{}) interface{} {
 		r.mask = make([]bool, n*c*h*w)
 		for i, t3d := range t4d {
 			for j, mat := range t3d {
-				v := mat.Vector
+				v := mat.Flatten()
 				for k, e := range v {
 					if e <= 0 {
 						// r.mask[(i*n+j)*c+k] = true
 						r.mask[(i*c+j)*h*w+k] = true
 						// r.mask = append(r.mask, true)
-						outt4d[i][j].Vector[k] = 0
+						outt4d[i][j].Assign(k, 0)
 					} else {
 						// r.mask = append(r.mask, false)
-						outt4d[i][j].Vector[k] = e
+						outt4d[i][j].Assign(k, e)
 					}
 				}
 			}
 		}
 		return outt4d
-	} else if mat, ok := x.(*num.Matrix); ok {
-		v := mat.Vector
+	} else if mat, ok := x.(num.Matrix); ok {
+		v := mat.Flatten()
 		r.mask = make([]bool, len(v))
 		out := vec.ZerosLike(v)
 		for i, e := range v {
@@ -165,12 +165,7 @@ func (r *ReLUT4D) Forward(x interface{}) interface{} {
 				out[i] = e
 			}
 		}
-
-		return &num.Matrix{
-			Vector:  out,
-			Rows:    mat.Rows,
-			Columns: mat.Columns,
-		}
+		return num.NewMatrix(out, mat.Rows(), mat.Columns())
 	}
 	return nil
 }
@@ -181,19 +176,19 @@ func (r *ReLUT4D) Backward(dout interface{}) interface{} {
 		outt4d := num.ZerosLikeT4D(t4d)
 		for i, t3d := range t4d {
 			for j, mat := range t3d {
-				for k, e := range mat.Vector {
+				for k, e := range mat.Flatten() {
 					if r.mask[(i*c+j)*h*w+k] {
-						outt4d[i][j].Vector[k] = 0
+						outt4d[i][j].Assign(k, 0)
 					} else {
-						outt4d[i][j].Vector[k] = e
+						outt4d[i][j].Assign(k, e)
 					}
 				}
 			}
 		}
 		return outt4d
 
-	} else if mat, ok := dout.(*num.Matrix); ok {
-		v := mat.Vector
+	} else if mat, ok := dout.(num.Matrix); ok {
+		v := mat.Flatten()
 		dv := vec.ZerosLike(v)
 		for i, e := range v {
 			if r.mask[i] {
@@ -203,13 +198,7 @@ func (r *ReLUT4D) Backward(dout interface{}) interface{} {
 				dv[i] = e
 			}
 		}
-		dx := &num.Matrix{
-			Vector:  dv,
-			Rows:    mat.Rows,
-			Columns: mat.Columns,
-		}
-		return dx
-
+		return num.NewMatrix(dv, mat.Rows(), mat.Columns())
 	}
 	return nil
 }

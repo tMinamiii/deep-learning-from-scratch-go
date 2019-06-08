@@ -10,7 +10,7 @@ import (
 )
 
 type ThreeLayerNet struct {
-	Params            map[string]*num.Matrix
+	Params            map[string]num.Matrix
 	Layers            map[string]layer.Layer
 	Sequence          []string
 	LastLayer         *layer.SoftmaxWithLoss
@@ -26,21 +26,12 @@ func NewThreeLayerNet(
 	hiddenSize int,
 	outputSize int,
 	weightDeceyLambda float64) *ThreeLayerNet {
-	params := map[string]*num.Matrix{}
+	params := map[string]num.Matrix{}
 	layers := map[string]layer.Layer{}
 
-	W1, err := num.NewRandnMatrix(inputSize, hiddenSize)
-	if err != nil {
-		panic(err)
-	}
-	W2, err := num.NewRandnMatrix(hiddenSize, hiddenSize)
-	if err != nil {
-		panic(err)
-	}
-	W3, err := num.NewRandnMatrix(hiddenSize, outputSize)
-	if err != nil {
-		panic(err)
-	}
+	W1 := num.NewRandnMatrix(inputSize, hiddenSize)
+	W2 := num.NewRandnMatrix(hiddenSize, hiddenSize)
+	W3 := num.NewRandnMatrix(hiddenSize, outputSize)
 
 	params["W1"] = num.Div(W1, math.Sqrt(2.0*float64(inputSize))) // weightInitStd
 	params["b1"] = num.Zeros(1, hiddenSize)
@@ -88,14 +79,14 @@ func NewThreeLayerNet(
 }
 
 // Predict は、TwoLayerNetの精度計算をします
-func (net *ThreeLayerNet) Predict(x *num.Matrix, trainFlg bool) *num.Matrix {
+func (net *ThreeLayerNet) Predict(x num.Matrix, trainFlg bool) num.Matrix {
 	for _, k := range net.Sequence {
 		x = net.Layers[k].Forward(x, trainFlg)
 	}
 	return x
 }
 
-func (net *ThreeLayerNet) Loss(x, t *num.Matrix, trainFlg bool) float64 {
+func (net *ThreeLayerNet) Loss(x, t num.Matrix, trainFlg bool) float64 {
 	y := net.Predict(x, trainFlg)
 
 	weightDecey := 0.0
@@ -108,7 +99,7 @@ func (net *ThreeLayerNet) Loss(x, t *num.Matrix, trainFlg bool) float64 {
 	return cee
 }
 
-func (net *ThreeLayerNet) Accuracy(x, t *num.Matrix) float64 {
+func (net *ThreeLayerNet) Accuracy(x, t num.Matrix) float64 {
 	y := net.Predict(x, false)
 	yMax := num.ArgMax(y, 1)
 	tMax := num.ArgMax(t, 1)
@@ -123,7 +114,7 @@ func (net *ThreeLayerNet) Accuracy(x, t *num.Matrix) float64 {
 	return accuracy
 }
 
-func (net *ThreeLayerNet) Gradient(x, t *num.Matrix) map[string]*num.Matrix {
+func (net *ThreeLayerNet) Gradient(x, t num.Matrix) map[string]num.Matrix {
 	// forward
 	net.Loss(x, t, true)
 
@@ -135,7 +126,7 @@ func (net *ThreeLayerNet) Gradient(x, t *num.Matrix) map[string]*num.Matrix {
 		dout = net.Layers[key].Backward(dout)
 	}
 
-	grads := map[string]*num.Matrix{}
+	grads := map[string]num.Matrix{}
 
 	for i := 1; i < net.HiddenLayerNum+2; i++ {
 		l := fmt.Sprintf("Affine%d", i)
@@ -149,7 +140,7 @@ func (net *ThreeLayerNet) Gradient(x, t *num.Matrix) map[string]*num.Matrix {
 	return grads
 }
 
-func (net *ThreeLayerNet) UpdateParams(grads map[string]*num.Matrix) {
+func (net *ThreeLayerNet) UpdateParams(grads map[string]num.Matrix) {
 	net.Params = net.Optimizer.Update(net.Params, grads)
 
 	for i := 1; i < net.HiddenLayerNum+2; i++ {

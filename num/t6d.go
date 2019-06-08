@@ -44,8 +44,8 @@ func (t Tensor6D) Transpose(a, b, c, d, e, f int) Tensor6D {
 		for j, et4d := range et5d {
 			for k, et3d := range et4d {
 				for l, emat := range et3d {
-					for n := 0; n < emat.Rows; n++ {
-						for m := 0; m < emat.Columns; m++ {
+					for n := 0; n < emat.Rows(); n++ {
+						for m := 0; m < emat.Columns(); m++ {
 							oldIdx := []int{i, j, k, l, n, m}
 							idx := make([]int, 6)
 							idx[0] = oldIdx[a]

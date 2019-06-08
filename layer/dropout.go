@@ -30,15 +30,17 @@ func NewDropout(ratio float64) *Dropout {
 //
 // def backward(self, dout):
 //     return dout * self.mask
-func (d *Dropout) Forward(x *num.Matrix, trainFlg bool) *num.Matrix {
+func (d *Dropout) Forward(x num.Matrix, trainFlg bool) num.Matrix {
 	if trainFlg {
 		out := num.ZerosLike(x)
-		rand, _ := num.NewRandnMatrix(x.Shape())
-		d.Mask = make([]bool, len(rand.Vector))
-		for i, v := range rand.Vector {
+		rand := num.NewRandnMatrix(x.Shape())
+		d.Mask = make([]bool, len(rand.Flatten()))
+		for i, v := range rand.Flatten() {
 			if v > d.Ratio {
 				d.Mask[i] = true
-				out.Vector[i] = x.Vector[i]
+				r := i / x.Columns()
+				c := i % x.Columns()
+				out[r][c] = x[r][c]
 			}
 		}
 		return out
@@ -46,8 +48,8 @@ func (d *Dropout) Forward(x *num.Matrix, trainFlg bool) *num.Matrix {
 	return num.Mul(x, 1.0-d.Ratio)
 }
 
-func (d *Dropout) Backward(dout *num.Matrix) *num.Matrix {
-	doutv := dout.Vector
+func (d *Dropout) Backward(dout num.Matrix) num.Matrix {
+	doutv := dout.Flatten()
 	dv := vec.ZerosLike(doutv)
 	for i, e := range doutv {
 		if d.Mask[i] {
@@ -56,11 +58,11 @@ func (d *Dropout) Backward(dout *num.Matrix) *num.Matrix {
 			dv[i] = 0
 		}
 	}
-	dx := &num.Matrix{
-		Vector:  dv,
-		Rows:    dout.Rows,
-		Columns: dout.Columns,
+	dx := num.Zeros(dout.Rows(), dout.Columns())
+	for i := 0; i < dout.Rows(); i++ {
+		for j := 0; j < dout.Columns(); j++ {
+			dx[i][j] = dv[i*dout.Columns()+j]
+		}
 	}
 	return dx
-
 }

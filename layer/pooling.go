@@ -32,11 +32,7 @@ func (p *Pooling) Forward(ix interface{}) interface{} {
 	col = col.Reshape(-1, p.PoolH*p.PoolW)
 
 	outVec := num.Max(col, 1)
-	outMat := &num.Matrix{
-		Vector:  outVec,
-		Rows:    1,
-		Columns: len(outVec),
-	}
+	outMat := num.NewMatrix(outVec, 1, len(outVec))
 	reshaped := outMat.ReshapeTo4D(N, outH, outW, C).Transpose(0, 3, 1, 2)
 	p.X = x
 	p.ArgMax = num.ArgMax(col, 1)
@@ -51,7 +47,7 @@ func (p *Pooling) Backward(idout interface{}) interface{} {
 	poolSize := p.PoolH * p.PoolW
 	dmax := num.Zeros(dout.Size(), poolSize)
 	for i, v := range dout.Flatten() {
-		dmax.Assign(v, i, p.ArgMax[i])
+		dmax[i][p.ArgMax[i]] = v
 	}
 	dmaxT5D := dmax.ReshapeTo5D(da, db, dc, dd, poolSize)
 	dm1, dm2, dm3, _, _ := dmaxT5D.Shape()

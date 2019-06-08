@@ -8,40 +8,40 @@ import (
 // BasicNetworkはゼロから作るディープラーニングのp64 Ch3.4.3の
 // ニューラルネットワーク
 type BasicNetwork struct {
-	Network map[string]*num.Matrix
+	Network map[string]num.Matrix
 }
 
 func NewBasicNetwork() *BasicNetwork {
-	network := map[string]*num.Matrix{}
+	network := map[string]num.Matrix{}
 
-	network["W1"], _ = num.NewMatrix(2, 3, vec.Vector{
+	network["W1"] = num.NewMatrix(vec.Vector{
 		0.1, 0.3, 0.5,
 		0.2, 0.4, 0.6,
-	})
-	network["b1"], _ = num.NewMatrix(1, 3, vec.Vector{
+	}, 2, 3)
+	network["b1"] = num.NewMatrix(vec.Vector{
 		0.1, 0.2, 0.3,
-	})
-	network["W2"], _ = num.NewMatrix(3, 2, vec.Vector{
+	}, 1, 2)
+	network["W2"] = num.NewMatrix(vec.Vector{
 		0.1, 0.4,
 		0.2, 0.5,
 		0.3, 0.6,
-	})
-	network["b2"], _ = num.NewMatrix(1, 2, vec.Vector{
+	}, 3, 2)
+	network["b2"] = num.NewMatrix(vec.Vector{
 		0.1, 0.2,
-	})
-	network["W3"], _ = num.NewMatrix(2, 2, vec.Vector{
+	}, 1, 2)
+	network["W3"] = num.NewMatrix(vec.Vector{
 		0.1, 0.3,
 		0.2, 0.4,
-	})
-	network["b3"], _ = num.NewMatrix(1, 2, vec.Vector{
+	}, 2, 2)
+	network["b3"] = num.NewMatrix(vec.Vector{
 		0.1, 0.2,
-	})
+	}, 1, 2)
 	return &BasicNetwork{
 		Network: network,
 	}
 }
 
-func (net *BasicNetwork) Forward(x *num.Matrix) vec.Vector {
+func (net *BasicNetwork) Forward(x num.Matrix) vec.Vector {
 	W1 := net.Network["W1"]
 	W2 := net.Network["W2"]
 	W3 := net.Network["W3"]
@@ -59,6 +59,6 @@ func (net *BasicNetwork) Forward(x *num.Matrix) vec.Vector {
 
 	mul3 := num.Dot(z2, W3)
 	a3 := num.Add(mul3, b3)
-	y := vec.IdentityFunction(a3.Vector)
+	y := vec.IdentityFunction(a3.Flatten())
 	return y
 }

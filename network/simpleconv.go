@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/naronA/zero_deeplearning/layer"
 	"github.com/naronA/zero_deeplearning/num"
@@ -50,18 +51,9 @@ func NewSimpleConvNet(
 	convOutputSize := (inputSize-filterSize+2*filterPad)/filterStride + 1
 	poolOutputSize := filterNum * (convOutputSize / 2) * (convOutputSize / 2)
 
-	W1Rnd, err := num.NewRandnT4D(filterNum, inputDim.Channel, filterSize, filterSize)
-	if err != nil {
-		panic(err)
-	}
-	W2Rnd, err := num.NewRandnMatrix(poolOutputSize, hiddenSize)
-	if err != nil {
-		panic(err)
-	}
-	W3Rnd, err := num.NewRandnMatrix(hiddenSize, outputSize)
-	if err != nil {
-		panic(err)
-	}
+	W1Rnd := num.NewRandnT4D(filterNum, inputDim.Channel, filterSize, filterSize)
+	W2Rnd := num.NewRandnMatrix(poolOutputSize, hiddenSize)
+	W3Rnd := num.NewRandnMatrix(hiddenSize, outputSize)
 	params := map[string]interface{}{}
 	// t4dparams := map[string]num.Tensor4D{}
 
@@ -116,15 +108,15 @@ func (net *SimpleConvNet) Predict(x interface{}) interface{} {
 	return x
 }
 
-func (net *SimpleConvNet) Loss(x num.Tensor4D, t *num.Matrix) float64 {
+func (net *SimpleConvNet) Loss(x num.Tensor4D, t num.Matrix) float64 {
 	if x == nil || t == nil {
 		fmt.Println(x, t)
 	}
-	y := net.Predict(x).(*num.Matrix)
+	y := net.Predict(x).(num.Matrix)
 	return net.LastLayer.Forward(y, t)
 }
 
-func (net *SimpleConvNet) Gradient(x num.Tensor4D, t *num.Matrix) map[string]interface{} {
+func (net *SimpleConvNet) Gradient(x num.Tensor4D, t num.Matrix) map[string]interface{} {
 	// forward
 	net.Loss(x, t)
 	var dout interface{} = net.LastLayer.Backward(0)
@@ -150,43 +142,39 @@ func (net *SimpleConvNet) UpdateParams(grads map[string]interface{}) {
 
 	conv1 := net.T4DLayers["Conv1"].(*layer.Convolution)
 	conv1.W = net.Params["W1"].(num.Tensor4D)
-	conv1.B = net.Params["b1"].(*num.Matrix)
+	conv1.B = net.Params["b1"].(num.Matrix)
 
 	affine1 := net.T4DLayers["Affine1"].(*layer.AffineT4D)
 	affine2 := net.T4DLayers["Affine2"].(*layer.AffineT4D)
-	affine1.W = net.Params["W2"].(*num.Matrix)
-	affine1.B = net.Params["b2"].(*num.Matrix)
-	affine2.W = net.Params["W3"].(*num.Matrix)
-	affine2.B = net.Params["b3"].(*num.Matrix)
+	affine1.W = net.Params["W2"].(num.Matrix)
+	affine1.B = net.Params["b2"].(num.Matrix)
+	affine2.W = net.Params["W3"].(num.Matrix)
+	affine2.B = net.Params["b3"].(num.Matrix)
 }
 
-func (net *SimpleConvNet) Accuracy(x num.Tensor4D, t *num.Matrix) float64 {
+func (net *SimpleConvNet) Accuracy(x num.Tensor4D, t num.Matrix) float64 {
 	accuracy := 0.0
 	size := 50
 	routine := 25
+
 	count := 0
-	// fmt.Println(len(x))
+	start := time.Now()
 	ch := make(chan float64)
-	// start := time.Now()
 	for i := 0; i < len(x); i += size {
 		for j := 0; j < routine; j++ {
 			count++
 			miniSize := size / routine
 			miniX := x[i+j*miniSize : i+miniSize+j*miniSize]
-			v := make(vec.Vector, 0, t.Rows*miniSize)
+			v := make(vec.Vector, 0, t.Rows()*miniSize)
 			for k := i + j*miniSize; k < i+miniSize+j*miniSize; k++ {
-				if k >= t.Rows {
+				if k >= t.Rows() {
 					break
 				}
 				v = append(v, t.SliceRow(k)...)
 			}
-			miniTest := &num.Matrix{
-				Vector:  v,
-				Rows:    miniSize,
-				Columns: t.Columns,
-			}
-			go func(train num.Tensor4D, test *num.Matrix, ch chan float64) {
-				y := net.Predict(train).(*num.Matrix)
+			miniTest := num.NewMatrix(v, miniSize, t.Columns())
+			go func(train num.Tensor4D, test num.Matrix, ch chan float64) {
+				y := net.Predict(train).(num.Matrix)
 				yMax := num.ArgMax(y, 1)
 				tMax := num.ArgMax(test, 1)
 				sum := 0.0
@@ -204,7 +192,7 @@ func (net *SimpleConvNet) Accuracy(x num.Tensor4D, t *num.Matrix) float64 {
 		}
 	}
 	close(ch)
-	// end := time.Now()
-	// fmt.Printf("elapstime = %v accuracy %f\n", end.Sub(start), accuracy/float64(count))
+	end := time.Now()
+	fmt.Printf("elapstime = %v accuracy %f\n", end.Sub(start), accuracy/float64(count))
 	return accuracy / float64(count)
 }

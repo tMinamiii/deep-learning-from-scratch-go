@@ -38,7 +38,7 @@ func (t Tensor5D) Assign(value float64, b, n, c, h, w int) {
 	t[b].Assign(value, n, c, h, w)
 }
 
-func (t Tensor5D) ReshapeTo2D(row, col int) *Matrix {
+func (t Tensor5D) ReshapeTo2D(row, col int) Matrix {
 	a, b, c, d, e := t.Shape()
 	size := a * b * c * d * e
 	if row == -1 {
@@ -46,12 +46,15 @@ func (t Tensor5D) ReshapeTo2D(row, col int) *Matrix {
 	} else if col == -1 {
 		col = size / row
 	}
-
-	return &Matrix{
-		Vector:  t.Flatten(),
-		Rows:    row,
-		Columns: col,
+	flat := t.Flatten()
+	mat := Zeros(row, col)
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			mat[i][j] = flat[i*col+j]
+		}
 	}
+
+	return mat
 }
 
 func (t Tensor5D) Flatten() vec.Vector {

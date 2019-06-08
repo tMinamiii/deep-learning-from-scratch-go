@@ -39,7 +39,7 @@ func (a *AdamAny) Update(params, grads map[string]interface{}) map[string]interf
 				a.M[k] = num.ZerosLikeT4D(t4d)
 				a.V[k] = num.ZerosLikeT4D(t4d)
 			}
-			if mat, ok := v.(*num.Matrix); ok {
+			if mat, ok := v.(num.Matrix); ok {
 				a.M[k] = num.ZerosLike(mat)
 				a.V[k] = num.ZerosLike(mat)
 			}
@@ -59,11 +59,11 @@ func (a *AdamAny) Update(params, grads map[string]interface{}) map[string]interf
 			delta := num.DivT4D(num.MulT4D(lrT, a.M[k]), num.AddT4D(num.SqrtT4D(a.V[k].(num.Tensor4D)), 1e-7))
 			newParams[k] = num.SubT4D(params[k], delta)
 		}
-		if mat, ok := g.(*num.Matrix); ok {
+		if mat, ok := g.(num.Matrix); ok {
 			a.M[k] = num.Add(a.M[k], num.Mul(1.0-a.Beta1, num.Sub(g, a.M[k])))
 			a.V[k] = num.Add(a.V[k], num.Mul(1.0-a.Beta2, num.Sub(num.Pow(mat, 2), a.V[k])))
 
-			delta := num.Div(num.Mul(lrT, a.M[k]), num.Add(num.Sqrt(a.V[k].(*num.Matrix)), 1e-7))
+			delta := num.Div(num.Mul(lrT, a.M[k]), num.Add(num.Sqrt(a.V[k].(num.Matrix)), 1e-7))
 			newParams[k] = num.Sub(params[k], delta)
 		}
 	}

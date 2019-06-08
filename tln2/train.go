@@ -22,7 +22,7 @@ const (
 	MNIST        = 10
 )
 
-func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (num.Matrix, num.Matrix) {
 	size := len(set.Labels)
 	image := vec.Vector{}
 	label := vec.Vector{}

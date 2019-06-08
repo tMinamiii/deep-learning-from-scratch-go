@@ -11,8 +11,8 @@ type Adam struct {
 	Beta1 float64
 	Beta2 float64
 	Iter  int
-	M     map[string]*num.Matrix
-	V     map[string]*num.Matrix
+	M     map[string]num.Matrix
+	V     map[string]num.Matrix
 }
 
 func NewAdam(lr float64) *Adam {
@@ -26,10 +26,10 @@ func NewAdam(lr float64) *Adam {
 	}
 }
 
-func (a *Adam) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
+func (a *Adam) Update(params, grads map[string]num.Matrix) map[string]num.Matrix {
 	if a.M == nil {
-		a.M = map[string]*num.Matrix{}
-		a.V = map[string]*num.Matrix{}
+		a.M = map[string]num.Matrix{}
+		a.V = map[string]num.Matrix{}
 		for k, v := range params {
 			a.M[k] = num.ZerosLike(v)
 			a.V[k] = num.ZerosLike(v)
@@ -39,7 +39,7 @@ func (a *Adam) Update(params, grads map[string]*num.Matrix) map[string]*num.Matr
 	fIter := float64(a.Iter)
 	lrT := a.LR * math.Sqrt(1.0-math.Pow(a.Beta2, fIter)) / (1.0 - math.Pow(a.Beta1, fIter))
 
-	newParams := map[string]*num.Matrix{}
+	newParams := map[string]num.Matrix{}
 	for k, g := range grads {
 		a.M[k] = num.Add(a.M[k], num.Mul(1.0-a.Beta1, num.Sub(g, a.M[k])))
 		a.V[k] = num.Add(a.V[k], num.Mul(1.0-a.Beta2, num.Sub(num.Pow(g, 2), a.V[k])))

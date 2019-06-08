@@ -3,7 +3,7 @@ package optimizer
 import "github.com/naronA/zero_deeplearning/num"
 
 type Optimizer interface {
-	Update(map[string]*num.Matrix, map[string]*num.Matrix) map[string]*num.Matrix
+	Update(map[string]num.Matrix, map[string]num.Matrix) map[string]num.Matrix
 }
 
 type SGD struct {
@@ -16,8 +16,8 @@ func NewSGD(lr float64) *SGD {
 	}
 }
 
-func (sgd *SGD) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
-	newParams := map[string]*num.Matrix{}
+func (sgd *SGD) Update(params, grads map[string]num.Matrix) map[string]num.Matrix {
+	newParams := map[string]num.Matrix{}
 	for k, g := range grads {
 		newParams[k] = num.Sub(params[k], num.Mul(g, sgd.LR))
 	}
@@ -27,7 +27,7 @@ func (sgd *SGD) Update(params, grads map[string]*num.Matrix) map[string]*num.Mat
 type Momentum struct {
 	LR       float64
 	Momentum float64
-	V        map[string]*num.Matrix
+	V        map[string]num.Matrix
 }
 
 func NewMomentum(lr float64) *Momentum {
@@ -38,15 +38,15 @@ func NewMomentum(lr float64) *Momentum {
 	}
 }
 
-func (mo *Momentum) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
+func (mo *Momentum) Update(params, grads map[string]num.Matrix) map[string]num.Matrix {
 	if mo.V == nil {
-		mo.V = map[string]*num.Matrix{}
+		mo.V = map[string]num.Matrix{}
 		for k, v := range params {
 			mo.V[k] = num.ZerosLike(v)
 		}
 	}
 
-	newParams := map[string]*num.Matrix{}
+	newParams := map[string]num.Matrix{}
 	for k, g := range grads {
 		mo.V[k] = num.Sub(num.Mul(mo.Momentum, mo.V[k]), num.Mul(mo.LR, g))
 		newParams[k] = num.Add(params[k], mo.V[k])
@@ -56,7 +56,7 @@ func (mo *Momentum) Update(params, grads map[string]*num.Matrix) map[string]*num
 
 type AdaGrad struct {
 	LR float64
-	H  map[string]*num.Matrix
+	H  map[string]num.Matrix
 }
 
 func NewAdaGrad(lr float64) *AdaGrad {
@@ -66,14 +66,14 @@ func NewAdaGrad(lr float64) *AdaGrad {
 	}
 }
 
-func (ad *AdaGrad) Update(params, grads map[string]*num.Matrix) map[string]*num.Matrix {
+func (ad *AdaGrad) Update(params, grads map[string]num.Matrix) map[string]num.Matrix {
 	if ad.H == nil {
-		ad.H = map[string]*num.Matrix{}
+		ad.H = map[string]num.Matrix{}
 		for k, v := range params {
 			ad.H[k] = num.ZerosLike(v)
 		}
 	}
-	newParams := map[string]*num.Matrix{}
+	newParams := map[string]num.Matrix{}
 	for k, g := range grads {
 		ad.H[k] = num.Add(ad.H[k], num.Pow(g, 2))
 		delta := num.Div(num.Mul(ad.LR, g), num.Add(num.Sqrt(ad.H[k]), 1e-7))

@@ -9,16 +9,16 @@ import (
 )
 
 func TestRelu(t *testing.T) {
-	m, _ := num.NewMatrix(2, 3, vec.Vector{
+	m := num.NewMatrix(vec.Vector{
 		0, 1, -1,
 		1, -1, 2,
-	})
+	}, 2, 3)
 	relu := NewRelu()
 	actual := relu.Forward(m, true)
-	expected, _ := num.NewMatrix(2, 3, vec.Vector{
+	expected := num.NewMatrix(vec.Vector{
 		0, 1, 0,
 		1, 0, 2,
-	})
+	}, 2, 3)
 
 	if num.NotEqual(actual, expected) {
 		t.Fail()
@@ -32,24 +32,24 @@ func TestRelu(t *testing.T) {
 }
 
 func TestAffine(t *testing.T) {
-	w, _ := num.NewMatrix(2, 2, vec.Vector{
+	w := num.NewMatrix(vec.Vector{
 		1, 0,
 		0, 1,
-	})
-	b, _ := num.NewMatrix(1, 2, vec.Vector{
+	}, 2, 2)
+	b := num.NewMatrix(vec.Vector{
 		1, 1,
-	})
+	}, 1, 2)
 	affine := NewAffine(w, b)
 
-	m, _ := num.NewMatrix(2, 2, vec.Vector{
+	m := num.NewMatrix(vec.Vector{
 		1, 2,
 		3, 4,
-	})
+	}, 2, 2)
 	actual := affine.Forward(m, true)
-	expected, _ := num.NewMatrix(2, 2, vec.Vector{
+	expected := num.NewMatrix(vec.Vector{
 		2, 3,
 		4, 5,
-	})
+	}, 2, 2)
 
 	if num.NotEqual(actual, expected) {
 		fmt.Println(actual, expected)
@@ -64,14 +64,14 @@ func TestAffine(t *testing.T) {
 }
 func TestSoftmaxWithLoss_1(t *testing.T) {
 	softmax := NewSfotmaxWithLoss()
-	xm, _ := num.NewMatrix(2, 2, vec.Vector{
+	xm := num.NewMatrix(vec.Vector{
 		1, 0,
 		0, 1,
-	})
-	tm, _ := num.NewMatrix(2, 2, vec.Vector{
+	}, 2, 2)
+	tm := num.NewMatrix(vec.Vector{
 		1, 0,
 		1, 0,
-	})
+	}, 2, 2)
 
 	actual := softmax.Forward(xm, tm)
 	expected := 0.8132614332101986
@@ -80,10 +80,10 @@ func TestSoftmaxWithLoss_1(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedBackward, _ := num.NewMatrix(2, 2, vec.Vector{
+	expectedBackward := num.NewMatrix(vec.Vector{
 		-0.13447071068499755, 0.13447071068499755,
 		-0.36552928931500245, 0.36552928931500245,
-	})
+	}, 2, 2)
 	actualBackward := softmax.Backward(1.0)
 	if num.NotEqual(actualBackward, expectedBackward) {
 		fmt.Println(actualBackward, expectedBackward)
@@ -93,14 +93,14 @@ func TestSoftmaxWithLoss_1(t *testing.T) {
 }
 func TestSoftmaxWithLoss_2(t *testing.T) {
 	softmax := NewSfotmaxWithLoss()
-	xm, _ := num.NewMatrix(2, 2, vec.Vector{
+	xm := num.NewMatrix(vec.Vector{
 		1, 0,
 		0, 1,
-	})
-	tm, _ := num.NewMatrix(2, 2, vec.Vector{
+	}, 2, 2)
+	tm := num.NewMatrix(vec.Vector{
 		1, 0,
 		0, 1,
-	})
+	}, 2, 2)
 
 	actual := softmax.Forward(xm, tm)
 	expected := 0.3132615507302881
@@ -109,12 +109,12 @@ func TestSoftmaxWithLoss_2(t *testing.T) {
 		t.Fail()
 	}
 
-	expectedBackward, _ := num.NewMatrix(2, 2, vec.Vector{
+	expectedBackward := num.NewMatrix(vec.Vector{
 		-0.13447071068499755, 0.13447071068499755,
 		0.13447071068499755, -0.13447071068499755,
 		// 0.7310585786300049, 0.2689414213699951,
 		// 0.2689414213699951, 0.7310585786300049,
-	})
+	}, 2, 2)
 	actualBackward := softmax.Backward(1.0)
 	if num.NotEqual(actualBackward, expectedBackward) {
 		fmt.Println(actualBackward, expectedBackward)

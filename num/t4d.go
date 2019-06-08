@@ -1,8 +1,6 @@
 package num
 
 import (
-	"errors"
-
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -35,8 +33,8 @@ func (t Tensor4D) Transpose(a, b, c, d int) Tensor4D {
 	t4d := ZerosT4D(shape[a], shape[b], shape[c], shape[d])
 	for i, e1t3d := range t {
 		for j, e2mat := range e1t3d {
-			for k := 0; k < e2mat.Rows; k++ {
-				for l := 0; l < e2mat.Columns; l++ {
+			for k := 0; k < e2mat.Rows(); k++ {
+				for l := 0; l < e2mat.Columns(); l++ {
 					oldIdx := []int{i, j, k, l}
 					idx := make([]int, 4)
 					idx[0] = oldIdx[a]
@@ -52,7 +50,7 @@ func (t Tensor4D) Transpose(a, b, c, d int) Tensor4D {
 	return t4d
 }
 
-func (t Tensor4D) ReshapeToMat(row, col int) *Matrix {
+func (t Tensor4D) ReshapeToMat(row, col int) Matrix {
 	size := t.Size()
 	if col == -1 {
 		col = size / row
@@ -60,11 +58,13 @@ func (t Tensor4D) ReshapeToMat(row, col int) *Matrix {
 		row = size / col
 	}
 	flat := t.Flatten()
-	return &Matrix{
-		Vector:  flat,
-		Rows:    row,
-		Columns: col,
+	mat := Zeros(row, col)
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			mat[i][j] = flat[i*col+j] // : (i+1)*col+j]
+		}
 	}
+	return mat
 }
 
 func (t Tensor4D) Window(x, y, h, w int) Tensor4D {
@@ -107,10 +107,13 @@ type Tensor4DSlice struct {
 func (t4s *Tensor4DSlice) ToTensor4D() Tensor4D {
 	newT4D := ZerosT4D(t4s.NewShape[0], t4s.NewShape[1], t4s.NewShape[2], t4s.NewShape[3])
 	for i, idx := range t4s.Indices {
-		val := t4s.Actual[idx.N][idx.C].Element(idx.H, idx.W)
+		val := t4s.Actual[idx.N][idx.C][idx.H][idx.W]
 		matrixLength := t4s.NewShape[2] * t4s.NewShape[3]
 		newMatIdx := i - idx.C*matrixLength - idx.N*(matrixLength*t4s.NewShape[1])
-		newT4D[idx.N][idx.C].Vector[newMatIdx] = val
+		row := newMatIdx / t4s.NewShape[3]
+		col := newMatIdx % t4s.NewShape[3]
+		newT4D[idx.N][idx.C][row][col] = val
+		newT4D[idx.N][idx.C].Flatten() // Vector[newMatIdx] = val
 	}
 	return newT4D
 }
@@ -118,8 +121,8 @@ func (t4s *Tensor4DSlice) ToTensor4D() Tensor4D {
 func AddAssign(t1 *Tensor4DSlice, t2 Tensor4D) {
 	t2flat := t2.Flatten()
 	for i, idx := range t1.Indices {
-		add := t1.Actual[idx.N][idx.C].Element(idx.H, idx.W) + t2flat[i]
-		t1.Actual[idx.N][idx.C].Assign(add, idx.H, idx.W)
+		add := t1.Actual[idx.N][idx.C][idx.H][idx.W] + t2flat[i]
+		t1.Actual[idx.N][idx.C][idx.H][idx.W] = add
 	}
 }
 
@@ -188,11 +191,11 @@ func EqualT4D(t1, t2 Tensor4D) bool {
 	return true
 }
 
-func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
+func (t Tensor4D) Im2Col(fw, fh, stride, pad int) Matrix {
 	nVLen := 0
 	for _, t3d := range t {
-		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
-			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+		for x := 0; x <= t3d[0].Columns()-fw+2*pad; x += stride {
+			for y := 0; y <= t3d[0].Rows()-fh+2*pad; y += stride {
 				for i := 0; i < len(t3d); i++ {
 					nVLen++
 				}
@@ -204,11 +207,11 @@ func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
 	for _, t3d := range t {
 		nV := make(vec.Vector, 0, nVLen)
 		// nV := vec.Vector{}
-		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
-			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+		for x := 0; x <= t3d[0].Columns()-fw+2*pad; x += stride {
+			for y := 0; y <= t3d[0].Rows()-fh+2*pad; y += stride {
 				for _, ma := range t3d {
 					padE := ma.Pad(pad)
-					nV = append(nV, padE.Window(x, y, fw, fh).Vector...)
+					nV = append(nV, padE.Window(x, y, fw, fh).Flatten()...)
 				}
 			}
 		}
@@ -218,27 +221,27 @@ func (t Tensor4D) Im2Col(fw, fh, stride, pad int) *Matrix {
 	// N, C, H, _ := t.Shape()
 	// fmt.Println(len(colVec), N*C*H, fw*fh*C)
 	col := fw * fh
-	row := len(colVec) / col
 	// col := len(colVec) / N / C / H
-	// fmt.Println(col)
-	return &Matrix{
-		Vector:  colVec,
-		Rows:    row,
-		Columns: col,
-		// Columns: fw * fh * C,
+	row := len(colVec) / col
+	mat := Zeros(row, col)
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			mat[i][j] = colVec[i*col+j]
+		}
 	}
+	return mat
 }
 
-func NewRandnT4D(n, c, h, w int) (Tensor4D, error) {
+func NewRandnT4D(n, c, h, w int) Tensor4D {
 	if n == 0 || c == 0 || h == 0 || w == 0 {
-		return nil, errors.New("row/columns is zero")
+		return nil
 	}
 	t4d := make(Tensor4D, n)
 	for i := 0; i < n; i++ {
-		t3d, _ := NewRandnT3D(c, h, w)
+		t3d := NewRandnT3D(c, h, w)
 		t4d[i] = t3d
 	}
-	return t4d, nil
+	return t4d
 }
 
 func calcT4d(a ArithmeticT4D, x1 interface{}, x2 interface{}) Tensor3D {
@@ -370,7 +373,7 @@ func SqrtT4D(x Tensor4D) Tensor4D {
 	return result
 }
 
-func DotT4D(x Tensor4D, y *Matrix) Tensor4D {
+func DotT4D(x Tensor4D, y Matrix) Tensor4D {
 	result := ZerosLikeT4D(x)
 	for i, v := range x {
 		result[i] = DotT3D(v, y)

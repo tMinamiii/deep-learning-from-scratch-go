@@ -1,17 +1,15 @@
 package num
 
 import (
-	"errors"
-
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-type Tensor3D []*Matrix
+type Tensor3D []Matrix
 
 func (t Tensor3D) Flatten() vec.Vector {
-	v := make(vec.Vector, 0, len(t)*len(t[0].Vector))
+	v := make(vec.Vector, 0, len(t)*len(t[0]))
 	for _, e := range t {
-		v = append(v, e.Vector...)
+		v = append(v, e.Flatten()...)
 	}
 	return v
 }
@@ -21,11 +19,11 @@ func (t Tensor3D) Channels() int {
 }
 
 func (t Tensor3D) Element(c, h, w int) float64 {
-	return t[c].Element(h, w)
+	return t[c][h][w]
 }
 
 func (t Tensor3D) Assign(value float64, c, h, w int) {
-	t[c].Assign(value, h, w)
+	t[c][h][w] = value
 }
 
 func (t Tensor3D) Shape() (int, int, int) {
@@ -50,16 +48,16 @@ func (t Tensor3D) Pad(size int) Tensor3D {
 	return newT3d
 }
 
-func NewRandnT3D(c, h, w int) (Tensor3D, error) {
+func NewRandnT3D(c, h, w int) Tensor3D {
 	if c == 0 || h == 0 || w == 0 {
-		return nil, errors.New("row/columns is zero")
+		return nil
 	}
 	t3d := make(Tensor3D, c)
 	for i := 0; i < c; i++ {
-		mat, _ := NewRandnMatrix(h, w)
+		mat := NewRandnMatrix(h, w)
 		t3d[i] = mat
 	}
-	return t3d, nil
+	return t3d
 }
 
 func ZerosT3D(c, h, w int) Tensor3D {
@@ -87,7 +85,7 @@ func ZerosLikeT3D(x Tensor3D) Tensor3D {
 //
 // }
 
-func calcT3d(a ArithmeticT3D, x1 interface{}, x2 interface{}) *Matrix {
+func calcT3d(a ArithmeticT3D, x1 interface{}, x2 interface{}) Matrix {
 	switch a {
 	case ADDT3D:
 		return Add(x1, x2)
@@ -211,7 +209,7 @@ func SoftmaxT3D(x Tensor3D) Tensor3D {
 	return t3d
 }
 
-func DotT3D(x Tensor3D, y *Matrix) Tensor3D {
+func DotT3D(x Tensor3D, y Matrix) Tensor3D {
 	result := ZerosLikeT3D(x)
 	for i, v := range x {
 		result[i] = Dot(v, y)
@@ -235,44 +233,45 @@ func NumericalGradientT3D(f func(vec.Vector) float64, x Tensor3D) Tensor3D {
 	return result
 }
 
-func (t Tensor3D) ToMatrix(axis int) *Matrix {
-	c, h, w := t.Shape()
-	if axis == 0 {
-		var zeroVec vec.Vector
-		// zeroVec := vec.Zeros(len(t) * len(t[0].Vector))
-		for _, mat := range t {
-			zeroVec = append(zeroVec, mat.Vector...)
-		}
-		return &Matrix{
-			Vector:  zeroVec,
-			Rows:    c,
-			Columns: h * w,
-		}
-	} else if axis == 1 {
-		var zeroVec vec.Vector
-		for _, mat := range t {
-			for i := 0; i < h; i++ {
-				zeroVec = append(zeroVec, mat.SliceRow(i)...)
-			}
-		}
-		return &Matrix{
-			Vector:  zeroVec,
-			Rows:    h,
-			Columns: c * w,
-		}
-	} else if axis == 2 {
-		var zeroVec vec.Vector
-		for _, mat := range t {
-			for i := 0; i < w; i++ {
-				zeroVec = append(zeroVec, mat.SliceColumn(i)...)
-			}
-		}
-		return &Matrix{
-			Vector:  zeroVec,
-			Rows:    w,
-			Columns: c * h,
-		}
-
-	}
-	return nil
-}
+// func (t Tensor3D) ToMatrix(axis int) *Matrix {
+// 	c, h, w := t.Shape()
+// 	if axis == 0 {
+// 		flat := t.Flatten()
+// 		var zeroVec vec.Vector
+// 		// zeroVec := vec.Zeros(len(t) * len(t[0].Vector))
+// 		for _, mat := range t {
+// 			zeroVec = append(zeroVec, mat.Vector...)
+// 		}
+// 		return &Matrix{
+// 			Vector:  zeroVec,
+// 			Rows:    c,
+// 			Columns: h * w,
+// 		}
+// 	} else if axis == 1 {
+// 		var zeroVec vec.Vector
+// 		for _, mat := range t {
+// 			for i := 0; i < h; i++ {
+// 				zeroVec = append(zeroVec, mat.SliceRow(i)...)
+// 			}
+// 		}
+// 		return &Matrix{
+// 			Vector:  zeroVec,
+// 			Rows:    h,
+// 			Columns: c * w,
+// 		}
+// 	} else if axis == 2 {
+// 		var zeroVec vec.Vector
+// 		for _, mat := range t {
+// 			for i := 0; i < w; i++ {
+// 				zeroVec = append(zeroVec, mat.SliceColumn(i)...)
+// 			}
+// 		}
+// 		return &Matrix{
+// 			Vector:  zeroVec,
+// 			Rows:    w,
+// 			Columns: c * h,
+// 		}
+//
+// 	}
+// 	return nil
+// }

@@ -22,27 +22,23 @@ const (
 	MNIST        = 10
 )
 
-func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, *num.Matrix) {
+func MnistTensor4D(set *mnist.DataSet) (num.Tensor4D, num.Matrix) {
 	size := len(set.Labels)
 	image := make(num.Tensor4D, size)
 	// label := vec.Vector{}
 	label := make(vec.Vector, 0, size*len(set.Labels[0]))
 	for i := 0; i < size; i++ {
-		mat := &num.Matrix{
-			Vector:  set.Images[i],
-			Rows:    28,
-			Columns: 28,
-		}
+		mat := num.NewMatrix(set.Images[i], 28, 28)
 		t3d := num.Tensor3D{mat}
 		image[i] = t3d
 		label = append(label, set.Labels[i]...)
 	}
 
-	t, _ := num.NewMatrix(size, 10, label)
+	t := num.NewMatrix(label, size, 10)
 	return image, t
 }
 
-func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (num.Matrix, num.Matrix) {
 	size := len(set.Labels)
 	image := make(vec.Vector, 0, size*len(set.Images[0]))
 	label := make(vec.Vector, 0, size*len(set.Labels[0]))
@@ -50,8 +46,8 @@ func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
 	}
-	x, _ := num.NewMatrix(size, ImageLength, image)
-	t, _ := num.NewMatrix(size, 10, label)
+	x := num.NewMatrix(image, size, ImageLength)
+	t := num.NewMatrix(label, size, 10)
 	return x, t
 }
 
@@ -81,7 +77,7 @@ func train() {
 	xTrain, tTrain := MnistTensor4D(train)
 	xTest, tTest := MnistTensor4D(test)
 	iterPerEpoch := func() int {
-		return 50
+		return 1
 		// if TrainSize/BatchSize > 1.0 {
 		// 	return TrainSize / BatchSize
 		// }
@@ -96,16 +92,12 @@ func train() {
 		label := make(vec.Vector, 0, len(train.Labels[0])*BatchSize)
 		xBatch := make(num.Tensor4D, BatchSize)
 		for j, v := range batchIndices {
-			mat := &num.Matrix{
-				Vector:  train.Images[v],
-				Rows:    28,
-				Columns: 28,
-			}
+			mat := num.NewMatrix(train.Images[v], 28, 28)
 			t3d := num.Tensor3D{mat}
 			xBatch[j] = t3d
 			label = append(label, train.Labels[v]...)
 		}
-		tBatch, _ := num.NewMatrix(BatchSize, 10, label)
+		tBatch := num.NewMatrix(label, BatchSize, 10)
 
 		grads := net.Gradient(xBatch, tBatch)
 		net.UpdateParams(grads)

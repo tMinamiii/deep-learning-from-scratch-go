@@ -1,137 +1,151 @@
 package num
 
 import (
-	"errors"
 	"fmt"
+	"math"
 
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-type Matrix struct {
-	Vector  vec.Vector
-	Rows    int
-	Columns int
+type Matrix []vec.Vector
+
+func NewMatrix(v vec.Vector, row, col int) Matrix {
+	totalLen := len(v)
+	mat := Zeros(row, col)
+	for i := 0; i < totalLen; i++ {
+		r := i / col
+		c := i % col
+		mat[r][c] = v[i]
+	}
+	return mat
 }
 
-func (m *Matrix) RowVecs() []vec.Vector {
-	v := make([]vec.Vector, 0, m.Rows)
-	for i := 0; i < m.Rows; i++ {
-		col := m.SliceRow(i)
-		v = append(v, col)
+func (m Matrix) Assign(i int, value float64) {
+	r := i / m.Columns()
+	c := i % m.Columns()
+	m[r][c] = value
+}
+
+func (m Matrix) Rows() int {
+	return len(m)
+}
+
+func (m Matrix) Columns() int {
+	return len(m[0])
+}
+
+func (m Matrix) Flatten() vec.Vector {
+	flat := make(vec.Vector, 0, m.Rows()*m.Columns())
+	for _, v := range m {
+		flat = append(flat, v...)
+	}
+	return flat
+}
+
+func (m Matrix) RowVecs() []vec.Vector {
+	v := make([]vec.Vector, 0, m.Rows())
+	for i := 0; i < m.Rows(); i++ {
+		v[i] = m[i]
 	}
 	return v
 }
 
-func (m *Matrix) ColumnVecs() []vec.Vector {
-	v := make([]vec.Vector, 0, m.Columns)
-	for i := 0; i < m.Columns; i++ {
+func (m Matrix) ColumnVecs() []vec.Vector {
+	v := make([]vec.Vector, 0, m.Columns())
+	for i := 0; i < m.Columns(); i++ {
 		col := m.SliceColumn(i)
-		v = append(v, col)
+		v[i] = col
 	}
 	return v
 }
 
-func (m *Matrix) T() *Matrix {
+func (m Matrix) T() Matrix {
 	return m.Transpose(1, 0)
 }
 
-func (m *Matrix) Transpose(a, b int) *Matrix {
-	trans := make(vec.Vector, m.Rows*m.Columns)
+func (m Matrix) Transpose(a, b int) Matrix {
 	if a == 0 && b == 1 {
-		for i := 0; i < m.Rows; i++ {
-			col := m.SliceRow(i)
-			for j := 0; j < len(col); j++ {
-				trans[i*len(col)+j] = col[j]
+		trans := Zeros(m.Rows(), m.Columns())
+		for i := 0; i < m.Rows(); i++ {
+			row := m.SliceRow(i)
+			for j := 0; j < len(row); j++ {
+				trans[i][j] = row[j]
 			}
 		}
-		return &Matrix{
-			Vector:  trans,
-			Rows:    m.Rows,
-			Columns: m.Columns,
-		}
-
+		fmt.Println(trans)
+		return trans
 	}
-	for i := 0; i < m.Columns; i++ {
+	trans := Zeros(m.Columns(), m.Rows())
+	for i := 0; i < m.Columns(); i++ {
 		col := m.SliceColumn(i)
-		// trans = append(trans, col...)
-		for j := 0; j < len(col); j++ {
-			trans[i*len(col)+j] = col[j]
+		for j, c := range col {
+			trans[i][j] = c
 		}
 	}
-	return &Matrix{
-		Vector:  trans,
-		Rows:    m.Columns,
-		Columns: m.Rows,
-	}
+	return trans
 }
 
-func (m *Matrix) Window(x, y, h, w int) *Matrix {
+func (m Matrix) Window(x, y, h, w int) Matrix {
 	mat := Zeros(h, w)
 	for i := x; i < x+h; i++ {
 		for j := y; j < y+w; j++ {
-			mat.Vector[(i-x)*w+(j-y)] = m.Element(i, j)
+			mat[i-x][j-y] = m[i][j]
 		}
 	}
 	return mat
 }
 
-func (m *Matrix) AssignWindow(window *Matrix, x, y, h, w int) {
+func (m Matrix) AssignWindow(window Matrix, x, y, h, w int) {
 	for i := 0; i < h; i++ {
 		for j := 0; j < w; j++ {
-			val := window.Element(i, j)
-			m.Assign(val, i+x, j+y)
+			val := window[i][j]
+			m[i+x][j+y] = val
 		}
 	}
 }
 
-func (m *Matrix) Pad(pad int) *Matrix {
+func (m Matrix) Pad(pad int) Matrix {
 	if pad == 0 {
-		return &Matrix{
-			Vector:  m.Vector,
-			Rows:    m.Rows,
-			Columns: m.Columns,
-		}
+		return m
 	}
-	col := m.Columns
-	newVec := vec.Vector{}
+	col := m.Columns()
+	row := m.Rows()
+	newVec := make([]vec.Vector, 0, row+2*pad)
 	rowPad := vec.Zeros(col + 2*pad)
 	for j := 0; j < pad; j++ {
-		newVec = append(newVec, rowPad...)
+		newVec = append(newVec, rowPad)
 	}
-	for j := 0; j < m.Rows; j++ {
+	for j := 0; j < m.Rows(); j++ {
+		row := make(vec.Vector, 0, (col + 2*pad))
 		srow := m.SliceRow(j)
 		for k := 0; k < pad; k++ {
-			newVec = append(newVec, 0)
+			row = append(row, 0)
 		}
-		newVec = append(newVec, srow...)
+		row = append(row, srow...)
 		for k := 0; k < pad; k++ {
-			newVec = append(newVec, 0)
+			row = append(row, 0)
 		}
+		newVec = append(newVec, row)
 	}
 	for j := 0; j < pad; j++ {
-		newVec = append(newVec, rowPad...)
+		newVec = append(newVec, rowPad)
 	}
-	return &Matrix{
-		Vector:  newVec,
-		Rows:    m.Rows + 2*pad,
-		Columns: m.Columns + 2*pad,
-	}
-
+	return newVec
 }
 
-func (m *Matrix) Shape() (int, int) {
-	if m.Rows == 1 {
-		return m.Columns, -1
+func (m Matrix) Shape() (int, int) {
+	if m.Rows() == 1 {
+		return m.Columns(), -1
 	}
-	return m.Rows, m.Columns
+	return m.Rows(), m.Columns()
 }
 
 // Matrixなのでndimは常に2
-func (m *Matrix) Ndim() int {
+func (m Matrix) Ndim() int {
 	return 2
 }
 
-func (m *Matrix) Reshape(row, col int) *Matrix {
+func (m Matrix) Reshape(row, col int) Matrix {
 	r, c := m.Shape()
 	size := r * c
 	if row == -1 {
@@ -139,18 +153,19 @@ func (m *Matrix) Reshape(row, col int) *Matrix {
 	} else if col == -1 {
 		col = size / row
 	}
-	if m.Rows*m.Columns != row*col {
+	if m.Rows()*m.Columns() != row*col {
 		return nil
 	}
-
-	return &Matrix{
-		Vector:  m.Vector,
-		Rows:    row,
-		Columns: col,
+	flat := m.Flatten()
+	reshape := make([]vec.Vector, row)
+	for i := range reshape {
+		reshape[i] = flat[i*col : (i+1)*col]
 	}
+
+	return reshape
 }
 
-func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
+func (m Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 	row, col := m.Shape()
 	size := row * col
 
@@ -164,22 +179,18 @@ func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 		d = int(size / a / b / c)
 	}
 
+	flat := m.Flatten()
 	t4d := ZerosT4D(a, b, c, d)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
-			sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
-			ma := &Matrix{
-				Vector:  sv,
-				Rows:    c,
-				Columns: d,
-			}
-			t4d[i][j] = ma
+			v := flat[(i*b+j)*c*d : (i*b+j+1)*c*d]
+			t4d[i][j] = NewMatrix(v, c, d)
 		}
 	}
 	return t4d
 }
 
-func (m *Matrix) ReshapeTo5D(a, b, c, d, e int) Tensor5D {
+func (m Matrix) ReshapeTo5D(a, b, c, d, e int) Tensor5D {
 	row, col := m.Shape()
 	size := row * col
 
@@ -195,36 +206,28 @@ func (m *Matrix) ReshapeTo5D(a, b, c, d, e int) Tensor5D {
 		e = int(size / a / b / c / d)
 	}
 
+	flat := m.Flatten()
 	t5d := ZerosT5D(a, b, c, d, e)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
 			for k := 0; k < c; k++ {
-				sv := m.Vector[((i*b+j)*c+k)*d*e : ((i*b+j)*c+k+1)*d*e]
-				ma := &Matrix{
-					Vector:  sv,
-					Rows:    c,
-					Columns: d,
-				}
-				t5d[i][j][k] = ma
+				v := flat[((i*b+j)*c+k)*d*e : ((i*b+j)*c+k+1)*d*e]
+				t5d[i][j][k] = NewMatrix(v, d, e)
 			}
 		}
 	}
 	return t5d
 }
 
-func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
+func (m Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
+	flat := m.Flatten()
 	t6d := ZerosT6D(a, b, c, d, e, f)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
 			for k := 0; k < c; k++ {
 				for l := 0; l < d; l++ {
-					sv := m.Vector[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
-					ma := &Matrix{
-						Vector:  sv,
-						Rows:    e,
-						Columns: f,
-					}
-					t6d[i][j][k][l] = ma
+					v := flat[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
+					t6d[i][j][k][l] = NewMatrix(v, e, f)
 				}
 			}
 		}
@@ -232,37 +235,29 @@ func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
 	return t6d
 }
 
-func (m *Matrix) Element(r int, c int) float64 {
-	return m.Vector[r*m.Columns+c]
-}
-
-func (m *Matrix) Assign(value float64, r, c int) {
-	m.Vector[r*m.Columns+c] = value
-}
-
-func (m *Matrix) SliceRow(r int) vec.Vector {
-	slice := m.Vector[r*m.Columns : (r+1)*m.Columns]
+func (m Matrix) SliceRow(r int) vec.Vector {
+	slice := m[r]
 	return slice
 }
 
-func (m *Matrix) SliceColumn(c int) vec.Vector {
-	slice := vec.Zeros(m.Rows)
-	for i := 0; i < m.Rows; i++ {
-		slice[i] = m.Element(i, c)
+func (m Matrix) SliceColumn(fix int) vec.Vector {
+	slice := vec.Zeros(m.Rows())
+	for i := 0; i < m.Rows(); i++ {
+		slice[i] = m[i][fix]
 	}
 	return slice
 }
 
-func (m *Matrix) String() string {
+func (m Matrix) String() string {
 	str := "[\n"
-	for i := 0; i < m.Rows; i++ {
+	for i := 0; i < m.Rows(); i++ {
 		str += fmt.Sprintf("  %v,\n", m.SliceRow(i))
 	}
 	str += "]"
 	return str
 }
 
-func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
+func (m Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
 	outH := (H+2*pad-fh)/stride + 1
 	outW := (W+2*pad-fw)/stride + 1
@@ -284,118 +279,89 @@ func (m *Matrix) Col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	return img.Slice(pad, H+pad, pad, W+pad)
 }
 
-func Zeros(rows int, cols int) *Matrix {
-	zeros := vec.Zeros(rows * cols)
-	return &Matrix{
-		Vector:  zeros,
-		Rows:    rows,
-		Columns: cols,
+func Zeros(rows int, cols int) Matrix {
+	mat := make([]vec.Vector, rows)
+	for i := 0; i < rows; i++ {
+		mat[i] = vec.Zeros(cols)
 	}
+	return mat
 }
 
-func ZerosLike(x *Matrix) *Matrix {
-	zeros := vec.Zeros(x.Rows * x.Columns)
-	return &Matrix{
-		Vector:  zeros,
-		Rows:    x.Rows,
-		Columns: x.Columns,
-	}
+func ZerosLike(x Matrix) Matrix {
+	return Zeros(x.Rows(), x.Columns())
 }
 
-func NewMatrix(row int, column int, vec vec.Vector) (*Matrix, error) {
-	if row == 0 || column == 0 {
-		return nil, errors.New("row/columns is zero")
+func NewRandnMatrix(rows, cols int) Matrix {
+	if rows == 0 || cols == 0 {
+		return nil
 	}
-	return &Matrix{
-		Vector:  vec,
-		Rows:    row,
-		Columns: column,
-	}, nil
+	vec := vec.Randn(rows * cols)
+	return NewMatrix(vec, rows, cols)
 }
 
-func NewRandnMatrix(row, column int) (*Matrix, error) {
-	if row == 0 || column == 0 {
-		return nil, errors.New("row/columns is zero")
-	}
-	vec := vec.Randn(row * column)
-	return &Matrix{
-		Vector:  vec,
-		Rows:    row,
-		Columns: column,
-	}, nil
-}
-
-func NotEqual(m1, m2 *Matrix) bool {
+func NotEqual(m1, m2 Matrix) bool {
 	return !Equal(m1, m2)
 }
 
-func Equal(m1, m2 *Matrix) bool {
-	if m1.Rows == m2.Rows &&
-		m1.Columns == m2.Columns &&
-		vec.Equal(m1.Vector, m2.Vector) {
+func Equal(m1, m2 Matrix) bool {
+	if m1.Rows() == m2.Rows() && m1.Columns() == m2.Columns() {
+		for i := 0; i < m1.Rows(); i++ {
+			if vec.NotEqual(m1[i], m2[i]) {
+				return false
+			}
+		}
 		return true
 	}
 	return false
 }
 
-func dotPart(i int, a, b, c *Matrix, ch chan int) {
-	ac := a.Columns
-	bc := b.Columns
+func dotPart(i int, a, b, c Matrix, ch chan int) {
+	ac := a.Columns()
+	bc := b.Columns()
 	for j := 0; j < bc; j++ {
 		part := 0.0
 		for k := 0; k < ac; k++ {
-			part += a.Element(i, k) * b.Element(k, j)
+			part += a[i][k] * b[k][j]
 		}
-		c.Assign(part, i, j)
+		c[i][j] = part
 	}
 	ch <- i
 }
 
-func Dot(m1, m2 *Matrix) *Matrix {
-	if m1.Columns != m2.Rows {
+func Dot(m1, m2 Matrix) Matrix {
+	if m1.Columns() != m2.Rows() {
 		return nil
 	}
-	// fmt.Println(m1.Rows * m2.Columns)
-	v3 := vec.Zeros(m1.Rows * m2.Columns)
-	m3 := &Matrix{
-		Vector:  v3,
-		Rows:    m1.Rows,
-		Columns: m2.Columns,
-	}
-
+	m3 := Zeros(m1.Rows(), m2.Columns())
 	ch := make(chan int)
-	for i := 0; i < m1.Rows; i++ {
+	for i := 0; i < m1.Rows(); i++ {
 		go dotPart(i, m1, m2, m3, ch)
 	}
-	for i := 0; i < m1.Rows; i++ {
+	for i := 0; i < m1.Rows(); i++ {
 		<-ch
 	}
 	return m3
 }
 
-func Dot2(m1, m2 *Matrix) *Matrix {
-	if m1.Columns != m2.Rows {
+func Dot2(m1, m2 Matrix) Matrix {
+	if m1.Columns() != m2.Rows() {
 		return nil
 	}
 	// fmt.Println(m1.Rows * m2.Columns)
-	mat := vec.Zeros(m1.Rows * m2.Columns)
-	for i := 0; i < m1.Columns; i++ {
-		for c := 0; c < m2.Columns; c++ {
-			for r := 0; r < m1.Rows; r++ {
+	mat := Zeros(m1.Rows(), m2.Columns())
+	for i := 0; i < m1.Columns(); i++ {
+		for c := 0; c < m2.Columns(); c++ {
+			for r := 0; r < m1.Rows(); r++ {
 				// mat[r*m2.Columns+c] += m1.Element(r, i) * m2.Element(i, c)
-				mat[r*m2.Columns+c] += m1.Vector[r*m1.Columns+i] * m2.Vector[i*m2.Columns+c]
+				mat[r][c] += m1[r][i] * m2[i][c]
 			}
 		}
 	}
-	return &Matrix{
-		Vector:  mat,
-		Rows:    m1.Rows,
-		Columns: m2.Columns,
-	}
+	return mat
 }
 
-func isTheSameShape(m1, m2 *Matrix) bool {
-	if m1.Columns == m2.Columns && m1.Rows == m2.Rows {
+func isTheSameShape(m1, m2 Matrix) bool {
+	if m1.Columns() == m2.Columns() && m1.Rows() == m2.Rows() {
 		return true
 	}
 	return false
@@ -410,154 +376,131 @@ const (
 	DIV
 )
 
-func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
+func matMat(a Arithmetic, m1, m2 Matrix) Matrix {
 	if !isTheSameShape(m1, m2) {
 		// 片方がベクトル(1行多列)だった場合
-		if m1.Rows == 1 || m2.Rows == 1 {
-			if m1.Columns != m2.Columns {
+		if m1.Rows() == 1 || m2.Rows() == 1 {
+			if m1.Columns() != m2.Columns() {
 				return nil
 			}
-			vector := vec.Zeros(m1.Rows * m1.Columns)
-			for r := 0; r < m1.Rows; r++ {
-				for c := 0; c < m2.Columns; c++ {
-					index := r*m1.Columns + c
+			vector := Zeros(m1.Rows(), m1.Columns())
+			for r := 0; r < m1.Rows(); r++ {
+				for c := 0; c < m2.Columns(); c++ {
 					switch a {
 					case ADD:
-						vector[index] = m1.Element(r, c) + m2.Element(0, c)
+						vector[r][c] = m1[r][c] + m2[0][c]
 					case SUB:
-						vector[index] = m1.Element(r, c) - m2.Element(0, c)
+						vector[r][c] = m1[r][c] - m2[0][c]
 					case MUL:
-						vector[index] = m1.Element(r, c) * m2.Element(0, c)
+						vector[r][c] = m1[r][c] * m2[0][c]
 					case DIV:
-						vector[index] = m1.Element(r, c) / m2.Element(0, c)
+						vector[r][c] = m1[r][c] / m2[0][c]
 					}
 				}
 			}
-			return &Matrix{
-				Vector:  vector,
-				Rows:    m1.Rows,
-				Columns: m1.Columns,
-			}
-
+			return vector
 		}
 	} else {
-		vector := vec.Zeros(m1.Rows * m1.Columns)
-		switch a {
-		case ADD:
-			vector = vec.Add(m1.Vector, m2.Vector)
-		case SUB:
-			vector = vec.Sub(m1.Vector, m2.Vector)
-		case MUL:
-			vector = vec.Mul(m1.Vector, m2.Vector)
-		case DIV:
-			vector = vec.Div(m1.Vector, m2.Vector)
+		vector := Zeros(m1.Rows(), m1.Columns())
+		for i, v := range m1 {
+			switch a {
+			case ADD:
+				vector[i] = vec.Add(v, m2[i])
+			case SUB:
+				vector[i] = vec.Sub(v, m2[i])
+			case MUL:
+				vector[i] = vec.Mul(v, m2[i])
+			case DIV:
+				vector[i] = vec.Div(v, m2[i])
+			}
 		}
-
-		return &Matrix{
-			Vector:  vector,
-			Rows:    m1.Rows,
-			Columns: m1.Columns,
-		}
+		return vector
 	}
 	return nil
 }
 
-func matVec(a Arithmetic, m1 *Matrix, m2 vec.Vector) *Matrix {
-	if m1.Columns != len(m2) {
+func matVec(a Arithmetic, m1 Matrix, m2 vec.Vector) Matrix {
+	if m1.Columns() != len(m2) {
 		return nil
 	}
-	vector := vec.Zeros(m1.Rows * m1.Columns)
-	for r := 0; r < m1.Rows; r++ {
+	vector := Zeros(m1.Rows(), m1.Columns())
+	for r := 0; r < m1.Rows(); r++ {
 		for c := 0; c < len(m2); c++ {
-			index := r*m1.Columns + c
 			switch a {
 			case ADD:
-				vector[index] = m1.Element(r, c) + m2[c]
+				vector[r][c] = m1[r][c] + m2[c]
 			case SUB:
-				vector[index] = m1.Element(r, c) - m2[c]
+				vector[r][c] = m1[r][c] - m2[c]
 			case MUL:
-				vector[index] = m1.Element(r, c) * m2[c]
+				vector[r][c] = m1[r][c] * m2[c]
 			case DIV:
-				vector[index] = m1.Element(r, c) / m2[c]
+				vector[r][c] = m1[r][c] / m2[c]
 			}
 		}
 	}
-	return &Matrix{
-		Vector:  vector,
-		Rows:    m1.Rows,
-		Columns: m1.Columns,
-	}
+	return vector
 }
 
-func matFloat(a Arithmetic, m1 *Matrix, m2 float64) *Matrix {
-	vector := vec.ZerosLike(m1.Vector)
-	switch a {
-	case ADD:
-		vector = vec.Add(m1.Vector, m2)
-	case SUB:
-		vector = vec.Sub(m1.Vector, m2)
-	case MUL:
-		vector = vec.Mul(m1.Vector, m2)
-	case DIV:
-		vector = vec.Div(m1.Vector, m2)
+func matFloat(a Arithmetic, m1 Matrix, m2 float64) Matrix {
+	vector := ZerosLike(m1)
+	for i, v := range m1 {
+		switch a {
+		case ADD:
+			vector[i] = vec.Add(v, m2)
+		case SUB:
+			vector[i] = vec.Sub(v, m2)
+		case MUL:
+			vector[i] = vec.Mul(v, m2)
+		case DIV:
+			vector[i] = vec.Div(v, m2)
+		}
 	}
-	return &Matrix{
-		Vector:  vector,
-		Rows:    m1.Rows,
-		Columns: m1.Columns,
-	}
+	return vector
 }
 
-func vecMat(a Arithmetic, m1 vec.Vector, m2 *Matrix) *Matrix {
-	if m2.Columns != len(m1) {
+func vecMat(a Arithmetic, m1 vec.Vector, m2 Matrix) Matrix {
+	if m2.Columns() != len(m1) {
 		return nil
 	}
-	vector := vec.Zeros(m2.Rows * m2.Columns)
-	for r := 0; r < m2.Rows; r++ {
+	vector := Zeros(m2.Rows(), m2.Columns())
+	for r := 0; r < m2.Rows(); r++ {
 		for c := 0; c < len(m1); c++ {
-			index := r*m2.Columns + c
 			switch a {
 			case ADD:
-				vector[index] = m1[c] + m2.Element(r, c)
+				vector[r][c] = m1[c] + m2[r][c]
 			case SUB:
-				vector[index] = m1[c] - m2.Element(r, c)
+				vector[r][c] = m1[c] - m2[r][c]
 			case MUL:
-				vector[index] = m1[c] * m2.Element(r, c)
+				vector[r][c] = m1[c] * m2[r][c]
 			case DIV:
-				vector[index] = m1[c] / m2.Element(r, c)
+				vector[r][c] = m1[c] / m2[r][c]
 			}
 		}
 	}
-	return &Matrix{
-		Vector:  vector,
-		Rows:    m2.Rows,
-		Columns: m2.Columns,
-	}
+	return vector
 }
 
-func floatMat(a Arithmetic, m1 float64, m2 *Matrix) *Matrix {
-	vector := vec.ZerosLike(m2.Vector)
-	switch a {
-	case ADD:
-		vector = vec.Add(m1, m2.Vector)
-	case SUB:
-		vector = vec.Sub(m1, m2.Vector)
-	case MUL:
-		vector = vec.Mul(m1, m2.Vector)
-	case DIV:
-		vector = vec.Div(m1, m2.Vector)
+func floatMat(a Arithmetic, m1 float64, m2 Matrix) Matrix {
+	vector := ZerosLike(m2)
+	for i, v := range m2 {
+		switch a {
+		case ADD:
+			vector[i] = vec.Add(m1, v)
+		case SUB:
+			vector[i] = vec.Sub(m1, v)
+		case MUL:
+			vector[i] = vec.Mul(m1, v)
+		case DIV:
+			vector[i] = vec.Div(m1, v)
+		}
 	}
-	return &Matrix{
-		Vector:  vector,
-		Rows:    m2.Rows,
-		Columns: m2.Columns,
-	}
+	return vector
 }
 
-func Add(x1, x2 interface{}) *Matrix {
-	if x1v, ok := x1.(*Matrix); ok {
+func Add(x1, x2 interface{}) Matrix {
+	if x1v, ok := x1.(Matrix); ok {
 		switch x2v := x2.(type) {
-		case *Matrix:
+		case Matrix:
 			return matMat(ADD, x1v, x2v)
 		case vec.Vector:
 			return matVec(ADD, x1v, x2v)
@@ -566,7 +509,7 @@ func Add(x1, x2 interface{}) *Matrix {
 		case int:
 			return matFloat(ADD, x1v, float64(x2v))
 		}
-	} else if x2v, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
 			return vecMat(ADD, x1v, x2v)
@@ -578,10 +521,10 @@ func Add(x1, x2 interface{}) *Matrix {
 	}
 	return nil
 }
-func Sub(x1, x2 interface{}) *Matrix {
-	if x1v, ok := x1.(*Matrix); ok {
+func Sub(x1, x2 interface{}) Matrix {
+	if x1v, ok := x1.(Matrix); ok {
 		switch x2v := x2.(type) {
-		case *Matrix:
+		case Matrix:
 			return matMat(SUB, x1v, x2v)
 		case vec.Vector:
 			return matVec(SUB, x1v, x2v)
@@ -590,7 +533,7 @@ func Sub(x1, x2 interface{}) *Matrix {
 		case int:
 			return matFloat(SUB, x1v, float64(x2v))
 		}
-	} else if x2v, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
 			return vecMat(SUB, x1v, x2v)
@@ -604,10 +547,10 @@ func Sub(x1, x2 interface{}) *Matrix {
 	return nil
 }
 
-func Mul(x1, x2 interface{}) *Matrix {
-	if x1v, ok := x1.(*Matrix); ok {
+func Mul(x1, x2 interface{}) Matrix {
+	if x1v, ok := x1.(Matrix); ok {
 		switch x2v := x2.(type) {
-		case *Matrix:
+		case Matrix:
 			return matMat(MUL, x1v, x2v)
 		case vec.Vector:
 			return matVec(MUL, x1v, x2v)
@@ -617,7 +560,7 @@ func Mul(x1, x2 interface{}) *Matrix {
 			return matFloat(MUL, x1v, float64(x2v))
 
 		}
-	} else if x2v, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
 			return vecMat(MUL, x1v, x2v)
@@ -630,10 +573,10 @@ func Mul(x1, x2 interface{}) *Matrix {
 	return nil
 }
 
-func Div(x1, x2 interface{}) *Matrix {
-	if x1v, ok := x1.(*Matrix); ok {
+func Div(x1, x2 interface{}) Matrix {
+	if x1v, ok := x1.(Matrix); ok {
 		switch x2v := x2.(type) {
-		case *Matrix:
+		case Matrix:
 			return matMat(DIV, x1v, x2v)
 		case vec.Vector:
 			return matVec(DIV, x1v, x2v)
@@ -642,7 +585,7 @@ func Div(x1, x2 interface{}) *Matrix {
 		case int:
 			return matFloat(DIV, x1v, float64(x2v))
 		}
-	} else if x2v, ok := x2.(*Matrix); ok {
+	} else if x2v, ok := x2.(Matrix); ok {
 		switch x1v := x1.(type) {
 		case vec.Vector:
 			return vecMat(DIV, x1v, x2v)
@@ -655,108 +598,100 @@ func Div(x1, x2 interface{}) *Matrix {
 	return nil
 }
 
-func Sigmoid(m *Matrix) *Matrix {
-	mat := vec.Sigmoid(m.Vector)
-	return &Matrix{
-		Vector:  mat,
-		Rows:    m.Rows,
-		Columns: m.Columns,
+func Sigmoid(m Matrix) Matrix {
+	mat := ZerosLike(m)
+	for i, v := range m {
+		mat[i] = vec.Sigmoid(v)
 	}
+	return mat
 }
 
-func Relu(m *Matrix) *Matrix {
-	mat := vec.Relu(m.Vector)
-	return &Matrix{
-		Vector:  mat,
-		Rows:    m.Rows,
-		Columns: m.Columns,
+func Relu(m Matrix) Matrix {
+	mat := ZerosLike(m)
+	for i, v := range m {
+		mat[i] = vec.Relu(v)
 	}
+	return mat
 }
 
-func Log(m *Matrix) *Matrix {
-	log := vec.Log(m.Vector)
-	return &Matrix{
-		Vector:  log,
-		Rows:    m.Rows,
-		Columns: m.Columns,
+func Log(m Matrix) Matrix {
+	mat := ZerosLike(m)
+	for i, v := range m {
+		mat[i] = vec.Log(v)
 	}
-}
-func MeanAll(m *Matrix) float64 {
-	return vec.Sum(m.Vector) / float64(len(m.Vector))
-}
-func SumAll(m *Matrix) float64 {
-	return vec.Sum(m.Vector)
+	return mat
 }
 
-func Mean(m *Matrix, axis int) *Matrix {
+func MeanAll(m Matrix) float64 {
+	return SumAll(m) / float64(len(m))
+}
+
+func SumAll(m Matrix) float64 {
+	sum := 0.0
+	for _, v := range m {
+		sum += vec.Sum(v)
+	}
+	return sum
+}
+
+func Mean(m Matrix, axis int) Matrix {
 	if axis == 0 {
-		v := vec.Zeros(m.Columns)
-		for i := 0; i < m.Columns; i++ {
+		v := vec.Zeros(m.Columns())
+		for i := 0; i < m.Columns(); i++ {
 			col := m.SliceColumn(i)
-			v[i] = vec.Sum(col) / float64(m.Rows)
+			v[i] = vec.Sum(col) / float64(m.Rows())
 		}
-		return &Matrix{
-			Vector:  v,
-			Rows:    1,
-			Columns: m.Columns,
-		}
+		return []vec.Vector{v}
 	} else if axis == 1 {
-		v := vec.Zeros(m.Rows)
-		for i := 0; i < m.Rows; i++ {
+		v := vec.Zeros(m.Rows())
+		for i := 0; i < m.Rows(); i++ {
 			row := m.SliceRow(i)
-			v[i] = vec.Sum(row) / float64(m.Columns)
+			v[i] = vec.Sum(row) / float64(m.Columns())
 		}
-		return &Matrix{
-			Vector:  v,
-			Rows:    1,
-			Columns: m.Rows,
-		}
+		return []vec.Vector{v}
 	}
 	return nil
 }
 
-func Sum(m *Matrix, axis int) *Matrix {
+func Sum(m Matrix, axis int) Matrix {
 	if axis == 0 {
-		v := vec.Zeros(m.Columns)
-		for i := 0; i < m.Columns; i++ {
+		v := vec.Zeros(m.Columns())
+		for i := 0; i < m.Columns(); i++ {
 			col := m.SliceColumn(i)
 			v[i] = vec.Sum(col)
 		}
-		return &Matrix{
-			Vector:  v,
-			Rows:    1,
-			Columns: m.Columns,
-		}
+		return []vec.Vector{v}
 	} else if axis == 1 {
-		v := vec.Zeros(m.Rows)
-		for i := 0; i < m.Rows; i++ {
+		v := vec.Zeros(m.Rows())
+		for i := 0; i < m.Rows(); i++ {
 			row := m.SliceRow(i)
 			v[i] = vec.Sum(row)
 		}
-		return &Matrix{
-			Vector:  v,
-			Rows:    1,
-			Columns: m.Rows,
-		}
+		return []vec.Vector{v}
 	}
 	return nil
 }
 
-func MaxAll(x *Matrix) float64 {
-	return vec.Max(x.Vector)
+func MaxAll(x Matrix) float64 {
+	max := math.SmallestNonzeroFloat64
+	for _, v := range x {
+		vecMax := vec.Max(v)
+		max = math.Max(max, vecMax)
+	}
+	return max
 }
 
-func Max(m *Matrix, axis int) vec.Vector {
+func Max(m Matrix, axis int) vec.Vector {
 	if axis == 0 {
-		v := vec.Zeros(m.Columns)
-		for i := 0; i < m.Columns; i++ {
+		v := vec.Zeros(m.Columns())
+		for i := 0; i < m.Columns(); i++ {
 			col := m.SliceColumn(i)
 			v[i] = vec.Max(col)
 		}
 		return v
 	} else if axis == 1 {
-		v := vec.Zeros(m.Rows)
-		for i := 0; i < m.Rows; i++ {
+		v := vec.Zeros(m.Rows())
+		for i := 0; i < m.Rows(); i++ {
 			row := m.SliceRow(i)
 			v[i] = vec.Max(row)
 		}
@@ -765,21 +700,30 @@ func Max(m *Matrix, axis int) vec.Vector {
 	return nil
 }
 
-func ArgMaxAll(x *Matrix) int {
-	return vec.ArgMax(x.Vector)
+func ArgMaxAll(x Matrix) int {
+	max := math.SmallestNonzeroFloat64
+	maxIndex := 0
+	for i, v := range x {
+		argMax := float64(vec.ArgMax(v))
+		if max != math.Max(max, argMax) {
+			maxIndex = i
+			max = math.Max(max, argMax)
+		}
+	}
+	return maxIndex
 }
 
-func ArgMax(m *Matrix, axis int) []int {
+func ArgMax(m Matrix, axis int) []int {
 	if axis == 0 {
-		v := make([]int, m.Columns)
-		for i := 0; i < m.Columns; i++ {
+		v := make([]int, m.Columns())
+		for i := 0; i < m.Columns(); i++ {
 			col := m.SliceColumn(i)
 			v[i] = vec.ArgMax(col)
 		}
 		return v
 	} else if axis == 1 {
-		v := make([]int, m.Rows)
-		for i := 0; i < m.Rows; i++ {
+		v := make([]int, m.Rows())
+		for i := 0; i < m.Rows(); i++ {
 			row := m.SliceRow(i)
 			v[i] = vec.ArgMax(row)
 		}
@@ -788,63 +732,62 @@ func ArgMax(m *Matrix, axis int) []int {
 	return nil
 }
 
-func Pow(x *Matrix, p float64) *Matrix {
-	sqrt := vec.Pow(x.Vector, p)
-	return &Matrix{
-		Vector:  sqrt,
-		Rows:    x.Rows,
-		Columns: x.Columns,
+func Pow(x Matrix, p float64) Matrix {
+	pow := ZerosLike(x)
+	for i, v := range x {
+		pow[i] = vec.Pow(v, p)
 	}
+	return pow
 }
 
-func Sqrt(x *Matrix) *Matrix {
-	sqrt := vec.Sqrt(x.Vector)
-	return &Matrix{
-		Vector:  sqrt,
-		Rows:    x.Rows,
-		Columns: x.Columns,
+func Sqrt(x Matrix) Matrix {
+	sqrt := ZerosLike(x)
+	for i, v := range x {
+		sqrt[i] = vec.Sqrt(v)
 	}
+	return sqrt
 }
 
-func Abs(x *Matrix) *Matrix {
-	abs := vec.Abs(x.Vector)
-	return &Matrix{
-		Vector:  abs,
-		Rows:    x.Rows,
-		Columns: x.Columns,
+func Abs(x Matrix) Matrix {
+	abs := ZerosLike(x)
+	for i, v := range x {
+		abs[i] = vec.Abs(v)
 	}
+	return abs
 }
 
-func Exp(x *Matrix) *Matrix {
-	exp := vec.Exp(x.Vector)
-	return &Matrix{
-		Vector:  exp,
-		Rows:    x.Rows,
-		Columns: x.Columns,
+func Exp(x Matrix) Matrix {
+	exp := ZerosLike(x)
+	for i, v := range x {
+		exp[i] = vec.Exp(v)
 	}
+	return exp
 }
 
-func Softmax(x *Matrix) *Matrix {
+func Softmax(x Matrix) Matrix {
 	xt := x.T()
 	sub := Sub(xt, Max(xt, 0))
 	expX := Exp(sub)
 	sumExpX := Sum(expX, 0)
-	softmax := Div(expX, sumExpX.Vector)
+	softmax := Div(expX, sumExpX)
 	return softmax.T()
 }
 
-func CrossEntropyError(y, t *Matrix) float64 {
-	r := vec.Zeros(y.Rows)
-	for i := 0; i < y.Rows; i++ {
+func CrossEntropyError(y, t Matrix) float64 {
+	r := vec.Zeros(y.Rows())
+	for i := 0; i < y.Rows(); i++ {
 		yRow := y.SliceRow(i)
 		tRow := t.SliceRow(i)
 		r[i] = vec.CrossEntropyError(yRow, tRow)
 	}
-	return vec.Sum(r) / float64(y.Rows)
+	return vec.Sum(r) / float64(y.Rows())
 }
 
-func NumericalGradient(f func(vec.Vector) float64, x *Matrix) *Matrix {
-	grad := vec.NumericalGradient(f, x.Vector)
-	mat := &Matrix{Rows: x.Rows, Columns: x.Columns, Vector: grad}
+func NumericalGradient(f func(vec.Vector) float64, x Matrix) Matrix {
+	mat := ZerosLike(x)
+	for i, v := range x {
+		mat[i] = vec.NumericalGradient(f, v)
+
+	}
 	return mat
 }

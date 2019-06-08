@@ -20,7 +20,7 @@ const (
 	LearningRate = 0.1
 )
 
-func MnistMatrix(set *mnist.DataSet) (*num.Matrix, *num.Matrix) {
+func MnistMatrix(set *mnist.DataSet) (num.Matrix, num.Matrix) {
 	size := len(set.Labels)
 	image := vec.Vector{}
 	label := vec.Vector{}
@@ -68,7 +68,7 @@ func train() {
 		tBatch, _ := num.NewMatrix(BatchSize, 10, label)
 		grads := net.NumericalGradient(xBatch, tBatch)
 
-		newParams := map[string]*num.Matrix{}
+		newParams := map[string]num.Matrix{}
 		keys := []string{"W1", "b1", "W2", "b2"}
 		for _, k := range keys {
 			mullr := num.Mul(grads[k], LearningRate)
