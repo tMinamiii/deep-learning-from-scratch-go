@@ -17,7 +17,7 @@ const (
 	ImageLength  = 784
 	ItersNum     = 100000
 	BatchSize    = 100
-	Hidden       = 50
+	Hidden       = 100
 	LearningRate = 0.0001
 	MNIST        = 10
 )

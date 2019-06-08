@@ -93,7 +93,7 @@ func (m *Matrix) Pad(pad int) *Matrix {
 		}
 	}
 	col := m.Columns
-	newVec := vec.Vector{}
+	newVec := make(vec.Vector, 0, m.Rows+2*pad)
 	rowPad := vec.Zeros(col + 2*pad)
 	for j := 0; j < pad; j++ {
 		newVec = append(newVec, rowPad...)
@@ -168,12 +168,11 @@ func (m *Matrix) ReshapeTo4D(a, b, c, d int) Tensor4D {
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
 			sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
-			ma := &Matrix{
+			t4d[i][j] = &Matrix{
 				Vector:  sv,
 				Rows:    c,
 				Columns: d,
 			}
-			t4d[i][j] = ma
 		}
 	}
 	return t4d
@@ -200,12 +199,11 @@ func (m *Matrix) ReshapeTo5D(a, b, c, d, e int) Tensor5D {
 		for j := 0; j < b; j++ {
 			for k := 0; k < c; k++ {
 				sv := m.Vector[((i*b+j)*c+k)*d*e : ((i*b+j)*c+k+1)*d*e]
-				ma := &Matrix{
+				t5d[i][j][k] = &Matrix{
 					Vector:  sv,
 					Rows:    c,
 					Columns: d,
 				}
-				t5d[i][j][k] = ma
 			}
 		}
 	}
@@ -219,12 +217,11 @@ func (m *Matrix) ReshapeTo6D(a, b, c, d, e, f int) Tensor6D {
 			for k := 0; k < c; k++ {
 				for l := 0; l < d; l++ {
 					sv := m.Vector[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
-					ma := &Matrix{
+					t6d[i][j][k][l] = &Matrix{
 						Vector:  sv,
 						Rows:    e,
 						Columns: f,
 					}
-					t6d[i][j][k][l] = ma
 				}
 			}
 		}
@@ -344,9 +341,11 @@ func dotPart(i int, a, b, c *Matrix, ch chan int) {
 	for j := 0; j < bc; j++ {
 		part := 0.0
 		for k := 0; k < ac; k++ {
-			part += a.Element(i, k) * b.Element(k, j)
+			part += a.Vector[i*a.Columns+k] * b.Vector[k*b.Columns+j]
+			//part += a.Element(i, k) * b.Element(k, j)
 		}
-		c.Assign(part, i, j)
+		c.Vector[i*c.Columns+j] = part
+		// c.Assign(part, i, j)
 	}
 	ch <- i
 }

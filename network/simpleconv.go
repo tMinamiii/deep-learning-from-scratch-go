@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/naronA/zero_deeplearning/layer"
 	"github.com/naronA/zero_deeplearning/num"
@@ -161,50 +162,83 @@ func (net *SimpleConvNet) UpdateParams(grads map[string]interface{}) {
 }
 
 func (net *SimpleConvNet) Accuracy(x num.Tensor4D, t *num.Matrix) float64 {
+	var sem = make(chan struct{}, 40)
 	accuracy := 0.0
-	size := 50
-	routine := 25
+	size := 5
 	count := 0
 	// fmt.Println(len(x))
 	ch := make(chan float64)
-	// start := time.Now()
+	start := time.Now()
 	for i := 0; i < len(x); i += size {
-		for j := 0; j < routine; j++ {
-			count++
-			miniSize := size / routine
-			miniX := x[i+j*miniSize : i+miniSize+j*miniSize]
-			v := make(vec.Vector, 0, t.Rows*miniSize)
-			for k := i + j*miniSize; k < i+miniSize+j*miniSize; k++ {
-				if k >= t.Rows {
-					break
-				}
-				v = append(v, t.SliceRow(k)...)
+		count++
+		train := x[i : i+size]
+		v := make(vec.Vector, 0, t.Rows*size)
+		for k := i; k < i+size; k++ {
+			if k >= t.Rows {
+				break
 			}
-			miniTest := &num.Matrix{
-				Vector:  v,
-				Rows:    miniSize,
-				Columns: t.Columns,
-			}
-			go func(train num.Tensor4D, test *num.Matrix, ch chan float64) {
-				y := net.Predict(train).(*num.Matrix)
-				yMax := num.ArgMax(y, 1)
-				tMax := num.ArgMax(test, 1)
-				sum := 0.0
-				r, _ := y.Shape()
-				for i, v := range yMax {
-					if v == tMax[i] {
-						sum += 1.0
-					}
-				}
-				ch <- sum / float64(r)
-			}(miniX, miniTest, ch)
+			v = append(v, t.SliceRow(k)...)
 		}
-		for j := 0; j < routine; j++ {
-			accuracy += <-ch
+		test := &num.Matrix{
+			Vector:  v,
+			Rows:    size,
+			Columns: t.Columns,
 		}
+		sem <- struct{}{}
+		go calcAcc(net, train, test, ch)
+		<-sem
+	}
+	for i := 0; i < len(x)/size; i++ {
+		accuracy += <-ch
 	}
 	close(ch)
-	// end := time.Now()
-	// fmt.Printf("elapstime = %v accuracy %f\n", end.Sub(start), accuracy/float64(count))
+	end := time.Now()
+	fmt.Printf("elapstime = %v accuracy %f\n", end.Sub(start), accuracy/float64(count))
 	return accuracy / float64(count)
 }
+
+func calcAcc(net *SimpleConvNet, train num.Tensor4D, test *num.Matrix, ch chan float64) {
+	// sem <- struct{}{}
+	y := net.Predict(train).(*num.Matrix)
+	yMax := num.ArgMax(y, 1)
+	tMax := num.ArgMax(test, 1)
+	sum := 0.0
+	r, _ := y.Shape()
+	for i, v := range yMax {
+		if v == tMax[i] {
+			sum += 1.0
+		}
+	}
+	ch <- sum / float64(r)
+	// <-sem
+}
+
+// func calcAcc(net *SimpleConvNet, x num.Tensor4D, t *num.Matrix, i, size int, ch chan float64) {
+// 	sem <- struct{}{}
+// 	train := x[i : i+size]
+// 	v := make(vec.Vector, 0, t.Rows*size)
+// 	for k := i; k < i+size; k++ {
+// 		if k >= t.Rows {
+// 			break
+// 		}
+// 		v = append(v, t.SliceRow(k)...)
+// 	}
+// 	test := &num.Matrix{
+// 		Vector:  v,
+// 		Rows:    size,
+// 		Columns: t.Columns,
+// 	}
+//
+// 	y := net.Predict(train).(*num.Matrix)
+// 	yMax := num.ArgMax(y, 1)
+// 	tMax := num.ArgMax(test, 1)
+// 	sum := 0.0
+// 	r, _ := y.Shape()
+// 	for i, v := range yMax {
+// 		if v == tMax[i] {
+// 			sum += 1.0
+// 		}
+// 	}
+// 	ch <- sum / float64(r)
+// 	<-sem
+// }
