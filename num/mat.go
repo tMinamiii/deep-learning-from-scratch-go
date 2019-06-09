@@ -7,6 +7,11 @@ import (
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
+type Tensor3D []*Matrix
+type Tensor4D []Tensor3D
+type Tensor5D []Tensor4D
+type Tensor6D []Tensor5D
+
 type Matrix struct {
 	Vector  vec.Vector
 	Rows    int
@@ -375,7 +380,7 @@ func Dot2(m1, m2 *Matrix) *Matrix {
 	}
 }
 
-func isTheSameShape(m1, m2 *Matrix) bool {
+func IsTheSameShape(m1, m2 *Matrix) bool {
 	if m1.Columns == m2.Columns && m1.Rows == m2.Rows {
 		return true
 	}
@@ -392,7 +397,7 @@ const (
 )
 
 func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
-	if !isTheSameShape(m1, m2) {
+	if !IsTheSameShape(m1, m2) {
 		// 片方がベクトル(1行多列)だった場合
 		if m1.Rows == 1 || m2.Rows == 1 {
 			if m1.Columns != m2.Columns {

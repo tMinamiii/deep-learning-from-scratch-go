@@ -6,8 +6,6 @@ import (
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-type Tensor4D []Tensor3D
-
 func (t Tensor4D) Size() int {
 	n, c, h, w := t.Shape()
 	return n * c * h * w

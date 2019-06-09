@@ -1,7 +1,5 @@
 package num
 
-type Tensor6D []Tensor5D
-
 func (t Tensor6D) Shape() (int, int, int, int, int, int) {
 	A := len(t)
 	B := len(t[0])
@@ -78,4 +76,13 @@ func (t Tensor6D) Slice(x, y int) Tensor4D {
 		t4d = append(t4d, t3d)
 	}
 	return t4d
+}
+
+func EqualT6D(t1, t2 Tensor6D) bool {
+	for i := range t1 {
+		if !EqualT5D(t1[i], t2[i]) {
+			return false
+		}
+	}
+	return true
 }

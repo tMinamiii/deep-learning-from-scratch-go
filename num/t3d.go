@@ -6,8 +6,6 @@ import (
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-type Tensor3D []*Matrix
-
 func (t Tensor3D) Flatten() vec.Vector {
 	v := make(vec.Vector, 0, len(t)*len(t[0].Vector))
 	for _, e := range t {
