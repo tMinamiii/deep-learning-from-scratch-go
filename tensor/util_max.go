@@ -1,32 +1,12 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-func maxMat(m *types.Matrix, axis int) vec.Vector {
-	if axis == 0 {
-		v := vec.Zeros(m.Columns)
-		for i := 0; i < m.Columns; i++ {
-			col := m.SliceColumn(i)
-			v[i] = vec.Max(col)
-		}
-		return v
-	} else if axis == 1 {
-		v := vec.Zeros(m.Rows)
-		for i := 0; i < m.Rows; i++ {
-			row := m.SliceRow(i)
-			v[i] = vec.Max(row)
-		}
-		return v
-	}
-	panic(m)
-}
-
 func Max(t *Tensor, axis int) *Tensor {
 	if len(t.Shape) == 2 {
-		vec := maxMat(t.Mat, axis)
+		vec := t.Mat.max(axis)
 		return &Tensor{
 			Vec:   vec,
 			Shape: []int{len(vec)},
@@ -35,18 +15,18 @@ func Max(t *Tensor, axis int) *Tensor {
 	panic(t)
 }
 
-func maxAllMat(m *types.Matrix) float64 {
+func maxAllMat(m *Matrix) float64 {
 	return vec.Max(m.Vector)
 }
 
-func maxAllT3D(m types.Tensor3D) float64 {
+func maxAllT3D(m Tensor3D) float64 {
 	max := 0.0
 	for _, mat := range m {
 		max += maxAllMat(mat)
 	}
 	return max
 }
-func maxAllT4D(m types.Tensor4D) float64 {
+func maxAllT4D(m Tensor4D) float64 {
 	max := 0.0
 	for _, t3d := range m {
 		max += maxAllT3D(t3d)

@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -63,7 +62,7 @@ func (t *Tensor) Im2Col(fw, fh, stride, pad int) *Tensor {
 	col := fw * fh
 	row := len(colVec) / col
 	return &Tensor{
-		Mat: &types.Matrix{
+		Mat: &Matrix{
 			Vector:  colVec,
 			Rows:    row,
 			Columns: col,

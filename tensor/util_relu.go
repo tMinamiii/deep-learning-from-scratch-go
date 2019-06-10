@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -30,25 +29,25 @@ func Relu(m *Tensor) *Tensor {
 	return nil
 }
 
-func reluMat(m *types.Matrix) *types.Matrix {
+func reluMat(m *Matrix) *Matrix {
 	mat := vec.Relu(m.Vector)
-	return &types.Matrix{
+	return &Matrix{
 		Vector:  mat,
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
 }
 
-func reluT3D(m types.Tensor3D) types.Tensor3D {
-	t3d := make([]*types.Matrix, len(m))
+func reluT3D(m Tensor3D) Tensor3D {
+	t3d := make([]*Matrix, len(m))
 	for i, mat := range t3d {
 		t3d[i] = reluMat(mat)
 	}
 	return t3d
 }
 
-func reluT4D(m types.Tensor4D) types.Tensor4D {
-	t4d := make([]types.Tensor3D, len(m))
+func reluT4D(m Tensor4D) Tensor4D {
+	t4d := make([]Tensor3D, len(m))
 	for i, t3d := range t4d {
 		t4d[i] = reluT3D(t3d)
 	}

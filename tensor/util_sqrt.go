@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -30,25 +29,25 @@ func Sqrt(m *Tensor) *Tensor {
 	return nil
 }
 
-func sqrtMat(m *types.Matrix) *types.Matrix {
+func sqrtMat(m *Matrix) *Matrix {
 	mat := vec.Sqrt(m.Vector)
-	return &types.Matrix{
+	return &Matrix{
 		Vector:  mat,
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
 }
 
-func sqrtT3D(m types.Tensor3D) types.Tensor3D {
-	t3d := make([]*types.Matrix, len(m))
+func sqrtT3D(m Tensor3D) Tensor3D {
+	t3d := make([]*Matrix, len(m))
 	for i, mat := range t3d {
 		t3d[i] = sqrtMat(mat)
 	}
 	return t3d
 }
 
-func sqrtT4D(m types.Tensor4D) types.Tensor4D {
-	t4d := make([]types.Tensor3D, len(m))
+func sqrtT4D(m Tensor4D) Tensor4D {
+	t4d := make([]Tensor3D, len(m))
 	for i, t3d := range t4d {
 		t4d[i] = sqrtT3D(t3d)
 	}

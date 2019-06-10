@@ -1,7 +1,5 @@
 package tensor
 
-import "github.com/naronA/zero_deeplearning/tensor/types"
-
 func (t *Tensor) Reshape(row, col int) *Tensor {
 	if len(t.Shape) == 2 {
 		m := t.Mat
@@ -13,7 +11,7 @@ func (t *Tensor) Reshape(row, col int) *Tensor {
 	panic(t)
 }
 
-func reshapeMat(m *types.Matrix, row, col int) *types.Matrix {
+func reshapeMat(m *Matrix, row, col int) *Matrix {
 	r, c := m.Shape()
 	size := r * c
 	if row == -1 {
@@ -25,7 +23,7 @@ func reshapeMat(m *types.Matrix, row, col int) *types.Matrix {
 		return nil
 	}
 
-	return &types.Matrix{
+	return &Matrix{
 		Vector:  m.Vector,
 		Rows:    row,
 		Columns: col,
@@ -48,11 +46,11 @@ func (t *Tensor) Reshape2DTo4D(a, b, c, d int) *Tensor {
 			d = size / a / b / c
 		}
 
-		t4d := types.ZerosT4D(a, b, c, d)
+		t4d := ZerosT4D(a, b, c, d)
 		for i := 0; i < a; i++ {
 			for j := 0; j < b; j++ {
 				sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
-				t4d[i][j] = &types.Matrix{
+				t4d[i][j] = &Matrix{
 					Vector:  sv,
 					Rows:    c,
 					Columns: d,
@@ -85,12 +83,12 @@ func (t *Tensor) Reshape2DTo5D(a, b, c, d, e int) *Tensor {
 		case e == -1:
 			e = size / a / b / c / d
 		}
-		t5d := types.ZerosT5D(a, b, c, d, e)
+		t5d := ZerosT5D(a, b, c, d, e)
 		for i := 0; i < a; i++ {
 			for j := 0; j < b; j++ {
 				for k := 0; k < c; k++ {
 					sv := m.Vector[((i*b+j)*c+k)*d*e : ((i*b+j)*c+k+1)*d*e]
-					t5d[i][j][k] = &types.Matrix{
+					t5d[i][j][k] = &Matrix{
 						Vector:  sv,
 						Rows:    c,
 						Columns: d,
@@ -110,13 +108,13 @@ func (t *Tensor) Reshape2DTo5D(a, b, c, d, e int) *Tensor {
 func (t *Tensor) Reshape2DTo6D(a, b, c, d, e, f int) *Tensor {
 	if len(t.Shape) == 2 {
 		m := t.Mat
-		t6d := types.ZerosT6D(a, b, c, d, e, f)
+		t6d := ZerosT6D(a, b, c, d, e, f)
 		for i := 0; i < a; i++ {
 			for j := 0; j < b; j++ {
 				for k := 0; k < c; k++ {
 					for l := 0; l < d; l++ {
 						sv := m.Vector[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
-						t6d[i][j][k][l] = &types.Matrix{
+						t6d[i][j][k][l] = &Matrix{
 							Vector:  sv,
 							Rows:    e,
 							Columns: f,
@@ -144,7 +142,7 @@ func (t *Tensor) Reshape4DTo2D(row, col int) *Tensor {
 		}
 		flat := t4d.Flatten()
 		return &Tensor{
-			Mat: &types.Matrix{
+			Mat: &Matrix{
 				Vector:  flat,
 				Rows:    row,
 				Columns: col,
@@ -167,7 +165,7 @@ func (t *Tensor) Reshape5DTo2D(row, col int) *Tensor {
 		}
 
 		return &Tensor{
-			Mat: &types.Matrix{
+			Mat: &Matrix{
 				Vector:  t5d.Flatten(),
 				Rows:    row,
 				Columns: col,

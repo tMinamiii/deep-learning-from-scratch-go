@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -35,9 +34,9 @@ func (t *Tensor) SliceMatColumn(c int) *Tensor {
 func (t *Tensor) Slice6DTo4D(x, y int) *Tensor {
 	if len(t.Shape) == 6 {
 		t6d := t.T6D
-		t4d := make(types.Tensor4D, 0, len(t6d))
+		t4d := make(Tensor4D, 0, len(t6d))
 		for _, ncolT5d := range t6d {
-			t3d := make(types.Tensor3D, 0, len(ncolT5d))
+			t3d := make(Tensor3D, 0, len(ncolT5d))
 			for _, ncolT4d := range ncolT5d {
 				ncolMat := ncolT4d[x][y]
 				t3d = append(t3d, ncolMat)
@@ -50,7 +49,7 @@ func (t *Tensor) Slice6DTo4D(x, y int) *Tensor {
 	panic(t)
 }
 
-func (t *Tensor) StrideSlice(y, yMax, x, xMax, stride int) *types.Tensor4DSlice {
+func (t *Tensor) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
 	indLen := 0
 	for _, imgT3D := range t.T4D {
 		for k := 0; k < len(imgT3D); k++ {
@@ -62,14 +61,14 @@ func (t *Tensor) StrideSlice(y, yMax, x, xMax, stride int) *types.Tensor4DSlice 
 		}
 	}
 
-	indices := make([]*types.Tensor4DIndex, 0, indLen)
+	indices := make([]*Tensor4DIndex, 0, indLen)
 	totalRows := (yMax - y) / stride
 	totalColumns := (xMax - x) / stride
 	for n, imgT3D := range t.T4D {
 		for c := range imgT3D {
 			for i := y; i < yMax; i += stride {
 				for j := x; j < xMax; j += stride {
-					index := &types.Tensor4DIndex{
+					index := &Tensor4DIndex{
 						N: n,
 						C: c,
 						H: i,
@@ -81,7 +80,7 @@ func (t *Tensor) StrideSlice(y, yMax, x, xMax, stride int) *types.Tensor4DSlice 
 		}
 	}
 	n, c, _, _ := t.T4D.Shape()
-	return &types.Tensor4DSlice{
+	return &Tensor4DSlice{
 		Actual:   t.T4D,
 		Indices:  indices,
 		NewShape: []int{n, c, totalRows, totalColumns},

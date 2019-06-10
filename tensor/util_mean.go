@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -21,15 +20,15 @@ func MeanAll(t *Tensor) float64 {
 	panic(1)
 }
 
-func meanAllMat(m *types.Matrix) float64 {
+func meanAllMat(m *Matrix) float64 {
 	return vec.Sum(m.Vector) / float64(len(m.Vector))
 }
 
-func meanAllT3D(m types.Tensor3D) float64 {
+func meanAllT3D(m Tensor3D) float64 {
 	return sumAllT3D(m) / float64(len(m))
 }
 
-func meanAllT4D(m types.Tensor4D) float64 {
+func meanAllT4D(m Tensor4D) float64 {
 	return sumAllT4D(m) / float64(len(m))
 }
 
@@ -44,14 +43,14 @@ func Mean(t *Tensor, axis int) *Tensor {
 	panic(t)
 }
 
-func meanMat(m *types.Matrix, axis int) *types.Matrix {
+func meanMat(m *Matrix, axis int) *Matrix {
 	if axis == 0 {
 		v := vec.Zeros(m.Columns)
 		for i := 0; i < m.Columns; i++ {
 			col := m.SliceColumn(i)
 			v[i] = vec.Sum(col) / float64(m.Rows)
 		}
-		return &types.Matrix{
+		return &Matrix{
 			Vector:  v,
 			Rows:    1,
 			Columns: m.Columns,
@@ -62,7 +61,7 @@ func meanMat(m *types.Matrix, axis int) *types.Matrix {
 			row := m.SliceRow(i)
 			v[i] = vec.Sum(row) / float64(m.Columns)
 		}
-		return &types.Matrix{
+		return &Matrix{
 			Vector:  v,
 			Rows:    1,
 			Columns: m.Rows,

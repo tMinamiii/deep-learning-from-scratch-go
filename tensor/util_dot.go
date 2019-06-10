@@ -1,11 +1,10 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
-func dotMatPart(i int, a, b, c *types.Matrix, ch chan int) {
+func dotMatPart(i int, a, b, c *Matrix, ch chan int) {
 	ac := a.Columns
 	bc := b.Columns
 	for j := 0; j < bc; j++ {
@@ -18,12 +17,12 @@ func dotMatPart(i int, a, b, c *types.Matrix, ch chan int) {
 	ch <- i
 }
 
-func dotMat(m1, m2 *types.Matrix) *types.Matrix {
+func dotMat(m1, m2 *Matrix) *Matrix {
 	if m1.Columns != m2.Rows {
 		return nil
 	}
 	v3 := vec.Zeros(m1.Rows * m2.Columns)
-	m3 := &types.Matrix{
+	m3 := &Matrix{
 		Vector:  v3,
 		Rows:    m1.Rows,
 		Columns: m2.Columns,
@@ -61,7 +60,7 @@ func IsTheSameShape(t1, t2 *Tensor) bool {
 	return false
 }
 
-func isTheSameShapeMat(m1, m2 *types.Matrix) bool {
+func isTheSameShapeMat(m1, m2 *Matrix) bool {
 	if m1.Columns == m2.Columns && m1.Rows == m2.Rows {
 		return true
 	}

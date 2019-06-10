@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -30,22 +29,22 @@ func NumericalGradient(f func(vec.Vector) float64, x *Tensor) *Tensor {
 	panic(x)
 }
 
-func NumericalGradientMat(f func(vec.Vector) float64, x *types.Matrix) *types.Matrix {
+func NumericalGradientMat(f func(vec.Vector) float64, x *Matrix) *Matrix {
 	grad := vec.NumericalGradient(f, x.Vector)
-	mat := &types.Matrix{Rows: x.Rows, Columns: x.Columns, Vector: grad}
+	mat := &Matrix{Rows: x.Rows, Columns: x.Columns, Vector: grad}
 	return mat
 }
 
-func NumericalGradientT3D(f func(vec.Vector) float64, x types.Tensor3D) types.Tensor3D {
-	result := make(types.Tensor3D, len(x))
+func NumericalGradientT3D(f func(vec.Vector) float64, x Tensor3D) Tensor3D {
+	result := make(Tensor3D, len(x))
 	for i, v := range x {
 		result[i] = NumericalGradientMat(f, v)
 	}
 	return result
 }
 
-func NumericalGradientT4D(f func(vec.Vector) float64, x types.Tensor4D) types.Tensor4D {
-	result := make(types.Tensor4D, len(x))
+func NumericalGradientT4D(f func(vec.Vector) float64, x Tensor4D) Tensor4D {
+	result := make(Tensor4D, len(x))
 	for i, v := range x {
 		result[i] = NumericalGradientT3D(f, v)
 	}

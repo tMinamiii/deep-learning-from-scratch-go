@@ -1,7 +1,6 @@
 package tensor
 
 import (
-	"github.com/naronA/zero_deeplearning/tensor/types"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -30,25 +29,25 @@ func Pow(m *Tensor, p float64) *Tensor {
 	return nil
 }
 
-func powMat(m *types.Matrix, p float64) *types.Matrix {
+func powMat(m *Matrix, p float64) *Matrix {
 	mat := vec.Pow(m.Vector, p)
-	return &types.Matrix{
+	return &Matrix{
 		Vector:  mat,
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
 }
 
-func powT3D(m types.Tensor3D, p float64) types.Tensor3D {
-	t3d := make([]*types.Matrix, len(m))
+func powT3D(m Tensor3D, p float64) Tensor3D {
+	t3d := make([]*Matrix, len(m))
 	for i, mat := range t3d {
 		t3d[i] = powMat(mat, p)
 	}
 	return t3d
 }
 
-func powT4D(m types.Tensor4D, p float64) types.Tensor4D {
-	t4d := make([]types.Tensor3D, len(m))
+func powT4D(m Tensor4D, p float64) Tensor4D {
+	t4d := make([]Tensor3D, len(m))
 	for i, t3d := range t4d {
 		t4d[i] = powT3D(t3d, p)
 	}
