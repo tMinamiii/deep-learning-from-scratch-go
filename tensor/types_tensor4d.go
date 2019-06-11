@@ -227,3 +227,38 @@ func vecT4D(a Arithmetic, x1 vec.Vector, x2 Tensor4D) Tensor4D {
 func floatT4D(a Arithmetic, x1 float64, x2 Tensor4D) Tensor4D {
 	return t4DFloat(a, x2, x1)
 }
+func (t Tensor4D) exp() Tensor4D {
+	t4d := make([]Tensor3D, len(t))
+	for i, t3d := range t4d {
+		t4d[i] = t3d.exp()
+	}
+	return t4d
+}
+
+func (t Tensor4D) log() Tensor4D {
+	t4d := make([]Tensor3D, len(t))
+	for i, t3d := range t4d {
+		t4d[i] = t3d.log()
+	}
+	return t4d
+}
+
+func (t Tensor4D) maxAll() float64 {
+	max := 0.0
+	for _, t3d := range t {
+		max += t3d.maxAll()
+	}
+	return max
+}
+
+func (t Tensor4D) meanAll() float64 {
+	return sumAllT4D(t) / float64(len(t))
+}
+
+func (t Tensor4D) pow(p float64) Tensor4D {
+	t4d := make([]Tensor3D, len(t))
+	for i, t3d := range t4d {
+		t4d[i] = t3d.pow(p)
+	}
+	return t4d
+}

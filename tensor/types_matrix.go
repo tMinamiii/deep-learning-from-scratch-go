@@ -443,3 +443,65 @@ func floatMat(a Arithmetic, m1 float64, m2 *Matrix) *Matrix {
 		Columns: m2.Columns,
 	}
 }
+
+func (m *Matrix) exp() *Matrix {
+	mat := vec.Exp(m.Vector)
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func (m *Matrix) log() *Matrix {
+	mat := vec.Log(m.Vector)
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func (m *Matrix) maxAll() float64 {
+	return vec.Max(m.Vector)
+}
+
+func (m *Matrix) meanAll() float64 {
+	return vec.Sum(m.Vector) / float64(len(m.Vector))
+}
+
+func (m *Matrix) mean(axis int) *Matrix {
+	if axis == 0 {
+		v := vec.Zeros(m.Columns)
+		for i := 0; i < m.Columns; i++ {
+			col := m.SliceColumn(i)
+			v[i] = vec.Sum(col) / float64(m.Rows)
+		}
+		return &Matrix{
+			Vector:  v,
+			Rows:    1,
+			Columns: m.Columns,
+		}
+	} else if axis == 1 {
+		v := vec.Zeros(m.Rows)
+		for i := 0; i < m.Rows; i++ {
+			row := m.SliceRow(i)
+			v[i] = vec.Sum(row) / float64(m.Columns)
+		}
+		return &Matrix{
+			Vector:  v,
+			Rows:    1,
+			Columns: m.Rows,
+		}
+	}
+	panic(m)
+}
+
+func (m *Matrix) pow(p float64) *Matrix {
+	mat := vec.Pow(m.Vector, p)
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}

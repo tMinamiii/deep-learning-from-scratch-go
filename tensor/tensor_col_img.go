@@ -51,8 +51,8 @@ func (t *Tensor) Im2Col(fw, fh, stride, pad int) *Tensor {
 		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
 			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
 				for _, ma := range t3d {
-					padE := ma.Pad(pad)
-					nV = append(nV, padE.Window(x, y, fw, fh).Vector...)
+					padE := ma.pad(pad)
+					nV = append(nV, padE.window(x, y, fw, fh).Vector...)
 				}
 			}
 		}

@@ -178,3 +178,39 @@ func vecT3D(a Arithmetic, x1 vec.Vector, x2 Tensor3D) Tensor3D {
 func floatT3D(a Arithmetic, x1 float64, x2 Tensor3D) Tensor3D {
 	return t3DFloat(a, x2, x1)
 }
+
+func (t Tensor3D) exp() Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.exp()
+	}
+	return t3d
+}
+
+func (t Tensor3D) log() Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.log()
+	}
+	return t3d
+}
+
+func (t Tensor3D) maxAll() float64 {
+	max := 0.0
+	for _, mat := range t {
+		max += mat.maxAll()
+	}
+	return max
+}
+
+func (t Tensor3D) meanAll() float64 {
+	return sumAllT3D(t) / float64(len(t))
+}
+
+func (t Tensor3D) pow(p float64) Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.pow(p)
+	}
+	return t3d
+}

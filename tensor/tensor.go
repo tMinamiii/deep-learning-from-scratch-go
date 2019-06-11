@@ -406,3 +406,79 @@ func (t *Tensor) Equal(x *Tensor) bool {
 	}
 	return false
 }
+
+func (t *Tensor) Exp() *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.exp(), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.exp(), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.exp(), Shape: t.Shape}
+	}
+	return nil
+}
+
+func (t *Tensor) Log() *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.log(), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.log(), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.log(), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Max(axis int) *Tensor {
+	if len(t.Shape) == 2 {
+		vec := t.Mat.max(axis)
+		return &Tensor{Vec: vec, Shape: []int{len(vec)}}
+	}
+	panic(t)
+}
+
+func (t *Tensor) MaxAll() float64 {
+	switch len(t.Shape) {
+	case 2:
+		return t.Mat.maxAll()
+	case 3:
+		return t.T3D.maxAll()
+	case 4:
+		return t.T4D.maxAll()
+	}
+	panic(t)
+}
+
+func (t *Tensor) MeanAll() float64 {
+	switch len(t.Shape) {
+	case 2:
+		return t.Mat.meanAll()
+	case 3:
+		return t.T3D.meanAll()
+	case 4:
+		return t.T4D.meanAll()
+	}
+	panic(t)
+}
+
+func (t *Tensor) Mean(axis int) *Tensor {
+	if len(t.Shape) == 2 {
+		return &Tensor{Mat: t.Mat.mean(axis), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Pow(p float64) *Tensor {
+	if len(t.Shape) == 2 {
+		return &Tensor{Mat: t.Mat.pow(p), Shape: t.Shape}
+	}
+	if len(t.Shape) == 3 {
+		return &Tensor{T3D: t.T3D.pow(p), Shape: t.Shape}
+	}
+	if len(t.Shape) == 4 {
+		return &Tensor{T4D: t.T4D.pow(p), Shape: t.Shape}
+	}
+	return nil
+}
