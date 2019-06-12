@@ -471,14 +471,114 @@ func (t *Tensor) Mean(axis int) *Tensor {
 }
 
 func (t *Tensor) Pow(p float64) *Tensor {
-	if len(t.Shape) == 2 {
+	switch len(t.Shape) {
+	case 2:
 		return &Tensor{Mat: t.Mat.pow(p), Shape: t.Shape}
-	}
-	if len(t.Shape) == 3 {
+	case 3:
 		return &Tensor{T3D: t.T3D.pow(p), Shape: t.Shape}
-	}
-	if len(t.Shape) == 4 {
+	case 4:
 		return &Tensor{T4D: t.T4D.pow(p), Shape: t.Shape}
 	}
-	return nil
+	panic(t)
+}
+
+func (t *Tensor) SumAll() float64 {
+	switch len(t.Shape) {
+	case 2:
+		return t.Mat.sumAll()
+	case 3:
+		return t.T3D.sumAll()
+	case 4:
+		return t.T4D.sumAll()
+	}
+	panic(t)
+}
+
+func Sum(t *Tensor, axis int) *Tensor {
+	if len(t.Shape) == 2 {
+		return &Tensor{Mat: t.Mat.sum(axis), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Sqrt() *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.sqrt(), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.sqrt(), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.sqrt(), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Softmax() *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.softmax(), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.softmax(), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.softmax(), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Sigmoid() *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.sigmoid(), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.sigmoid(), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.sigmoid(), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Relu() *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.relu(), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.relu(), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.relu(), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) numericalGradient(f func(vec.Vector) float64) *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		return &Tensor{Mat: t.Mat.numericalGradient(f), Shape: t.Shape}
+	case 3:
+		return &Tensor{T3D: t.T3D.numericalGradient(f), Shape: t.Shape}
+	case 4:
+		return &Tensor{T4D: t.T4D.numericalGradient(f), Shape: t.Shape}
+	}
+	panic(t)
+}
+
+func (t *Tensor) IsTheSameShape(x *Tensor) bool {
+	if len(t.Shape) == 2 && len(x.Shape) == 2 {
+		m1 := t.Mat
+		m2 := x.Mat
+		return m1.isTheSameShapeMat(m2)
+	}
+	return false
+}
+
+func Dot(t1, t2 *Tensor) *Tensor {
+	if len(t1.Shape) == 2 && len(t2.Shape) == 2 {
+		m1 := t1.Mat
+		m2 := t2.Mat
+		m3 := dotMat(m1, m2)
+		return &Tensor{
+			Mat:   m3,
+			Shape: []int{m3.Rows, m3.Columns},
+		}
+	}
+	panic([]*Tensor{t1, t2})
 }

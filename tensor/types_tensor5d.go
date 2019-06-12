@@ -63,8 +63,8 @@ func ZerosLikeT5D(x Tensor5D) Tensor5D {
 
 func (t Tensor5D) window(x, y, h, w int) Tensor5D {
 	newT5D := make(Tensor5D, len(t))
-	for i, mat := range t {
-		newT5D[i] = windowT4D(mat, x, y, h, w)
+	for i, t4d := range t {
+		newT5D[i] = t4d.window(x, y, h, w)
 	}
 	return newT5D
 }

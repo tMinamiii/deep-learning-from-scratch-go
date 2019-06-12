@@ -12,8 +12,8 @@ type Matrix struct {
 	Columns int
 }
 
-func (m *Matrix) T() *Matrix {
-	return m.transposeMat(1, 0)
+func (m *Matrix) t() *Matrix {
+	return m.transpose(1, 0)
 }
 
 func (m *Matrix) Shape() (int, int) {
@@ -141,15 +141,6 @@ func zerosMat(shape []int) *Matrix {
 		Rows:    rows,
 		Columns: cols,
 	}
-}
-
-func softmaxMat(x *Matrix) *Matrix {
-	xt := x.T()
-	sub := matVec(SUB, xt, xt.max(0))
-	expX := Exp(sub)
-	sumExpX := Sum(expX, 0)
-	softmax := matVec(DIV, expX, sumExpX.Vector)
-	return softmax.T()
 }
 
 func (m *Matrix) pad(pad int) *Matrix {
@@ -504,4 +495,91 @@ func (m *Matrix) pow(p float64) *Matrix {
 		Rows:    m.Rows,
 		Columns: m.Columns,
 	}
+}
+
+func (m *Matrix) sumAll() float64 {
+	return vec.Sum(m.Vector)
+}
+
+func (m *Matrix) sqrt() *Matrix {
+	mat := vec.Sqrt(m.Vector)
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func (m *Matrix) softmax() *Matrix {
+	xt := m.t()
+	sub := matVec(SUB, xt, xt.max(0))
+	expX := sub.exp()
+	sumExpX := expX.sum(0)
+	softmax := matVec(DIV, expX, sumExpX.Vector)
+	return softmax.t()
+}
+
+func (m *Matrix) sigmoid() *Matrix {
+	mat := vec.Sigmoid(m.Vector)
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func (m *Matrix) relu() *Matrix {
+	mat := vec.Relu(m.Vector)
+	return &Matrix{
+		Vector:  mat,
+		Rows:    m.Rows,
+		Columns: m.Columns,
+	}
+}
+
+func (m *Matrix) numericalGradient(f func(vec.Vector) float64) *Matrix {
+	grad := vec.NumericalGradient(f, m.Vector)
+	mat := &Matrix{Rows: m.Rows, Columns: m.Columns, Vector: grad}
+	return mat
+}
+
+func (m *Matrix) isTheSameShapeMat(x *Matrix) bool {
+	if m.Columns == x.Columns && m.Rows == x.Rows {
+		return true
+	}
+	return false
+}
+
+func dotMatPart(i int, a, b, c *Matrix, ch chan int) {
+	ac := a.Columns
+	bc := b.Columns
+	for j := 0; j < bc; j++ {
+		part := 0.0
+		for k := 0; k < ac; k++ {
+			part += a.Vector[i*a.Columns+k] * b.Vector[k*b.Columns+j]
+		}
+		c.Vector[i*c.Columns+j] = part
+	}
+	ch <- i
+}
+
+func dotMat(m1, m2 *Matrix) *Matrix {
+	if m1.Columns != m2.Rows {
+		return nil
+	}
+	v3 := vec.Zeros(m1.Rows * m2.Columns)
+	m3 := &Matrix{
+		Vector:  v3,
+		Rows:    m1.Rows,
+		Columns: m2.Columns,
+	}
+
+	ch := make(chan int)
+	for i := 0; i < m1.Rows; i++ {
+		go dotMatPart(i, m1, m2, m3, ch)
+	}
+	for i := 0; i < m1.Rows; i++ {
+		<-ch
+	}
+	return m3
 }

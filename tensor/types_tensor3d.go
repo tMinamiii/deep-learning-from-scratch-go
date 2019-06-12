@@ -204,7 +204,7 @@ func (t Tensor3D) maxAll() float64 {
 }
 
 func (t Tensor3D) meanAll() float64 {
-	return sumAllT3D(t) / float64(len(t))
+	return t.sumAll() / float64(len(t))
 }
 
 func (t Tensor3D) pow(p float64) Tensor3D {
@@ -213,4 +213,50 @@ func (t Tensor3D) pow(p float64) Tensor3D {
 		t3d[i] = mat.pow(p)
 	}
 	return t3d
+}
+func (t Tensor3D) sumAll() float64 {
+	sum := 0.0
+	for _, mat := range t {
+		sum += mat.sumAll()
+	}
+	return sum
+}
+
+func (t Tensor3D) sqrt() Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.sqrt()
+	}
+	return t3d
+}
+func (t Tensor3D) softmax() Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.softmax()
+	}
+	return t3d
+}
+
+func (t Tensor3D) sigmoid() Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.sigmoid()
+	}
+	return t3d
+}
+
+func (t Tensor3D) relu() Tensor3D {
+	t3d := make([]*Matrix, len(t))
+	for i, mat := range t3d {
+		t3d[i] = mat.relu()
+	}
+	return t3d
+}
+
+func (t Tensor3D) numericalGradient(f func(vec.Vector) float64) Tensor3D {
+	result := make(Tensor3D, len(t))
+	for i, v := range t {
+		result[i] = v.numericalGradient(f)
+	}
+	return result
 }
