@@ -13,12 +13,12 @@ func (t Tensor5D) Shape() (int, int, int, int, int) {
 
 }
 
-func (t Tensor5D) Element(b, n, c, h, w int) float64 {
-	return t[b].Element(n, c, h, w)
+func (t Tensor5D) element(b, n, c, h, w int) float64 {
+	return t[b].element(n, c, h, w)
 }
 
-func (t Tensor5D) Assign(value float64, b, n, c, h, w int) {
-	t[b].Assign(value, n, c, h, w)
+func (t Tensor5D) assign(value float64, b, n, c, h, w int) {
+	t[b].assign(value, n, c, h, w)
 }
 
 func (t Tensor5D) flatten() vec.Vector {
@@ -29,18 +29,18 @@ func (t Tensor5D) flatten() vec.Vector {
 	return v
 }
 
-func ZerosT5D(a, b, c, h, w int) Tensor5D {
+func zerosT5D(a, b, c, h, w int) Tensor5D {
 	t5d := make(Tensor5D, a)
 	for i := range t5d {
-		t5d[i] = ZerosT4D(b, c, h, w)
+		t5d[i] = zerosT4D(b, c, h, w)
 	}
 	return t5d
 }
 
-func ZerosLikeT5D(x Tensor5D) Tensor5D {
+func zerosLikeT5D(x Tensor5D) Tensor5D {
 	t5d := make(Tensor5D, len(x))
 	for i, v := range x {
-		t5d[i] = ZerosLikeT4D(v)
+		t5d[i] = zerosLikeT4D(v)
 	}
 	return t5d
 }
@@ -56,7 +56,7 @@ func (t Tensor5D) window(x, y, h, w int) Tensor5D {
 func (t Tensor5D) transpose(a, b, c, d, e int) Tensor5D {
 	u, v, w, x, y := t.Shape()
 	shape := []int{u, v, w, x, y}
-	t5d := zerosT5D([]int{shape[a], shape[b], shape[c], shape[d], shape[e]})
+	t5d := zerosT5D(shape[a], shape[b], shape[c], shape[d], shape[e])
 	for i, et4d := range t {
 		for j, et3d := range et4d {
 			for k, emat := range et3d {
@@ -71,32 +71,14 @@ func (t Tensor5D) transpose(a, b, c, d, e int) Tensor5D {
 						idx[4] = oldIdx[e]
 						// fmt.Println(i, j, k, l)
 						// fmt.Println(" ", idx[0], idx[1], idx[2], idx[3])
-						v := t.element([]int{i, j, k, l, n})
-						t5d.assign(v, []int{idx[0], idx[1], idx[2], idx[3], idx[4]})
+						v := t.element(i, j, k, l, n)
+						t5d.assign(v, idx[0], idx[1], idx[2], idx[3], idx[4])
 					}
 				}
 			}
 		}
 	}
 	return t5d
-}
-
-func (t Tensor5D) element(point []int) float64 {
-	a := point[0]
-	return t[a].element(point[1:])
-}
-
-func (t Tensor5D) assign(value float64, point []int) {
-	a := point[0]
-	t[a].assign(value, point[1:])
-}
-
-func zerosT5D(shape []int) (t5d Tensor5D) {
-	t5d = make(Tensor5D, shape[0])
-	for i := range t5d {
-		t5d[i] = zerosT4D(shape[1:])
-	}
-	return
 }
 
 func (t Tensor5D) pad(size int) Tensor5D {

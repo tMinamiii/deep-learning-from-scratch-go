@@ -24,15 +24,15 @@ func (m *Matrix) Shape() (int, int) {
 }
 
 // Matrixなのでndimは常に2
-func (m *Matrix) Ndim() int {
+func (m *Matrix) ndim() int {
 	return 2
 }
 
-func (m *Matrix) Element(r int, c int) float64 {
+func (m *Matrix) element(r int, c int) float64 {
 	return m.Vector[r*m.Columns+c]
 }
 
-func (m *Matrix) Assign(value float64, r, c int) {
+func (m *Matrix) assign(value float64, r, c int) {
 	m.Vector[r*m.Columns+c] = value
 }
 
@@ -46,27 +46,14 @@ func (m *Matrix) String() string {
 }
 
 func zerosLikeMat(m *Matrix) *Matrix {
-	return zerosMat([]int{m.Rows, m.Columns})
-}
-
-func (m *Matrix) SliceRow(r int) vec.Vector {
-	slice := m.Vector[r*m.Columns : (r+1)*m.Columns]
-	return slice
-}
-
-func (m *Matrix) SliceColumn(c int) vec.Vector {
-	slice := vec.Zeros(m.Rows)
-	for i := 0; i < m.Rows; i++ {
-		slice[i] = m.Element(i, c)
-	}
-	return slice
+	return zerosMat(m.Rows, m.Columns)
 }
 
 func (m *Matrix) window(x, y, h, w int) *Matrix {
-	mat := zerosMat([]int{h, w})
+	mat := zerosMat(h, w)
 	for i := x; i < x+h; i++ {
 		for j := y; j < y+w; j++ {
-			mat.Vector[(i-x)*w+(j-y)] = m.Element(i, j)
+			mat.Vector[(i-x)*w+(j-y)] = m.element(i, j)
 		}
 	}
 	return mat
@@ -76,7 +63,7 @@ func (m *Matrix) transpose(a, b int) *Matrix {
 	trans := make(vec.Vector, m.Rows*m.Columns)
 	if a == 0 && b == 1 {
 		for i := 0; i < m.Rows; i++ {
-			col := m.SliceRow(i)
+			col := m.sliceRow(i)
 			for j := 0; j < len(col); j++ {
 				trans[i*len(col)+j] = col[j]
 			}
@@ -89,7 +76,7 @@ func (m *Matrix) transpose(a, b int) *Matrix {
 
 	}
 	for i := 0; i < m.Columns; i++ {
-		col := m.SliceColumn(i)
+		col := m.sliceColumn(i)
 		// trans = append(trans, col...)
 		for j := 0; j < len(col); j++ {
 			trans[i*len(col)+j] = col[j]
@@ -102,30 +89,28 @@ func (m *Matrix) transpose(a, b int) *Matrix {
 	}
 }
 
-func (m *Matrix) element(point []int) float64 {
-	r := point[0]
-	c := point[1]
-	return m.Vector[r*m.Columns+c]
-}
-
-func (m *Matrix) assign(value float64, point []int) {
-	a := point[0]
-	b := point[1]
-	m.Vector[a*m.Columns+b] = value
-}
+// func (m *Matrix) element(point []int) float64 {
+// 	r := point[0]
+// 	c := point[1]
+// 	return m.Vector[r*m.Columns+c]
+// }
+//
+// func (m *Matrix) assign(value float64, point []int) {
+// 	a := point[0]
+// 	b := point[1]
+// 	m.Vector[a*m.Columns+b] = value
+// }
 
 func (m *Matrix) assignWindow(window *Matrix, x, y, h, w int) {
 	for i := 0; i < h; i++ {
 		for j := 0; j < w; j++ {
-			val := window.Element(i, j)
-			m.assign(val, []int{i + x, j + y})
+			val := window.element(i, j)
+			m.assign(val, i+x, j+y)
 		}
 	}
 }
 
-func zerosMat(shape []int) *Matrix {
-	rows := shape[0]
-	cols := shape[1]
+func zerosMat(rows, cols int) *Matrix {
 	zeros := vec.Zeros(rows * cols)
 	return &Matrix{
 		Vector:  zeros,
@@ -149,7 +134,7 @@ func (m *Matrix) pad(pad int) *Matrix {
 		newVec = append(newVec, rowPad...)
 	}
 	for j := 0; j < m.Rows; j++ {
-		srow := m.SliceRow(j)
+		srow := m.sliceRow(j)
 		for k := 0; k < pad; k++ {
 			newVec = append(newVec, 0)
 		}
@@ -172,14 +157,14 @@ func (m *Matrix) max(axis int) vec.Vector {
 	if axis == 0 {
 		v := vec.Zeros(m.Columns)
 		for i := 0; i < m.Columns; i++ {
-			col := m.SliceColumn(i)
+			col := m.sliceColumn(i)
 			v[i] = vec.Max(col)
 		}
 		return v
 	} else if axis == 1 {
 		v := vec.Zeros(m.Rows)
 		for i := 0; i < m.Rows; i++ {
-			row := m.SliceRow(i)
+			row := m.sliceRow(i)
 			v[i] = vec.Max(row)
 		}
 		return v
@@ -191,7 +176,7 @@ func (m *Matrix) sum(axis int) *Matrix {
 	if axis == 0 {
 		v := vec.Zeros(m.Columns)
 		for i := 0; i < m.Columns; i++ {
-			col := m.SliceColumn(i)
+			col := m.sliceColumn(i)
 			v[i] = vec.Sum(col)
 		}
 		return &Matrix{
@@ -202,7 +187,7 @@ func (m *Matrix) sum(axis int) *Matrix {
 	} else if axis == 1 {
 		v := vec.Zeros(m.Rows)
 		for i := 0; i < m.Rows; i++ {
-			row := m.SliceRow(i)
+			row := m.sliceRow(i)
 			v[i] = vec.Sum(row)
 		}
 		return &Matrix{
@@ -231,14 +216,14 @@ func (m *Matrix) argMax(axis int) []int {
 	if axis == 0 {
 		v := make([]int, m.Columns)
 		for i := 0; i < m.Columns; i++ {
-			col := m.SliceColumn(i)
+			col := m.sliceColumn(i)
 			v[i] = vec.ArgMax(col)
 		}
 		return v
 	} else if axis == 1 {
 		v := make([]int, m.Rows)
 		for i := 0; i < m.Rows; i++ {
-			row := m.SliceRow(i)
+			row := m.sliceRow(i)
 			v[i] = vec.ArgMax(row)
 		}
 		return v
@@ -249,8 +234,8 @@ func (m *Matrix) argMax(axis int) []int {
 func (m *Matrix) crossEntropyError(x *Matrix) float64 {
 	r := vec.Zeros(m.Rows)
 	for i := 0; i < m.Rows; i++ {
-		mRow := m.SliceRow(i)
-		xRow := x.SliceRow(i)
+		mRow := m.sliceRow(i)
+		xRow := x.sliceRow(i)
 		r[i] = vec.CrossEntropyError(mRow, xRow)
 	}
 	return vec.Sum(r) / float64(m.Rows)
@@ -278,13 +263,13 @@ func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
 					index := r*m1.Columns + c
 					switch a {
 					case ADD:
-						vector[index] = m1.Element(r, c) + m2.Element(0, c)
+						vector[index] = m1.element(r, c) + m2.element(0, c)
 					case SUB:
-						vector[index] = m1.Element(r, c) - m2.Element(0, c)
+						vector[index] = m1.element(r, c) - m2.element(0, c)
 					case MUL:
-						vector[index] = m1.Element(r, c) * m2.Element(0, c)
+						vector[index] = m1.element(r, c) * m2.element(0, c)
 					case DIV:
-						vector[index] = m1.Element(r, c) / m2.Element(0, c)
+						vector[index] = m1.element(r, c) / m2.element(0, c)
 					}
 				}
 			}
@@ -327,13 +312,13 @@ func matVec(a Arithmetic, m1 *Matrix, m2 vec.Vector) *Matrix {
 			index := r*m1.Columns + c
 			switch a {
 			case ADD:
-				vector[index] = m1.Element(r, c) + m2[c]
+				vector[index] = m1.element(r, c) + m2[c]
 			case SUB:
-				vector[index] = m1.Element(r, c) - m2[c]
+				vector[index] = m1.element(r, c) - m2[c]
 			case MUL:
-				vector[index] = m1.Element(r, c) * m2[c]
+				vector[index] = m1.element(r, c) * m2[c]
 			case DIV:
-				vector[index] = m1.Element(r, c) / m2[c]
+				vector[index] = m1.element(r, c) / m2[c]
 			}
 		}
 	}
@@ -373,13 +358,13 @@ func vecMat(a Arithmetic, m1 vec.Vector, m2 *Matrix) *Matrix {
 			index := r*m2.Columns + c
 			switch a {
 			case ADD:
-				vector[index] = m1[c] + m2.Element(r, c)
+				vector[index] = m1[c] + m2.element(r, c)
 			case SUB:
-				vector[index] = m1[c] - m2.Element(r, c)
+				vector[index] = m1[c] - m2.element(r, c)
 			case MUL:
-				vector[index] = m1[c] * m2.Element(r, c)
+				vector[index] = m1[c] * m2.element(r, c)
 			case DIV:
-				vector[index] = m1[c] / m2.Element(r, c)
+				vector[index] = m1[c] / m2.element(r, c)
 			}
 		}
 	}
@@ -439,7 +424,7 @@ func (m *Matrix) mean(axis int) *Matrix {
 	if axis == 0 {
 		v := vec.Zeros(m.Columns)
 		for i := 0; i < m.Columns; i++ {
-			col := m.SliceColumn(i)
+			col := m.sliceColumn(i)
 			v[i] = vec.Sum(col) / float64(m.Rows)
 		}
 		return &Matrix{
@@ -450,7 +435,7 @@ func (m *Matrix) mean(axis int) *Matrix {
 	} else if axis == 1 {
 		v := vec.Zeros(m.Rows)
 		for i := 0; i < m.Rows; i++ {
-			row := m.SliceRow(i)
+			row := m.sliceRow(i)
 			v[i] = vec.Sum(row) / float64(m.Columns)
 		}
 		return &Matrix{
@@ -565,7 +550,7 @@ func (m *Matrix) sliceRow(r int) vec.Vector {
 func (m *Matrix) sliceColumn(c int) vec.Vector {
 	slice := vec.Zeros(m.Rows)
 	for i := 0; i < m.Rows; i++ {
-		slice[i] = m.Element(i, c)
+		slice[i] = m.element(i, c)
 	}
 	return slice
 }
@@ -602,7 +587,7 @@ func (m *Matrix) reshapeTo4D(a, b, c, d int) Tensor4D {
 	case d == -1:
 		d = size / a / b / c
 	}
-	t4d := ZerosT4D(a, b, c, d)
+	t4d := zerosT4D(a, b, c, d)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
 			sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
@@ -631,7 +616,7 @@ func (m *Matrix) reshapeTo5D(a, b, c, d, e int) Tensor5D {
 	case e == -1:
 		e = size / a / b / c / d
 	}
-	t5d := ZerosT5D(a, b, c, d, e)
+	t5d := zerosT5D(a, b, c, d, e)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
 			for k := 0; k < c; k++ {
@@ -649,7 +634,7 @@ func (m *Matrix) reshapeTo5D(a, b, c, d, e int) Tensor5D {
 }
 
 func (m *Matrix) reshapeTo6D(a, b, c, d, e, f int) Tensor6D {
-	t6d := zerosT6D([]int{a, b, c, d, e, f})
+	t6d := zerosT6D(a, b, c, d, e, f)
 	for i := 0; i < a; i++ {
 		for j := 0; j < b; j++ {
 			for k := 0; k < c; k++ {
@@ -673,7 +658,7 @@ func (m *Matrix) col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
 	outW := (W+2*pad-fw)/stride + 1
 	ncol := m.reshapeTo6D(N, outH, outW, C, fh, fw).transpose(0, 3, 4, 5, 1, 2)
 	// ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
-	img := zerosT4D([]int{N, C, H + 2*pad + stride - 1, W + 2*pad + stride - 1})
+	img := zerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
 	// img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
 	for y := 0; y < fh; y++ {
 		yMax := y + stride*outH

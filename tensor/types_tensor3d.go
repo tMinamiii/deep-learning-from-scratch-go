@@ -18,12 +18,12 @@ func (t Tensor3D) Channels() int {
 	return len(t)
 }
 
-func (t Tensor3D) Element(c, h, w int) float64 {
-	return t[c].Element(h, w)
+func (t Tensor3D) element(c, h, w int) float64 {
+	return t[c].element(h, w)
 }
 
-func (t Tensor3D) Assign(value float64, c, h, w int) {
-	t[c].Assign(value, h, w)
+func (t Tensor3D) assign(value float64, c, h, w int) {
+	t[c].assign(value, h, w)
 }
 
 func (t Tensor3D) Shape() (int, int, int) {
@@ -32,15 +32,15 @@ func (t Tensor3D) Shape() (int, int, int) {
 	return C, H, W
 }
 
-func ZerosT3D(c, h, w int) Tensor3D {
+func zerosT3D(c, h, w int) Tensor3D {
 	t3d := make(Tensor3D, c)
 	for i := range t3d {
-		t3d[i] = zerosMat([]int{h, w})
+		t3d[i] = zerosMat(h, w)
 	}
 	return t3d
 }
 
-func ZerosLikeT3D(x Tensor3D) Tensor3D {
+func zerosLikeT3D(x Tensor3D) Tensor3D {
 	matrixes := make(Tensor3D, len(x))
 	for i, v := range x {
 		matrixes[i] = zerosLikeMat(v)
@@ -59,7 +59,7 @@ func (t Tensor3D) window(x, y, h, w int) Tensor3D {
 func (t Tensor3D) transpose(a, b, c int) Tensor3D {
 	x, y, z := t.Shape()
 	shape := []int{x, y, z}
-	t3d := ZerosT3D(shape[a], shape[b], shape[c])
+	t3d := zerosT3D(shape[a], shape[b], shape[c])
 	for i, mat := range t {
 		for j := 0; j < mat.Rows; j++ {
 			for k := 0; k < mat.Columns; k++ {
@@ -68,31 +68,21 @@ func (t Tensor3D) transpose(a, b, c int) Tensor3D {
 				idx[0] = oldIdx[a]
 				idx[1] = oldIdx[b]
 				idx[2] = oldIdx[c]
-				v := t.element([]int{i, j, k})
-				t3d.assign(v, []int{idx[0], idx[1], idx[2]})
+				v := t.element(i, j, k)
+				t3d.assign(v, idx[0], idx[1], idx[2])
 			}
 		}
 	}
 	return t3d
 }
 
-func (t Tensor3D) element(point []int) float64 {
-	a := point[0]
-	return t[a].element(point[1:])
-}
-
-func (t Tensor3D) assign(value float64, point []int) {
-	a := point[0]
-	t[a].assign(value, point[1:])
-}
-
-func zerosT3D(shape []int) (t3d Tensor3D) {
-	t3d = make(Tensor3D, shape[0])
-	for i := range t3d {
-		t3d[i] = zerosMat(shape[1:])
-	}
-	return
-}
+// func zerosT3D(shape []int) (t3d Tensor3D) {
+// 	t3d = make(Tensor3D, shape[0])
+// 	for i := range t3d {
+// 		t3d[i] = zerosMat(shape[1:])
+// 	}
+// 	return
+// }
 
 func (t Tensor3D) pad(size int) Tensor3D {
 	newT3D := make(Tensor3D, len(t))

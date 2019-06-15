@@ -97,15 +97,15 @@ func (t *Tensor) Flatten() vec.Vector {
 func Zeros(shape []int) *Tensor {
 	switch len(shape) {
 	case 2:
-		return &Tensor{Mat: zerosMat(shape), Shape: shape}
+		return &Tensor{Mat: zerosMat(shape[0], shape[1]), Shape: shape}
 	case 3:
-		return &Tensor{T3D: zerosT3D(shape), Shape: shape}
+		return &Tensor{T3D: zerosT3D(shape[0], shape[1], shape[2]), Shape: shape}
 	case 4:
-		return &Tensor{T4D: zerosT4D(shape), Shape: shape}
+		return &Tensor{T4D: zerosT4D(shape[0], shape[1], shape[2], shape[3]), Shape: shape}
 	case 5:
-		return &Tensor{T5D: zerosT5D(shape), Shape: shape}
+		return &Tensor{T5D: zerosT5D(shape[0], shape[1], shape[2], shape[3], shape[4]), Shape: shape}
 	case 6:
-		return &Tensor{T6D: zerosT6D(shape), Shape: shape}
+		return &Tensor{T6D: zerosT6D(shape[0], shape[1], shape[2], shape[3], shape[4], shape[5]), Shape: shape}
 	}
 	panic(shape)
 }
@@ -173,16 +173,18 @@ func (t *Tensor) Transpose(axis []int) *Tensor {
 /* Dependent */
 func (t *Tensor) Element(point []int) float64 {
 	switch len(t.Shape) {
+	case 1:
+		return t.Vec[point[0]]
 	case 2:
-		return t.Mat.element(point)
+		return t.Mat.element(point[0], point[1])
 	case 3:
-		return t.T3D.element(point)
+		return t.T3D.element(point[0], point[1], point[2])
 	case 4:
-		return t.T4D.element(point)
+		return t.T4D.element(point[0], point[1], point[2], point[3])
 	case 5:
-		return t.T5D.element(point)
+		return t.T5D.element(point[0], point[1], point[2], point[3], point[4])
 	case 6:
-		return t.T6D.element(point)
+		return t.T6D.element(point[0], point[1], point[2], point[3], point[4], point[5])
 	}
 	panic(t)
 }
@@ -190,19 +192,19 @@ func (t *Tensor) Element(point []int) float64 {
 func (t *Tensor) Assign(value float64, point []int) {
 	switch {
 	case len(t.Shape) == 2:
-		t.Mat.assign(value, point)
+		t.Mat.assign(value, point[0], point[1])
 		return
 	case len(t.Shape) == 3:
-		t.T3D.assign(value, point)
+		t.T3D.assign(value, point[0], point[1], point[2])
 		return
 	case len(t.Shape) == 4:
-		t.T4D.assign(value, point)
+		t.T4D.assign(value, point[0], point[1], point[2], point[3])
 		return
 	case len(t.Shape) == 5:
-		t.T5D.assign(value, point)
+		t.T5D.assign(value, point[0], point[1], point[2], point[3], point[4])
 		return
 	case len(t.Shape) == 6:
-		t.T6D.assign(value, point)
+		t.T6D.assign(value, point[0], point[1], point[2], point[3], point[4], point[5])
 		return
 	}
 	panic(t)
@@ -412,17 +414,17 @@ func (t *Tensor) Equal(x *Tensor) bool {
 	}
 	switch len(t.Shape) {
 	case 1:
-		vec.Equal(t.Vec, x.Vec)
+		return vec.Equal(t.Vec, x.Vec)
 	case 2:
-		t.Mat.equal(x.Mat)
+		return t.Mat.equal(x.Mat)
 	case 3:
-		t.T3D.equal(x.T3D)
+		return t.T3D.equal(x.T3D)
 	case 4:
-		t.T4D.equal(x.T4D)
+		return t.T4D.equal(x.T4D)
 	case 5:
-		t.T5D.equal(x.T5D)
+		return t.T5D.equal(x.T5D)
 	case 6:
-		t.T6D.equal(x.T6D)
+		return t.T6D.equal(x.T6D)
 	}
 	return false
 }
@@ -615,7 +617,7 @@ func (t *Tensor) SliceColumn(c int) *Tensor {
 	if len(t.Shape) == 2 {
 		panic(t)
 	}
-	slice := t.Mat.SliceColumn(c)
+	slice := t.Mat.sliceColumn(c)
 	return &Tensor{
 		Vec:   slice,
 		Shape: []int{len(slice)},

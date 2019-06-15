@@ -161,7 +161,7 @@ func (net *SimpleConvNet) Accuracy(x, t *Tensor) float64 {
 			if k >= t.Mat.Rows {
 				break
 			}
-			v = append(v, t.Mat.SliceRow(k)...)
+			v = append(v, t.Mat.sliceRow(k)...)
 		}
 		a, b, c, d := train.Shape()
 		tt := &Tensor{
