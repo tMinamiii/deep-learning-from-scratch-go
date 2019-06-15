@@ -19,17 +19,17 @@ func (t Tensor4D) Assign(value float64, n, c, h, w int) {
 	t[n].Assign(value, c, h, w)
 }
 
-func (t Tensor4D) Flatten() vec.Vector {
-	v := make(vec.Vector, 0, len(t)*len(t[0].Flatten()))
+func (t Tensor4D) flatten() vec.Vector {
+	v := make(vec.Vector, 0, len(t)*len(t[0].flatten()))
 	for _, e := range t {
-		v = append(v, e.Flatten()...)
+		v = append(v, e.flatten()...)
 	}
 	return v
 }
+
 func (t Tensor4D) Shape() (int, int, int, int) {
 	N := len(t)
-	C := t[0].Channels()
-	H, W := t[0][0].Shape()
+	C, H, W := t[0].Shape()
 	return N, C, H, W
 }
 
@@ -115,7 +115,7 @@ func (t Tensor4D) assign(value float64, point []int) {
 }
 
 func addAssignT4D(t1 *Tensor4DSlice, t2 Tensor4D) {
-	t2flat := t2.Flatten()
+	t2flat := t2.flatten()
 	for i, idx := range t1.Indices {
 		add := t1.Actual[idx.N][idx.C].Element(idx.H, idx.W) + t2flat[i]
 		t1.Actual[idx.N][idx.C].Assign(add, idx.H, idx.W)
@@ -309,4 +309,101 @@ func (t Tensor4D) numericalGradient(f func(vec.Vector) float64) Tensor4D {
 		result[i] = v.numericalGradient(f)
 	}
 	return result
+}
+
+func (t Tensor4D) slice(y, yMax, x, xMax int) Tensor4D {
+	t4dslice := t.strideSlice(y, yMax, x, xMax, 1)
+	sliced := t4dslice.ToTensor4D()
+	return sliced
+}
+
+func (t Tensor4D) strideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
+	indLen := 0
+	for _, imgT3D := range t {
+		for k := 0; k < len(imgT3D); k++ {
+			for i := y; i < yMax; i += stride {
+				for j := x; j < xMax; j += stride {
+					indLen++
+				}
+			}
+		}
+	}
+
+	indices := make([]*Tensor4DIndex, 0, indLen)
+	totalRows := (yMax - y) / stride
+	totalColumns := (xMax - x) / stride
+	for n, imgT3D := range t {
+		for c := range imgT3D {
+			for i := y; i < yMax; i += stride {
+				for j := x; j < xMax; j += stride {
+					index := &Tensor4DIndex{
+						N: n,
+						C: c,
+						H: i,
+						W: j,
+					}
+					indices = append(indices, index)
+				}
+			}
+		}
+	}
+	n, c, _, _ := t.Shape()
+	return &Tensor4DSlice{
+		Actual:   t,
+		Indices:  indices,
+		NewShape: []int{n, c, totalRows, totalColumns},
+	}
+}
+
+func (t Tensor4D) im2Col(fw, fh, stride, pad int) *Matrix {
+	t4d := t
+	nVLen := 0
+	for _, t3d := range t4d {
+		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
+			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+				for i := 0; i < len(t3d); i++ {
+					nVLen++
+				}
+			}
+		}
+	}
+
+	colVec := make(vec.Vector, 0, len(t4d))
+	for _, t3d := range t4d {
+		nV := make(vec.Vector, 0, nVLen)
+		for x := 0; x <= t3d[0].Columns-fw+2*pad; x += stride {
+			for y := 0; y <= t3d[0].Rows-fh+2*pad; y += stride {
+				for _, ma := range t3d {
+					padE := ma.pad(pad)
+					nV = append(nV, padE.window(x, y, fw, fh).Vector...)
+				}
+			}
+		}
+		colVec = append(colVec, nV...)
+	}
+
+	col := fw * fh
+	row := len(colVec) / col
+
+	return &Matrix{
+		Vector:  colVec,
+		Rows:    row,
+		Columns: col,
+	}
+}
+
+func (t Tensor4D) reshapeToMat(row, col int) *Matrix {
+	t4d := t
+	size := t4d.Size()
+	if col == -1 {
+		col = size / row
+	} else if row == -1 {
+		row = size / col
+	}
+	flat := t4d.flatten()
+	return &Matrix{
+		Vector:  flat,
+		Rows:    row,
+		Columns: col,
+	}
 }

@@ -6,7 +6,7 @@ import (
 
 type Tensor3D []*Matrix
 
-func (t Tensor3D) Flatten() vec.Vector {
+func (t Tensor3D) flatten() vec.Vector {
 	v := make(vec.Vector, 0, len(t)*len(t[0].Vector))
 	for _, e := range t {
 		v = append(v, e.Vector...)
@@ -27,7 +27,7 @@ func (t Tensor3D) Assign(value float64, c, h, w int) {
 }
 
 func (t Tensor3D) Shape() (int, int, int) {
-	C := t.Channels()
+	C := len(t)
 	H, W := t[0].Shape()
 	return C, H, W
 }
@@ -35,7 +35,7 @@ func (t Tensor3D) Shape() (int, int, int) {
 func ZerosT3D(c, h, w int) Tensor3D {
 	t3d := make(Tensor3D, c)
 	for i := range t3d {
-		t3d[i] = ZerosMat(h, w)
+		t3d[i] = zerosMat([]int{h, w})
 	}
 	return t3d
 }
@@ -43,7 +43,7 @@ func ZerosT3D(c, h, w int) Tensor3D {
 func ZerosLikeT3D(x Tensor3D) Tensor3D {
 	matrixes := make(Tensor3D, len(x))
 	for i, v := range x {
-		matrixes[i] = ZerosLikeMat(v)
+		matrixes[i] = zerosLikeMat(v)
 	}
 	return matrixes
 }

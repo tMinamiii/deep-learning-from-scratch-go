@@ -76,8 +76,22 @@ func NewRandnT4D(n, c, h, w int) *Tensor {
 	}
 	return &Tensor{
 		T4D:   t4d,
-		Shape: []int{c, h, w},
+		Shape: []int{n, c, h, w},
 	}
+}
+
+func (t *Tensor) Flatten() vec.Vector {
+	switch len(t.Shape) {
+	case 2:
+		return t.Mat.Vector
+	case 3:
+		return t.T3D.flatten()
+	case 4:
+		return t.T4D.flatten()
+	case 5:
+		return t.T5D.flatten()
+	}
+	panic(t)
 }
 
 func Zeros(shape []int) *Tensor {
@@ -173,19 +187,23 @@ func (t *Tensor) Element(point []int) float64 {
 	panic(t)
 }
 
-/* Depenedent*/
 func (t *Tensor) Assign(value float64, point []int) {
 	switch {
 	case len(t.Shape) == 2:
 		t.Mat.assign(value, point)
+		return
 	case len(t.Shape) == 3:
 		t.T3D.assign(value, point)
+		return
 	case len(t.Shape) == 4:
 		t.T4D.assign(value, point)
+		return
 	case len(t.Shape) == 5:
 		t.T5D.assign(value, point)
+		return
 	case len(t.Shape) == 6:
 		t.T6D.assign(value, point)
+		return
 	}
 	panic(t)
 }
@@ -193,6 +211,7 @@ func (t *Tensor) Assign(value float64, point []int) {
 func (t *Tensor) AssignWindow(window *Matrix, x, y, h, w int) {
 	if len(t.Shape) == 2 {
 		t.Mat.assignWindow(window, x, y, h, w)
+		return
 	}
 	panic(t)
 }
@@ -200,6 +219,7 @@ func (t *Tensor) AssignWindow(window *Matrix, x, y, h, w int) {
 func AddAssign(t1 *Tensor4DSlice, t2 *Tensor) {
 	if len(t2.Shape) == 4 {
 		addAssignT4D(t1, t2.T4D)
+		return
 	}
 	panic(t2)
 }
@@ -434,7 +454,7 @@ func (t *Tensor) Log() *Tensor {
 func (t *Tensor) Max(axis int) *Tensor {
 	if len(t.Shape) == 2 {
 		vec := t.Mat.max(axis)
-		return &Tensor{Vec: vec, Shape: []int{len(vec)}}
+		return &Tensor{Mat: &Matrix{Vector: vec, Rows: 1, Columns: len(vec)}, Shape: []int{1, len(vec)}}
 	}
 	panic(t)
 }
@@ -494,7 +514,7 @@ func (t *Tensor) SumAll() float64 {
 	panic(t)
 }
 
-func Sum(t *Tensor, axis int) *Tensor {
+func (t *Tensor) Sum(axis int) *Tensor {
 	if len(t.Shape) == 2 {
 		return &Tensor{Mat: t.Mat.sum(axis), Shape: t.Shape}
 	}
@@ -549,7 +569,7 @@ func (t *Tensor) Relu() *Tensor {
 	panic(t)
 }
 
-func (t *Tensor) numericalGradient(f func(vec.Vector) float64) *Tensor {
+func (t *Tensor) NumericalGradient(f func(vec.Vector) float64) *Tensor {
 	switch len(t.Shape) {
 	case 2:
 		return &Tensor{Mat: t.Mat.numericalGradient(f), Shape: t.Shape}
@@ -581,4 +601,148 @@ func Dot(t1, t2 *Tensor) *Tensor {
 		}
 	}
 	panic([]*Tensor{t1, t2})
+}
+
+func (t *Tensor) SliceRow(r int) *Tensor {
+	if len(t.Shape) != 2 {
+		panic(t)
+	}
+	slice := t.Mat.sliceRow(r)
+	return &Tensor{Vec: slice, Shape: []int{len(slice)}}
+}
+
+func (t *Tensor) SliceColumn(c int) *Tensor {
+	if len(t.Shape) == 2 {
+		panic(t)
+	}
+	slice := t.Mat.SliceColumn(c)
+	return &Tensor{
+		Vec:   slice,
+		Shape: []int{len(slice)},
+	}
+}
+
+func (t *Tensor) Slice6DTo4D(x, y int) *Tensor {
+	if len(t.Shape) == 6 {
+		t6d := t.T6D
+		t4d := t6d.sliceTo4D(x, y)
+		n, c, h, w := t4d.Shape()
+		return &Tensor{T4D: t4d, Shape: []int{n, c, h, w}}
+	}
+	panic(t)
+}
+
+func (t *Tensor) SliceT4D(y, yMax, x, xMax int) *Tensor {
+	if len(t.Shape) == 4 {
+		sliced := t.T4D.slice(y, yMax, x, xMax)
+		n, c, h, w := sliced.Shape()
+		return &Tensor{T4D: sliced, Shape: []int{n, c, h, w}}
+	}
+	panic(t)
+}
+
+func (t *Tensor) StrideSlice(y, yMax, x, xMax, stride int) *Tensor4DSlice {
+	if len(t.Shape) == 4 {
+		return t.T4D.strideSlice(y, yMax, x, xMax, stride)
+	}
+	panic(t)
+}
+
+func (t *Tensor) Col2Img(shape []int, fh, fw, stride, pad int) *Tensor {
+	if len(t.Shape) == 2 {
+		img := t.Mat.col2Img(shape, fh, fw, stride, pad)
+		a, b, c, d := img.Shape()
+		return &Tensor{T4D: img, Shape: []int{a, b, c, d}}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Im2Col(fw, fh, stride, pad int) *Tensor {
+	if len(t.Shape) != 4 {
+		panic(t)
+	}
+	mat := t.T4D.im2Col(fw, fh, stride, pad)
+	return &Tensor{
+		Mat:   mat,
+		Shape: []int{mat.Rows, mat.Columns},
+	}
+}
+
+func (t *Tensor) ReshapeToMat(row, col int) *Tensor {
+	switch len(t.Shape) {
+	case 4:
+		mat := t.T4D.reshapeToMat(row, col)
+		return &Tensor{
+			Mat:   mat,
+			Shape: []int{mat.Rows, mat.Columns},
+		}
+	case 5:
+		mat := t.T5D.reshapeToMat(row, col)
+		return &Tensor{
+			Mat:   mat,
+			Shape: []int{mat.Rows, mat.Columns},
+		}
+
+	}
+	panic(t)
+}
+
+func (t *Tensor) ReshapeTo4D(a, b, c, d int) *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		t := t.Mat.reshapeTo4D(a, b, c, d)
+		// a, b, c, d := t.Shape()
+		return &Tensor{
+			T4D:   t,
+			Shape: []int{a, b, c, d},
+		}
+	}
+	panic(t)
+}
+
+func (t *Tensor) ReshapeTo5D(a, b, c, d, e int) *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		t := t.Mat.reshapeTo5D(a, b, c, d, e)
+		return &Tensor{
+			T5D:   t,
+			Shape: []int{a, b, c, d, e},
+		}
+	}
+	panic(t)
+}
+
+func (t *Tensor) ReshapeTo6D(a, b, c, d, e, f int) *Tensor {
+	switch len(t.Shape) {
+	case 2:
+		t := t.Mat.reshapeTo6D(a, b, c, d, e, f)
+		// a, b, c, d := t.Shape()
+		return &Tensor{
+			T6D:   t,
+			Shape: []int{a, b, c, d, e, f},
+		}
+	}
+	panic(t)
+}
+
+func (t *Tensor) Reshape(row, col int) *Tensor {
+	if len(t.Shape) == 2 {
+		m := t.Mat
+		return &Tensor{
+			Mat:   m.reshape(row, col),
+			Shape: []int{row, col},
+		}
+	}
+	panic(t)
+}
+
+func (t *Tensor) T() *Tensor {
+	if len(t.Shape) == 2 {
+		m := t.Mat.t()
+		return &Tensor{
+			Mat:   m,
+			Shape: []int{m.Rows, m.Columns},
+		}
+	}
+	panic(t)
 }

@@ -102,3 +102,17 @@ func (t Tensor6D) equal(x Tensor6D) bool {
 	}
 	return true
 }
+
+func (t Tensor6D) sliceTo4D(x, y int) Tensor4D {
+	t6d := t
+	t4d := make(Tensor4D, 0, len(t6d))
+	for _, ncolT5d := range t6d {
+		t3d := make(Tensor3D, 0, len(ncolT5d))
+		for _, ncolT4d := range ncolT5d {
+			ncolMat := ncolT4d[x][y]
+			t3d = append(t3d, ncolMat)
+		}
+		t4d = append(t4d, t3d)
+	}
+	return t4d
+}

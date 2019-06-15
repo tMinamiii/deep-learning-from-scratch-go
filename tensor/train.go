@@ -1,4 +1,4 @@
-package main
+package tensor
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/naronA/zero_deeplearning/mnist"
-	"github.com/naronA/zero_deeplearning/tensor"
 	"github.com/naronA/zero_deeplearning/vec"
 )
 
@@ -20,33 +19,33 @@ const (
 	MNIST        = 10
 )
 
-func MnistTensor4D(set *mnist.DataSet) (*tensor.Tensor, *tensor.Tensor) {
+func MnistTensor4D(set *mnist.DataSet) (*Tensor, *Tensor) {
 	size := len(set.Labels)
-	image := make(tensor.Tensor4D, size)
+	image := make(Tensor4D, size)
 	label := make(vec.Vector, 0, size*len(set.Labels[0]))
 	for i := 0; i < size; i++ {
-		mat := &tensor.Matrix{
+		mat := &Matrix{
 			Vector:  set.Images[i],
 			Rows:    28,
 			Columns: 28,
 		}
-		t3d := tensor.Tensor3D{mat}
+		t3d := Tensor3D{mat}
 		image[i] = t3d
 		label = append(label, set.Labels[i]...)
 	}
 	a, b, c, d := image.Shape()
-	t := &tensor.Tensor{
-		Mat:   &tensor.Matrix{Rows: size, Columns: 10, Vector: label},
+	t := &Tensor{
+		Mat:   &Matrix{Rows: size, Columns: 10, Vector: label},
 		Shape: []int{size, 10},
 	}
-	imageTen := &tensor.Tensor{
+	imageTen := &Tensor{
 		T4D:   image,
 		Shape: []int{a, b, c, d},
 	}
 	return imageTen, t
 }
 
-func MnistMatrix(set *mnist.DataSet) (*tensor.Tensor, *tensor.Tensor) {
+func MnistMatrix(set *mnist.DataSet) (*Tensor, *Tensor) {
 	size := len(set.Labels)
 	image := make(vec.Vector, 0, size*len(set.Images[0]))
 	label := make(vec.Vector, 0, size*len(set.Labels[0]))
@@ -54,16 +53,16 @@ func MnistMatrix(set *mnist.DataSet) (*tensor.Tensor, *tensor.Tensor) {
 		image = append(image, set.Images[i]...)
 		label = append(label, set.Labels[i]...)
 	}
-	x := &tensor.Tensor{
-		Mat: &tensor.Matrix{
+	x := &Tensor{
+		Mat: &Matrix{
 			Rows:    size,
 			Columns: ImageLength,
 			Vector:  image,
 		},
 		Shape: []int{size, ImageLength},
 	}
-	t := &tensor.Tensor{
-		Mat: &tensor.Matrix{
+	t := &Tensor{
+		Mat: &Matrix{
 			Rows:    size,
 			Columns: 10,
 			Vector:  label,
@@ -76,22 +75,22 @@ func MnistMatrix(set *mnist.DataSet) (*tensor.Tensor, *tensor.Tensor) {
 func train() {
 	train, test := mnist.LoadMnist()
 	TrainSize := len(train.Labels)
-	opt := tensor.NewAdam(LearningRate)
+	opt := NewAdam(LearningRate)
 
-	inputDim := &tensor.InputDim{
+	inputDim := &InputDim{
 		Channel: 1,
 		Height:  28,
 		Weidth:  28,
 	}
 
-	convParams := &tensor.ConvParams{
+	convParams := &ConvParams{
 		FilterNum:  30,
 		FilterSize: 5,
 		Pad:        0,
 		Stride:     1,
 	}
 
-	net := tensor.NewSimpleConvNet(opt, inputDim, convParams, 100, 10, 0.01)
+	net := NewSimpleConvNet(opt, inputDim, convParams, 100, 10, 0.01)
 
 	xTrain, tTrain := MnistTensor4D(train)
 	xTest, tTest := MnistTensor4D(test)
@@ -109,22 +108,22 @@ func train() {
 		start := time.Now()
 		batchIndices := rand.Perm(TrainSize)[:BatchSize]
 		label := make(vec.Vector, 0, len(train.Labels[0])*BatchSize)
-		xBatch := make(tensor.Tensor4D, BatchSize)
+		xBatch := make(Tensor4D, BatchSize)
 		for j, v := range batchIndices {
-			mat := &tensor.Matrix{
+			mat := &Matrix{
 				Vector:  train.Images[v],
 				Rows:    28,
 				Columns: 28,
 			}
-			t3d := tensor.Tensor3D{mat}
+			t3d := Tensor3D{mat}
 			xBatch[j] = t3d
 			label = append(label, train.Labels[v]...)
 		}
-		tBatch := &tensor.Matrix{Rows: BatchSize, Columns: 10, Vector: label}
+		tBatch := &Matrix{Rows: BatchSize, Columns: 10, Vector: label}
 		e, f := tBatch.Shape()
-		tBatchTen := &tensor.Tensor{Mat: tBatch, Shape: []int{e, f}}
+		tBatchTen := &Tensor{Mat: tBatch, Shape: []int{e, f}}
 		a, b, c, d := xBatch.Shape()
-		xBatchTen := &tensor.Tensor{T4D: xBatch, Shape: []int{a, b, c, d}}
+		xBatchTen := &Tensor{T4D: xBatch, Shape: []int{a, b, c, d}}
 		grads := net.Gradient(xBatchTen, tBatchTen)
 		net.UpdateParams(grads)
 		loss := net.Loss(xBatchTen, tBatchTen)

@@ -45,17 +45,8 @@ func (m *Matrix) String() string {
 	return str
 }
 
-func ZerosMat(r, c int) *Matrix {
-	zeros := vec.Zeros(r * c)
-	return &Matrix{
-		Vector:  zeros,
-		Rows:    r,
-		Columns: c,
-	}
-}
-
-func ZerosLikeMat(m *Matrix) *Matrix {
-	return ZerosMat(m.Rows, m.Columns)
+func zerosLikeMat(m *Matrix) *Matrix {
+	return zerosMat([]int{m.Rows, m.Columns})
 }
 
 func (m *Matrix) SliceRow(r int) vec.Vector {
@@ -274,25 +265,8 @@ func (m *Matrix) equal(x *Matrix) bool {
 	return false
 }
 
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
 func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
-	if m1.Rows != m2.Rows && m1.Columns != m2.Columns {
+	if m1.Rows != m2.Rows && m1.Columns == m2.Columns {
 		// 片方がベクトル(1行多列)だった場合
 		if m1.Rows == 1 || m2.Rows == 1 {
 			if m1.Columns != m2.Columns {
@@ -582,4 +556,133 @@ func dotMat(m1, m2 *Matrix) *Matrix {
 		<-ch
 	}
 	return m3
+}
+
+func (m *Matrix) sliceRow(r int) vec.Vector {
+	return m.Vector[r*m.Columns : (r+1)*m.Columns]
+}
+
+func (m *Matrix) sliceColumn(c int) vec.Vector {
+	slice := vec.Zeros(m.Rows)
+	for i := 0; i < m.Rows; i++ {
+		slice[i] = m.Element(i, c)
+	}
+	return slice
+}
+
+func (m *Matrix) reshape(row, col int) *Matrix {
+	r, c := m.Shape()
+	size := r * c
+	if row == -1 {
+		row = size / col
+	} else if col == -1 {
+		col = size / row
+	}
+	if m.Rows*m.Columns != row*col {
+		return nil
+	}
+
+	return &Matrix{
+		Vector:  m.Vector,
+		Rows:    row,
+		Columns: col,
+	}
+}
+
+func (m *Matrix) reshapeTo4D(a, b, c, d int) Tensor4D {
+	row, col := m.Shape()
+	size := row * col
+	switch {
+	case a == -1:
+		a = size / b / c / d
+	case b == -1:
+		b = size / a / c / d
+	case c == -1:
+		c = size / a / b / d
+	case d == -1:
+		d = size / a / b / c
+	}
+	t4d := ZerosT4D(a, b, c, d)
+	for i := 0; i < a; i++ {
+		for j := 0; j < b; j++ {
+			sv := m.Vector[(i*b+j)*c*d : (i*b+j+1)*c*d]
+			t4d[i][j] = &Matrix{
+				Vector:  sv,
+				Rows:    c,
+				Columns: d,
+			}
+		}
+	}
+	return t4d
+}
+
+func (m *Matrix) reshapeTo5D(a, b, c, d, e int) Tensor5D {
+	row, col := m.Shape()
+	size := row * col
+	switch {
+	case a == -1:
+		a = size / b / c / d / e
+	case b == -1:
+		b = size / a / c / d / e
+	case c == -1:
+		c = size / a / b / d / e
+	case d == -1:
+		d = size / a / b / c / e
+	case e == -1:
+		e = size / a / b / c / d
+	}
+	t5d := ZerosT5D(a, b, c, d, e)
+	for i := 0; i < a; i++ {
+		for j := 0; j < b; j++ {
+			for k := 0; k < c; k++ {
+				sv := m.Vector[((i*b+j)*c+k)*d*e : ((i*b+j)*c+k+1)*d*e]
+				t5d[i][j][k] = &Matrix{
+					Vector:  sv,
+					Rows:    c,
+					Columns: d,
+				}
+			}
+		}
+	}
+
+	return t5d
+}
+
+func (m *Matrix) reshapeTo6D(a, b, c, d, e, f int) Tensor6D {
+	t6d := zerosT6D([]int{a, b, c, d, e, f})
+	for i := 0; i < a; i++ {
+		for j := 0; j < b; j++ {
+			for k := 0; k < c; k++ {
+				for l := 0; l < d; l++ {
+					sv := m.Vector[(((i*b+j)*c+k)*d+l)*e*f : (((i*b+j)*c+k)*d+l+1)*e*f]
+					t6d[i][j][k][l] = &Matrix{
+						Vector:  sv,
+						Rows:    e,
+						Columns: f,
+					}
+				}
+			}
+		}
+	}
+	return t6d
+}
+
+func (m *Matrix) col2Img(shape []int, fh, fw, stride, pad int) Tensor4D {
+	N, C, H, W := shape[0], shape[1], shape[2], shape[3]
+	outH := (H+2*pad-fh)/stride + 1
+	outW := (W+2*pad-fw)/stride + 1
+	ncol := m.reshapeTo6D(N, outH, outW, C, fh, fw).transpose(0, 3, 4, 5, 1, 2)
+	// ncol := m.ReshapeTo6D(N, outH, outW, C, fh, fw).Transpose(0, 3, 4, 5, 1, 2)
+	img := zerosT4D([]int{N, C, H + 2*pad + stride - 1, W + 2*pad + stride - 1})
+	// img := ZerosT4D(N, C, H+2*pad+stride-1, W+2*pad+stride-1)
+	for y := 0; y < fh; y++ {
+		yMax := y + stride*outH
+		for x := 0; x < fw; x++ {
+			xMax := x + stride*outW
+			slice := img.strideSlice(y, yMax, x, xMax, stride)
+			ncolSlice := ncol.sliceTo4D(y, x)
+			addAssignT4D(slice, ncolSlice)
+		}
+	}
+	return img.slice(pad, H+pad, pad, W+pad)
 }

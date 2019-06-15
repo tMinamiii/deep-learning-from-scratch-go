@@ -21,26 +21,10 @@ func (t Tensor5D) Assign(value float64, b, n, c, h, w int) {
 	t[b].Assign(value, n, c, h, w)
 }
 
-func (t Tensor5D) ReshapeTo2D(row, col int) *Matrix {
-	a, b, c, d, e := t.Shape()
-	size := a * b * c * d * e
-	if row == -1 {
-		row = size / col
-	} else if col == -1 {
-		col = size / row
-	}
-
-	return &Matrix{
-		Vector:  t.Flatten(),
-		Rows:    row,
-		Columns: col,
-	}
-}
-
-func (t Tensor5D) Flatten() vec.Vector {
+func (t Tensor5D) flatten() vec.Vector {
 	v := vec.Vector{}
 	for _, e := range t {
-		v = append(v, e.Flatten()...)
+		v = append(v, e.flatten()...)
 	}
 	return v
 }
@@ -131,4 +115,20 @@ func (t Tensor5D) equal(x Tensor5D) bool {
 		}
 	}
 	return true
+}
+
+func (t Tensor5D) reshapeToMat(row, col int) *Matrix {
+	a, b, c, d, e := t.Shape()
+	size := a * b * c * d * e
+	if row == -1 {
+		row = size / col
+	} else if col == -1 {
+		col = size / row
+	}
+
+	return &Matrix{
+		Vector:  t.flatten(),
+		Rows:    row,
+		Columns: col,
+	}
 }
