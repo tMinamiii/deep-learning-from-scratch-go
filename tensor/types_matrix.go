@@ -255,7 +255,8 @@ func matMat(a Arithmetic, m1, m2 *Matrix) *Matrix {
 		// 片方がベクトル(1行多列)だった場合
 		if m1.Rows == 1 || m2.Rows == 1 {
 			if m1.Columns != m2.Columns {
-				return nil
+				panic(m1)
+				// return nil
 			}
 			vector := vec.Zeros(m1.Rows * m1.Columns)
 			for r := 0; r < m1.Rows; r++ {

@@ -335,16 +335,16 @@ func calcArithmetic(a Arithmetic, x1, x2 *Tensor) *Tensor {
 		switch len(x1.Shape) {
 		case 3:
 			x1v := x1.T3D
-			return &Tensor{T4D: t3DT4D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T4D: t3DT4D(a, x1v, x2v), Shape: x2.Shape}
 		case 2:
 			x1v := x1.Mat
-			return &Tensor{T4D: matT4D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T4D: matT4D(a, x1v, x2v), Shape: x2.Shape}
 		case 1:
 			x1v := x1.Vec
-			return &Tensor{T4D: vecT4D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T4D: vecT4D(a, x1v, x2v), Shape: x2.Shape}
 		case 0:
 			x1v := x1.Val
-			return &Tensor{T4D: floatT4D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T4D: floatT4D(a, x1v, x2v), Shape: x2.Shape}
 		}
 	}
 	if len(x1.Shape) == 3 {
@@ -368,13 +368,13 @@ func calcArithmetic(a Arithmetic, x1, x2 *Tensor) *Tensor {
 		switch len(x1.Shape) {
 		case 2:
 			x1v := x1.Mat
-			return &Tensor{T3D: matT3D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T3D: matT3D(a, x1v, x2v), Shape: x2.Shape}
 		case 1:
 			x1v := x1.Vec
-			return &Tensor{T3D: vecT3D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T3D: vecT3D(a, x1v, x2v), Shape: x2.Shape}
 		case 0:
 			x1v := x1.Val
-			return &Tensor{T3D: floatT3D(a, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{T3D: floatT3D(a, x1v, x2v), Shape: x2.Shape}
 		}
 	}
 	if len(x1.Shape) == 2 {
@@ -382,23 +382,23 @@ func calcArithmetic(a Arithmetic, x1, x2 *Tensor) *Tensor {
 		switch len(x2.Shape) {
 		case 2:
 			x2v := x2.Mat
-			return &Tensor{Mat: matMat(ADD, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{Mat: matMat(a, x1v, x2v), Shape: x1.Shape}
 		case 1:
 			x2v := x2.Vec
-			return &Tensor{Mat: matVec(ADD, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{Mat: matVec(a, x1v, x2v), Shape: x1.Shape}
 		case 0:
 			x2v := x2.Val
-			return &Tensor{Mat: matFloat(ADD, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{Mat: matFloat(a, x1v, x2v), Shape: x1.Shape}
 		}
 	} else if len(x2.Shape) == 2 {
 		x2v := x2.Mat
 		switch len(x1.Shape) {
 		case 1:
 			x1v := x1.Vec
-			return &Tensor{Mat: vecMat(ADD, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{Mat: vecMat(a, x1v, x2v), Shape: x2.Shape}
 		case 0:
 			x1v := x1.Val
-			return &Tensor{Mat: floatMat(ADD, x1v, x2v), Shape: x1.Shape}
+			return &Tensor{Mat: floatMat(a, x1v, x2v), Shape: x2.Shape}
 		}
 	}
 	panic([]*Tensor{x1, x2})
@@ -413,6 +413,8 @@ func (t *Tensor) Equal(x *Tensor) bool {
 		return false
 	}
 	switch len(t.Shape) {
+	case 0:
+		return t.Val == x.Val
 	case 1:
 		return vec.Equal(t.Vec, x.Vec)
 	case 2:

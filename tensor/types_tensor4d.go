@@ -239,7 +239,7 @@ func (t Tensor4D) meanAll() float64 {
 
 func (t Tensor4D) pow(p float64) Tensor4D {
 	t4d := make([]Tensor3D, len(t))
-	for i, t3d := range t4d {
+	for i, t3d := range t {
 		t4d[i] = t3d.pow(p)
 	}
 	return t4d
@@ -255,7 +255,7 @@ func (t Tensor4D) sumAll() float64 {
 
 func (t Tensor4D) sqrt() Tensor4D {
 	t4d := make([]Tensor3D, len(t))
-	for i, t3d := range t4d {
+	for i, t3d := range t {
 		t4d[i] = t3d.sqrt()
 	}
 	return t4d
@@ -263,7 +263,7 @@ func (t Tensor4D) sqrt() Tensor4D {
 
 func (t Tensor4D) softmax() Tensor4D {
 	t4d := make([]Tensor3D, len(t))
-	for i, t3d := range t4d {
+	for i, t3d := range t {
 		t4d[i] = t3d.softmax()
 	}
 	return t4d
@@ -271,7 +271,7 @@ func (t Tensor4D) softmax() Tensor4D {
 
 func (t Tensor4D) sigmoid() Tensor4D {
 	t4d := make([]Tensor3D, len(t))
-	for i, t3d := range t4d {
+	for i, t3d := range t {
 		t4d[i] = t3d.sigmoid()
 	}
 	return t4d
@@ -279,7 +279,7 @@ func (t Tensor4D) sigmoid() Tensor4D {
 
 func (t Tensor4D) relu() Tensor4D {
 	t4d := make([]Tensor3D, len(t))
-	for i, t3d := range t4d {
+	for i, t3d := range t {
 		t4d[i] = t3d.relu()
 	}
 	return t4d

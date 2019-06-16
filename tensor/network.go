@@ -149,7 +149,7 @@ func (net *SimpleConvNet) UpdateParams(grads map[string]*Tensor) {
 func (net *SimpleConvNet) Accuracy(x, t *Tensor) float64 {
 	var sem = make(chan struct{}, 40)
 	accuracy := 0.0
-	size := 5
+	size := 10
 	count := 0
 	ch := make(chan float64)
 	start := time.Now()

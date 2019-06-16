@@ -1,6 +1,7 @@
 package tensor
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -40,14 +41,23 @@ func (a *Adam) Update(params, grads map[string]*Tensor) map[string]*Tensor {
 	a.Iter++
 	fIter := float64(a.Iter)
 	lrT := a.LR * math.Sqrt(1.0-math.Pow(a.Beta2, fIter)) / (1.0 - math.Pow(a.Beta1, fIter))
-
+	lrTten := &Tensor{Val: lrT, Shape: []int{}}
+	h := &Tensor{Val: 1e-7, Shape: []int{}}
+	diffBeta1 := &Tensor{Val: 1.0 - a.Beta1, Shape: []int{}}
+	diffBeta2 := &Tensor{Val: 1.0 - a.Beta2, Shape: []int{}}
 	newParams := map[string]*Tensor{}
 	for k, g := range grads {
-		a.M[k] = Add(a.M[k], Mul(&Tensor{Val: 1.0 - a.Beta1}, Sub(g, a.M[k])))
-		a.V[k] = Add(a.V[k], Mul(&Tensor{Val: 1.0 - a.Beta2}, Sub(g.Pow(2), a.V[k])))
-
-		delta := Div(Mul(&Tensor{Val: lrT}, a.M[k]), Add(a.V[k].Sqrt(), &Tensor{Val: 1e-7}))
+		a.M[k] = Add(a.M[k], Mul(diffBeta1, Sub(g, a.M[k])))
+		a.V[k] = Add(a.V[k], Mul(diffBeta2, Sub(g.Pow(2), a.V[k])))
+		delta := Div(Mul(lrTten, a.M[k]), Add(a.V[k].Sqrt(), h))
 		newParams[k] = Sub(params[k], delta)
+
+		if params[k].Equal(newParams[k]) {
+			fmt.Println(a.Iter, "MISS UPDATED")
+			fmt.Println(params[k])
+			fmt.Println(newParams[k])
+		}
 	}
+
 	return newParams
 }
